@@ -1,0 +1,44 @@
+name: spectaacademy
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.0.0 # Diturunkan ke 3.0.0 agar lebih kompatibel luas
+
+dependencies:
+  webview_flutter: ^4.0.7
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  http: ^1.1.0   
+  
+  # Kunci di versi 1.1.0 (Tanpa tanda ^) agar startPaymentUi berfungsi kembali
+  midtrans_sdk: 1.1.0             
+  
+  shared_preferences: ^2.2.2
+  intl: ^0.19.0 # Gunakan 0.19.0 yang lebih stabil untuk Flutter 3.x
+  image_picker: ^1.0.4
+  table_calendar: ^3.1.0
+  url_launcher: ^6.2.5
+  file_picker: ^8.0.0+1
+  google_fonts: ^6.2.1
+  provider: ^6.1.2
+  carousel_slider: ^5.0.0
+  cached_network_image: ^3.4.1
+  smooth_page_indicator: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0 # Gunakan versi 3.0.0 yang umum
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/abdi_negara.png
+    - assets/images/ptn_unhan.png
+    - assets/images/favorit.png
+    - assets/images/reguler.png
