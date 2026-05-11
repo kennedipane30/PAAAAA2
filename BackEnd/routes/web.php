@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\AdminTryoutController;
 use App\Http\Controllers\Pengajar\PengajarDashboardController;
 use App\Http\Controllers\Pengajar\MateriController;
 use App\Http\Controllers\Pengajar\TryoutController;
+use App\Http\Controllers\Pengajar\AbsensiController;
 use App\Http\Controllers\Pengajar\PracticeQuestionController;
 use App\Http\Controllers\Pengajar\JadwalTutorController;
 
@@ -89,12 +90,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 // 🔥 2. GROUP PENGAJAR (Role: Pengajar)
 // ============================
 Route::middleware(['auth', 'role:pengajar'])->prefix('pengajar')->name('pengajar.')->group(function () {
-    Route::get('/dashboard', [PengajarDashboardController::class, 'index'])->name('dashboard');
+ Route::get('/dashboard', [PengajarDashboardController::class, 'index'])->name('dashboard');
     Route::get('/jadwal-mengajar', [PengajarDashboardController::class, 'jadwalSaya'])->name('jadwal.index');
-    Route::get('/absensi', [PengajarDashboardController::class, 'absensi'])->name('absensi.index');
-    Route::get('/absensi/{class_id}', [PengajarDashboardController::class, 'showAbsensi'])->name('absensi.show');
-    Route::post('/absensi/simpan', [PengajarDashboardController::class, 'storeAbsensi'])->name('absensi.store');
-    Route::get('/absensi/detail/{schedule_id}', [PengajarDashboardController::class, 'detailAbsensi'])->name('absensi.detail');
+
+    // ✨ FITUR ABSENSI (Mengarahkan ke Controller Baru)
+    Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi/isi/{class_id}', [AbsensiController::class, 'show'])->name('absensi.show');
+    Route::post('/absensi/simpan', [AbsensiController::class, 'store'])->name('absensi.store');
+    Route::get('/absensi/detail/{schedule_id}', [AbsensiController::class, 'detail'])->name('absensi.detail');
+
 
     Route::get('/materi', [MateriController::class, 'index'])->name('materi.index');
     Route::get('/materi/pilih/{class_id}/{subject_name}', [MateriController::class, 'pilihMateri'])->name('materi.pilih');

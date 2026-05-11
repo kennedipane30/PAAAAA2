@@ -81,7 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         // ✅ KONTEN KELAS
-        Route::post('/class/content', [AuthController::class, 'getClassContent']);
+    Route::post('/class/content', [AuthController::class, 'getClassContent']);
         Route::post('/class/join', [AuthController::class, 'joinClass']);
         Route::get('/schedules', [AuthController::class, 'getSiswaSchedule']);
 
