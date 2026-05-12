@@ -75,7 +75,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/penugasan-materi', [TeacherAssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('/penugasan-materi/{id}', [TeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
 
-    // FITUR MASTER TRYOUT (ADMIN)
     Route::prefix('tryout-master')->name('tryout.')->group(function() {
         Route::get('/', [AdminTryoutController::class, 'index'])->name('index');
         Route::get('/export/{class_id}', [AdminTryoutController::class, 'exportCsv'])->name('export');
@@ -90,15 +89,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 // 🔥 2. GROUP PENGAJAR (Role: Pengajar)
 // ============================
 Route::middleware(['auth', 'role:pengajar'])->prefix('pengajar')->name('pengajar.')->group(function () {
- Route::get('/dashboard', [PengajarDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/jadwal-mengajar', [PengajarDashboardController::class, 'jadwalSaya'])->name('jadwal.index');
+    Route::get('/dashboard', [PengajarDashboardController::class, 'index'])->name('dashboard');
 
-    // ✨ FITUR ABSENSI (Mengarahkan ke Controller Baru)
-    Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
-    Route::get('/absensi/isi/{class_id}', [AbsensiController::class, 'show'])->name('absensi.show');
-    Route::post('/absensi/simpan', [AbsensiController::class, 'store'])->name('absensi.store');
-    Route::get('/absensi/detail/{schedule_id}', [AbsensiController::class, 'detail'])->name('absensi.detail');
-
+    // ✨ MODIFIKASI FITUR ABSENSI (Alur Baru Rekapitulasi)
+    Route::prefix('absensi')->name('absensi.')->group(function() {
+        Route::get('/', [AbsensiController::class, 'index'])->name('index'); // Daftar Kelas Tugas
+        Route::get('/weeks/{class_id}/{subject}', [AbsensiController::class, 'listWeeks'])->name('weeks'); // Grid 20 Minggu
+        Route::get('/isi/{class_id}/{subject}/{week}', [AbsensiController::class, 'create'])->name('create'); // Form Absen
+        Route::post('/simpan', [AbsensiController::class, 'store'])->name('store'); // Simpan Absensi
+        Route::get('/recap/{class_id}/{subject}/{week}', [AbsensiController::class, 'showRecap'])->name('recap'); // Lihat Recap/Detail
+    });
 
     Route::get('/materi', [MateriController::class, 'index'])->name('materi.index');
     Route::get('/materi/pilih/{class_id}/{subject_name}', [MateriController::class, 'pilihMateri'])->name('materi.pilih');
@@ -116,8 +116,6 @@ Route::middleware(['auth', 'role:pengajar'])->prefix('pengajar')->name('pengajar
         Route::get('/pilih/{class_id}/{subject_name}', [PracticeQuestionController::class, 'selectPractice'])->name('pilih');
         Route::post('/upload/{class_id}', [PracticeQuestionController::class, 'storeCSV'])->name('store');
     });
-
-    Route::get('/jadwal-tutor', [JadwalTutorController::class, 'index'])->name('tutor.index');
 });
 
 // View Gallery

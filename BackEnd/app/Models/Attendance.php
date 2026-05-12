@@ -10,15 +10,24 @@ class Attendance extends Model {
 
     protected $table = 'attendances';
     protected $primaryKey = 'attendance_id';
-    protected $fillable = ['schedule_id', 'user_id', 'status', 'date'];
 
-    // Relasi ke Siswa
-    public function user() {
-        return $this->belongsTo(User::class, 'user_id', 'usersID');
-    }
+    // ✨ TAMBAHKAN week dan subject_name
+    protected $fillable = [
+        'user_id',
+        'teacher_id',
+        'class_id',
+        'subject_name',
+        'week',
+        'status',
+        'date'
+    ];
 
-    // Relasi ke Jadwal
-    public function schedule() {
-        return $this->belongsTo(Schedule::class, 'schedule_id', 'schedule_id');
+public function user() {
+    return $this->belongsTo(User::class, 'user_id', 'usersID');
+}
+
+    // Relasi ke kelas untuk mempermudah pemanggilan nama program
+    public function classModel() {
+        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
     }
 }

@@ -6,26 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::create('attendances', function (Blueprint $table) {
-            $table->id('attendance_id'); // Primary Key
+    Schema::create('attendances', function (Blueprint $table) {
+        $table->id('attendance_id');
+        $table->unsignedBigInteger('user_id');    // ID Siswa (usersID)
+        $table->unsignedBigInteger('teacher_id'); // ID Pengajar (usersID)
+        $table->unsignedBigInteger('class_id');   // ID Kelas
+        $table->string('subject_name');           // TIU, TWK, dll
+        $table->integer('week');                  // Minggu 1 - 20
+        $table->enum('status', ['h', 'i', 'a']);  // Hadir, Izin, Alpa
+        $table->date('date');                     // Tanggal absen dilakukan
+        $table->timestamps();
 
-            // Foreign Key ke Jadwal
-            $table->foreignId('schedule_id')
-                  ->constrained('schedules', 'schedule_id')
-                  ->onDelete('cascade');
-
-            // Foreign Key ke Siswa (usersID)
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('usersID')->on('users')->onDelete('cascade');
-
-            // Status Kehadiran
-            $table->enum('status', ['present', 'permission', 'absent']);
-
-            $table->date('date');
-            $table->timestamps();
-        });
-    }
-
+        $table->foreign('user_id')->references('usersID')->on('users')->onDelete('cascade');
+        $table->foreign('teacher_id')->references('usersID')->on('users')->onDelete('cascade');
+    });
+}
     public function down(): void {
         Schema::dropIfExists('attendances');
     }
