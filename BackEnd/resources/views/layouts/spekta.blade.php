@@ -119,9 +119,6 @@
                     <a href="{{ route('pengajar.tryout.index') }}" class="nav-link {{ request()->routeIs('pengajar.tryout.index') ? 'active' : '' }} flex items-center py-3 px-4 rounded-xl mb-1">
                         <span class="mr-3 text-lg">⏱️</span> Input Soal TO
                     </a>
-                    <a href="{{ route('pengajar.tryout.nilai') }}" class="nav-link {{ request()->routeIs('pengajar.tryout.nilai') ? 'active' : '' }} flex items-center py-3 px-4 rounded-xl mb-1">
-                        <span class="mr-3 text-lg">📊</span> Lihat Nilai
-                    </a>
                 @endif
             </nav>
 

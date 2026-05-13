@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TryoutSubmission;
 use App\Models\ClassModel;
-use App\Models\Question; // Pastikan model Question ada
+use App\Models\Question;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // ✨ Tambahkan ini
 
 class AdminTryoutController extends Controller
 {
@@ -14,13 +15,21 @@ class AdminTryoutController extends Controller
     {
         $classes = ClassModel::all();
         $submissions = TryoutSubmission::with(['user', 'classModel'])->latest()->get();
-        return view('admin.tryout.index', compact('submissions', 'classes'));
+
+        // ✨ AMBIL DAFTAR PAKET YANG SUDAH TERBIT DI MOBILE
+        $activeTryouts = Question::select('class_id', DB::raw('count(*) as total'))
+                        ->groupBy('class_id')
+                        ->with('classModel')
+                        ->get();
+
+        return view('admin.tryout.index', compact('submissions', 'classes', 'activeTryouts'));
     }
 
     public function exportCsv($class_id)
     {
         $questions = TryoutSubmission::where('class_id', $class_id)->get();
-        $fileName = 'Master_Soal_Kelas_'.$class_id.'.csv';
+        $class = ClassModel::find($class_id);
+        $fileName = 'Master_Soal_' . ($class->program_name ?? 'Kelas') . '.csv';
 
         $headers = ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=$fileName"];
         $columns = ['No', 'Pertanyaan', 'Gbr_Soal', 'Opsi A', 'Gbr_A', 'Opsi B', 'Gbr_B', 'Opsi C', 'Gbr_C', 'Opsi D', 'Gbr_D', 'Kunci', 'Pembahasan'];
@@ -44,7 +53,6 @@ class AdminTryoutController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    // ✨ FUNGSI UNTUK PROSES UPLOAD CSV MASTER KE MOBILE
     public function uploadMaster(Request $request)
     {
         $request->validate([
@@ -54,14 +62,13 @@ class AdminTryoutController extends Controller
 
         $file = $request->file('file_csv');
         $handle = fopen($file->getRealPath(), "r");
-        fgetcsv($handle, 2000, ","); // Skip Header
+        fgetcsv($handle, 2000, ",");
 
         try {
             while (($row = fgetcsv($handle, 2000, ",")) !== FALSE) {
                 if (empty($row[1]) && empty($row[2])) continue;
 
-                // Simpan ke tabel Question aplikasi Mobile
-                \App\Models\Question::create([
+                Question::create([
                     'class_id'       => $request->class_id,
                     'question_text'  => $row[1] ?? '-',
                     'question_image' => $row[2] ?? null,
@@ -83,4 +90,13 @@ class AdminTryoutController extends Controller
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
-}   
+
+    /**
+     * ✨ FUNGSI HAPUS PAKET TERBIT
+     */
+    public function destroyPackage($class_id)
+    {
+        Question::where('class_id', $class_id)->delete();
+        return back()->with('success', 'Paket Tryout berhasil dihapus dari Mobile.');
+    }
+}

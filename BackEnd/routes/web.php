@@ -79,7 +79,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/', [AdminTryoutController::class, 'index'])->name('index');
         Route::get('/export/{class_id}', [AdminTryoutController::class, 'exportCsv'])->name('export');
         Route::post('/upload-final', [AdminTryoutController::class, 'uploadMaster'])->name('upload');
-    });
+        Route::delete('/tryout-destroy/{class_id}', [App\Http\Controllers\Admin\AdminTryoutController::class, 'destroyPackage'])->name('admin.tryout.destroy_package');    });
 
     Route::resource('classes', ClassManagementController::class)->only(['index', 'edit', 'update','create','store', 'destroy']);
     Route::resource('banners', BannerController::class)->except(['show']);
@@ -108,15 +108,20 @@ Route::middleware(['auth', 'role:pengajar'])->prefix('pengajar')->name('pengajar
         Route::get('/', [TryoutController::class, 'index'])->name('index');
         Route::get('/buat/{class_id}/{subject_name}', [TryoutController::class, 'create'])->name('create');
         Route::post('/simpan', [TryoutController::class, 'store'])->name('store');
-        Route::get('/nilai', [TryoutController::class, 'lihatNilai'])->name('nilai');
-    });
+
+        });
 
     Route::prefix('latihan')->name('latihan.')->group(function() {
-        Route::get('/', [PracticeQuestionController::class, 'index'])->name('index');
-        Route::get('/pilih/{class_id}/{subject_name}', [PracticeQuestionController::class, 'selectPractice'])->name('pilih');
-        Route::post('/upload/{class_id}', [PracticeQuestionController::class, 'storeCSV'])->name('store');
+            Route::get('/', [PracticeQuestionController::class, 'index'])->name('index');
+            Route::get('/pilih/{class_id}/{subject_name}', [PracticeQuestionController::class, 'selectPractice'])->name('pilih');
+            Route::post('/upload/{class_id}', [PracticeQuestionController::class, 'storeCSV'])->name('store');
+
+            // ✨ PERBAIKAN: Hilangkan '/latihan' di path dan 'latihan.' di name
+            Route::delete('/destroy-week/{class_id}/{subject}/{week}', [PracticeQuestionController::class, 'destroyByWeek'])
+                ->name('destroy_week');
+        });
+
     });
-});
 
 // View Gallery
 Route::get('/view-galeri/{filename}', function ($filename) {
