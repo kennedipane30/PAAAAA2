@@ -111,7 +111,7 @@ class AuthController extends Controller {
     }
 
     /**
-     * 🔥 4. GET CLASS CONTENT (MODIFIKASI: MENAMBAHKAN LATIHAN SOAL)
+     * 4. GET CLASS CONTENT
      */
     public function getClassContent(Request $request): JsonResponse {
         $classId = $request->class_id;
@@ -130,8 +130,6 @@ class AuthController extends Controller {
         $status = $enrollment ? $enrollment->status : 'none';
 
         $tryouts = Tryout::where('class_id', $classId)->get();
-
-        // ✨ MODIFIKASI: Ambil data latihan soal agar sinkron dengan gambar kedua di HP
         $practiceQuestions = PracticeQuestion::where('class_id', $classId)->get();
 
         return response()->json([
@@ -142,12 +140,29 @@ class AuthController extends Controller {
             'image_url'     => $class->image_url,
             'materi'        => $class->materials,
             'tryouts'       => $tryouts,
-            'practice_questions' => $practiceQuestions, // ✨ Dikirim ke Flutter
+            'practice_questions' => $practiceQuestions,
         ]);
     }
 
     /**
-     * 5. UPDATE PROFIL
+     * ✨ 5. GET QUESTIONS (SANGAT PENTING: Tambahkan ini agar tidak error!)
+     */
+    public function getQuestions(Request $request): JsonResponse {
+        $tryoutId = $request->tryout_id;
+        $questions = Question::where('tryout_id', $tryoutId)->get();
+
+        if ($questions->isEmpty()) {
+            return response()->json(['status' => 'error', 'message' => 'Soal belum tersedia untuk paket ini.'], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $questions
+        ]);
+    }
+
+    /**
+     * 6. UPDATE PROFIL
      */
     public function updateProfile(Request $request): JsonResponse {
         $v = Validator::make($request->all(), [
@@ -168,7 +183,7 @@ class AuthController extends Controller {
     }
 
     /**
-     * 6. JOIN CLASS (PEMBAYARAN MANUAL)
+     * 7. JOIN CLASS
      */
     public function joinClass(Request $request): JsonResponse {
         $request->validate(['class_id' => 'required', 'payment_proof' => 'required|image']);
@@ -186,7 +201,7 @@ class AuthController extends Controller {
     }
 
     /**
-     * 7. SUBMIT TRYOUT
+     * 8. SUBMIT TRYOUT
      */
     public function submitTryout(Request $request): JsonResponse {
         $userAnswers = $request->input('answers');
@@ -200,7 +215,7 @@ class AuthController extends Controller {
         }
 
         $score = count($questions) > 0 ? ($correctCount / count($questions)) * 100 : 0;
-        $result = TryoutResult::create([
+        TryoutResult::create([
             'user_id' => Auth::id(),
             'tryout_id' => $request->tryout_id,
             'score' => (int)$score,
@@ -211,7 +226,7 @@ class AuthController extends Controller {
     }
 
     /**
-     * 8. LOGOUT
+     * 9. LOGOUT
      */
     public function logout(Request $request): JsonResponse {
         $request->user()->currentAccessToken()->delete();
@@ -219,7 +234,7 @@ class AuthController extends Controller {
     }
 
     /**
-     * 9. CEK PROMO
+     * 10. CEK PROMO
      */
     public function checkPromo(Request $request): JsonResponse {
         $class = ClassModel::find($request->class_id);
@@ -243,29 +258,18 @@ class AuthController extends Controller {
     }
 
     /**
-     * ✨ 10. GET SCHEDULE (MODIFIKASI: FIX IDE WARNING & AMBIGUOUS PLUCK)
+     * 11. GET SCHEDULE
      */
     public function getSiswaSchedule(Request $request): JsonResponse {
-        /** @var \App\Models\User $user */ // Memperbaiki peringatan 'Undefined method classes'
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-
-        if (!$user) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
-        }
-
-        // Gunakan table pivot 'enrollments' untuk pluck agar tidak ambigu
-        $classIds = $user->classes()
-                         ->wherePivot('status', 'active')
-                         ->pluck('enrollments.class_id');
+        $classIds = $user->classes()->wherePivot('status', 'active')->pluck('enrollments.class_id');
 
         $schedules = Schedule::whereIn('class_id', $classIds)
                     ->with(['class', 'material'])
                     ->orderBy('date', 'asc')
                     ->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $schedules
-        ]);
+        return response()->json(['status' => 'success', 'data' => $schedules]);
     }
 }

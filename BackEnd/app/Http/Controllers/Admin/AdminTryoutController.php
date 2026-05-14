@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TryoutSubmission;
 use App\Models\ClassModel;
 use App\Models\Question;
+use App\Models\Tryout; // ✨ Wajib Import Model Tryout
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,27 +55,32 @@ class AdminTryoutController extends Controller
 
     public function uploadMaster(Request $request)
     {
-        $request->validate([
-            'class_id' => 'required',
-            'file_csv' => 'required'
-        ]);
+        $request->validate(['class_id' => 'required', 'file_csv' => 'required|mimes:csv,txt']);
 
-        if (!$request->hasFile('file_csv')) {
-            return back()->with('error', 'File tidak terdeteksi. Pastikan memilih file.');
-        }
-
+        $class = ClassModel::find($request->class_id);
         $file = $request->file('file_csv');
         $handle = fopen($file->getRealPath(), "r");
-        fgetcsv($handle, 2000, ","); // Skip header baris pertama
+        fgetcsv($handle, 2000, ",");
 
-        DB::beginTransaction(); // ✨ Gunakan transaksi agar aman
+        DB::beginTransaction();
         try {
+            // ✨ PERBAIKAN UTAMA: Buat Induk Paket Tryout agar muncul di Mobile
+            $tryout = Tryout::updateOrCreate(
+                ['class_id' => $request->class_id],
+                [
+                    'title' => 'Tryout Akbar ' . $class->program_name,
+                    'duration' => 60, // Default 60 menit
+                    'is_active' => true
+                ]
+            );
+
             $count = 0;
             while (($row = fgetcsv($handle, 2000, ",")) !== FALSE) {
                 if (empty($row[1]) && empty($row[2])) continue;
 
                 Question::create([
                     'class_id'       => $request->class_id,
+                    'tryout_id'      => $tryout->tryout_id, // ✨ Hubungkan ke Paket Tryout
                     'question'       => $row[1] ?? '-',
                     'question_image' => $row[2] ?: null,
                     'option_a'       => $row[3] ?? '-',
@@ -92,7 +98,7 @@ class AdminTryoutController extends Controller
             }
             fclose($handle);
             DB::commit();
-            return back()->with('success', "Berhasil! $count soal telah dipublikasikan ke Mobile.");
+            return back()->with('success', "Berhasil! $count soal dan 1 Paket Tryout telah aktif di Mobile.");
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal: ' . $e->getMessage());
@@ -101,6 +107,8 @@ class AdminTryoutController extends Controller
 
     public function destroyPackage($class_id)
     {
+        // ✨ Hapus Paket Tryout dan Soal-soalnya
+        Tryout::where('class_id', $class_id)->delete();
         Question::where('class_id', $class_id)->delete();
         return back()->with('success', 'Paket Tryout berhasil dihapus dari Mobile.');
     }

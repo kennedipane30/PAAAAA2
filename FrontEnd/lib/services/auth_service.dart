@@ -86,7 +86,7 @@ class AuthService {
     return await http.post(
       Uri.parse('$baseUrl/class/content'),
       headers: {
-        'Accept': 'application/json', // Penting agar tidak error HTML
+        'Accept': 'application/json', 
         'Authorization': 'Bearer $token'
       },
       body: {'class_id': classId.toString()},
@@ -204,7 +204,7 @@ class AuthService {
   }
 
   // ============================
-  // 📝 6. TRYOUT & SCHEDULES
+  // 📝 6. TRYOUT & TUTOR
   // ============================
 
   static Future<http.Response> getSiswaSchedule(String token) async {
@@ -217,6 +217,7 @@ class AuthService {
     );
   }
 
+  // ✨ MODIFIKASI: Ambil Soal Tryout (Pastikan Body & Header Sinkron)
   static Future<http.Response> getQuestions(int tryoutId, String token) async {
     return await http.post(
       Uri.parse('$baseUrl/tryout/questions'),
@@ -224,7 +225,7 @@ class AuthService {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token'
       },
-      body: {'tryout_id': tryoutId.toString()},
+      body: {'tryout_id': tryoutId.toString()}, // Key harus sinkron dengan Laravel
     );
   }
 
@@ -242,6 +243,29 @@ class AuthService {
         'Authorization': 'Bearer $token'
       },
       body: jsonEncode({'tryout_id': tryoutId, 'answers': stringAnswers}),
+    );
+  }
+
+  // ✨ MODIFIKASI: DEDICATED TUTOR (Sesuai Rute API Baru)
+  static Future<http.Response> getTutorData(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/tutor/form-data'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+  }
+
+  static Future<http.Response> getTutorHistory(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/tutor/history'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+  }
+
+  static Future<http.Response> submitTutor(Map data, String token) async {
+    return await http.post(
+      Uri.parse('$baseUrl/tutor/submit'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+      body: data.map((key, value) => MapEntry(key, value.toString())),
     );
   }
 

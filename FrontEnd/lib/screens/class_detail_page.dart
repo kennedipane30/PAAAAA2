@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import 'payment_confirmation_page.dart';
 import 'subject_list_page.dart'; 
-import 'practice_subject_list_page.dart'; // ✨ Import halaman baru
+import 'practice_subject_list_page.dart'; 
+import 'tryout_detail_page.dart'; // ✨ Import halaman detail tryout
 
 class ClassDetailPage extends StatefulWidget {
   final int classId;
@@ -43,6 +44,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     _fetchDetail();
   }
 
+  // --- FUNGSI MAPPING GAMBAR LOKAL ---
   String _getLocalAsset() {
     int cid = int.tryParse(widget.classId.toString()) ?? 0;
     switch (cid) {
@@ -76,33 +78,44 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     }
   }
 
+  // --- LOGIKA NAVIGASI FITUR ---
+
   void _navigateToMaterials() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => SubjectListPage(
-      classId: widget.classId, className: widget.className, token: widget.token, materi: materi,
+      classId: widget.classId,
+      className: widget.className,
+      token: widget.token,
+      materi: materi,
     )));
   }
 
   void _navigateToPractice() {
     if (practiceQuestions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(backgroundColor: Colors.orange, content: Text("Latihan soal belum tersedia."))
-      );
+      _showWarningSnack("Latihan soal belum tersedia untuk kelas ini.");
       return;
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => PracticeSubjectListPage(
-      allExercises: practiceQuestions, token: widget.token,
+      allExercises: practiceQuestions, 
+      token: widget.token,
     )));
   }
 
   void _navigateToTryouts() {
     if (tryouts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(backgroundColor: Colors.orange, content: Text("Tryout belum tersedia.")),
-      );
+      _showWarningSnack("Tryout belum tersedia.");
     } else {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Membuka daftar Tryout...")));
-       // Navigator.push(context, MaterialPageRoute(builder: (_) => TryoutListPage(...)));
+       // ✨ NAVIGASI KE DETAIL TRYOUT (Mengambil paket pertama)
+       Navigator.push(context, MaterialPageRoute(builder: (context) => TryoutDetailPage(
+         tryoutData: tryouts[0], 
+         token: widget.token
+       )));
     }
+  }
+
+  void _showWarningSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(backgroundColor: Colors.orange, content: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold)))
+    );
   }
 
   @override
@@ -136,6 +149,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                         const Text("Kurikulum & Fitur Belajar", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 15),
                         
+                        // ✨ LIST FITUR MENJADI TOMBOL
                         _buildFeatureButton(
                           icon: Icons.menu_book_rounded,
                           title: "Materi Video & PDF",
@@ -156,11 +170,12 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                         _buildFeatureButton(
                           icon: Icons.assignment_rounded,
                           title: "Simulasi Tryout",
-                          subtitle: tryouts.isEmpty ? "Belum tersedia" : "${tryouts.length} Paket siap dikerjakan",
+                          subtitle: tryouts.isEmpty ? "Belum tersedia" : "${tryouts.length} Paket Tryout",
                           onTap: _navigateToTryouts,
                           isLocked: !isActive,
                           color: Colors.orange,
                         ),
+                        
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -168,6 +183,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 ),
               ],
             ),
+      // ✨ Tombol bawah hanya tampil untuk pendaftaran (Bukan untuk yang sudah aktif)
       bottomNavigationBar: (isActive || isAnotherClassActive) ? null : _buildPremiumBottomBar(),
     );
   }
@@ -175,7 +191,16 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       expandedHeight: 280.0, pinned: true, backgroundColor: spektaRed,
-      flexibleSpace: FlexibleSpaceBar(background: Image.asset(_getLocalAsset(), fit: BoxFit.cover)),
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CircleAvatar(
+          backgroundColor: Colors.black26,
+          child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Image.asset(_getLocalAsset(), fit: BoxFit.cover),
+      ),
     );
   }
 
@@ -189,10 +214,21 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     );
   }
 
-  Widget _buildFeatureButton({required IconData icon, required String title, required String subtitle, required VoidCallback onTap, bool isLocked = true, Color color = const Color(0xFF990000)}) {
+  Widget _buildFeatureButton({
+    required IconData icon, 
+    required String title, 
+    required String subtitle, 
+    required VoidCallback onTap, 
+    bool isLocked = true,
+    Color color = const Color(0xFF990000)
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -204,7 +240,10 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: isLocked ? Colors.grey[100] : color.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
+                  decoration: BoxDecoration(
+                    color: isLocked ? Colors.grey[100] : color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                   child: Icon(isLocked ? Icons.lock_outline_rounded : icon, color: isLocked ? Colors.grey : color),
                 ),
                 const SizedBox(width: 15),
