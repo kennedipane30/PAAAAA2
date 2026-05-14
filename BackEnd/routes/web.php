@@ -40,19 +40,26 @@ Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 // ============================
 // 🔥 1. GROUP ADMIN (Role: Admin)
 // ============================
+// ============================
+// 🔥 1. GROUP ADMIN (Role: Admin)
+// ============================
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    // Monitoring Nilai
     Route::prefix('scores')->name('scores.')->group(function() {
         Route::get('/', [TryoutController::class, 'lihatNilai'])->name('index');
         Route::get('/detail/{class_id}', [TryoutController::class, 'detailNilai'])->name('detail');
         Route::post('/export-selected', [TryoutController::class, 'exportPdfSelected'])->name('pdf_selected');
     });
 
+    // Manajemen Jadwal & Akun Pengajar
     Route::resource('jadwal', JadwalController::class);
     Route::get('/get-materi/{class_id}', [JadwalController::class, 'getMateri'])->name('jadwal.getMateri');
     Route::resource('manajemen-pengajar', ManajemenPengajarController::class);
 
+    // Manajemen Siswa
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::get('/semua', [ManajemenSiswaController::class, 'index'])->name('index');
         Route::get('/tambah-kelas', [ManajemenSiswaController::class, 'indexPendaftaran'])->name('pendaftaran');
@@ -60,30 +67,40 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::post('/tambah-kelas/proses/{id}', [ManajemenSiswaController::class, 'prosesAktivasi'])->name('proses_aktivasi');
     });
 
+    // Dedicated Tutor & Pengumuman
     Route::get('/dedicated-tutor', [AdminDedicatedTutorController::class, 'index'])->name('tutor.index');
     Route::post('/dedicated-tutor/update/{id}', [AdminDedicatedTutorController::class, 'updateAssignment'])->name('tutor.update');
     Route::resource('announcement', AnnouncementController::class);
 
+    // Keuangan (Pembayaran)
     Route::get('/pembayaran', [PembayaranController::class, 'index'])->name('pembayaran.index');
     Route::post('/pembayaran/verifikasi/{id}', [PembayaranController::class, 'verifikasi'])->name('pembayaran.verify');
 
+    // Manajemen Promo
     Route::get('/promo', [PromoController::class, 'index'])->name('promo.index');
     Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
     Route::delete('/promo/{id}', [PromoController::class, 'destroy'])->name('promo.destroy');
 
+    // Penugasan Materi
     Route::get('/penugasan-materi', [TeacherAssignmentController::class, 'index'])->name('assignments.index');
     Route::post('/penugasan-materi', [TeacherAssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('/penugasan-materi/{id}', [TeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
 
+    // ✨ FITUR MASTER TRYOUT (Grup yang diperbaiki)
     Route::prefix('tryout-master')->name('tryout.')->group(function() {
         Route::get('/', [AdminTryoutController::class, 'index'])->name('index');
         Route::get('/export/{class_id}', [AdminTryoutController::class, 'exportCsv'])->name('export');
         Route::post('/upload-final', [AdminTryoutController::class, 'uploadMaster'])->name('upload');
-        Route::delete('/tryout-destroy/{class_id}', [App\Http\Controllers\Admin\AdminTryoutController::class, 'destroyPackage'])->name('admin.tryout.destroy_package');    });
+        Route::delete('/tryout-destroy/{class_id}', [AdminTryoutController::class, 'destroyPackage'])->name('destroy_package');
+    });
 
+    // Manajemen Kelas (Posisinya harus di luar prefix tryout-master)
     Route::resource('classes', ClassManagementController::class)->only(['index', 'edit', 'update','create','store', 'destroy']);
+
+    // Banner (Posisinya harus di luar prefix tryout-master)
     Route::resource('banners', BannerController::class)->except(['show']);
-});
+
+}); // Penutup Group Admin yang Benar
 
 // ============================
 // 🔥 2. GROUP PENGAJAR (Role: Pengajar)

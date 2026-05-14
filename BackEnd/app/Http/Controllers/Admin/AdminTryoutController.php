@@ -7,7 +7,7 @@ use App\Models\TryoutSubmission;
 use App\Models\ClassModel;
 use App\Models\Question;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // ✨ Tambahkan ini
+use Illuminate\Support\Facades\DB;
 
 class AdminTryoutController extends Controller
 {
@@ -16,7 +16,6 @@ class AdminTryoutController extends Controller
         $classes = ClassModel::all();
         $submissions = TryoutSubmission::with(['user', 'classModel'])->latest()->get();
 
-        // ✨ AMBIL DAFTAR PAKET YANG SUDAH TERBIT DI MOBILE
         $activeTryouts = Question::select('class_id', DB::raw('count(*) as total'))
                         ->groupBy('class_id')
                         ->with('classModel')
@@ -29,7 +28,7 @@ class AdminTryoutController extends Controller
     {
         $questions = TryoutSubmission::where('class_id', $class_id)->get();
         $class = ClassModel::find($class_id);
-        $fileName = 'Master_Soal_' . ($class->program_name ?? 'Kelas') . '.csv';
+        $fileName = 'Master_Kurasi_' . str_replace(' ', '_', $class->program_name ?? 'Kelas') . '.csv';
 
         $headers = ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=$fileName"];
         $columns = ['No', 'Pertanyaan', 'Gbr_Soal', 'Opsi A', 'Gbr_A', 'Opsi B', 'Gbr_B', 'Opsi C', 'Gbr_C', 'Opsi D', 'Gbr_D', 'Kunci', 'Pembahasan'];
@@ -57,43 +56,49 @@ class AdminTryoutController extends Controller
     {
         $request->validate([
             'class_id' => 'required',
-            'file_csv' => 'required|mimes:csv,txt'
+            'file_csv' => 'required'
         ]);
+
+        if (!$request->hasFile('file_csv')) {
+            return back()->with('error', 'File tidak terdeteksi. Pastikan memilih file.');
+        }
 
         $file = $request->file('file_csv');
         $handle = fopen($file->getRealPath(), "r");
-        fgetcsv($handle, 2000, ",");
+        fgetcsv($handle, 2000, ","); // Skip header baris pertama
 
+        DB::beginTransaction(); // ✨ Gunakan transaksi agar aman
         try {
+            $count = 0;
             while (($row = fgetcsv($handle, 2000, ",")) !== FALSE) {
                 if (empty($row[1]) && empty($row[2])) continue;
 
                 Question::create([
                     'class_id'       => $request->class_id,
-                    'question_text'  => $row[1] ?? '-',
-                    'question_image' => $row[2] ?? null,
+                    'question'       => $row[1] ?? '-',
+                    'question_image' => $row[2] ?: null,
                     'option_a'       => $row[3] ?? '-',
-                    'option_a_image' => $row[4] ?? null,
+                    'option_a_image' => $row[4] ?: null,
                     'option_b'       => $row[5] ?? '-',
-                    'option_b_image' => $row[6] ?? null,
+                    'option_b_image' => $row[6] ?: null,
                     'option_c'       => $row[7] ?? '-',
-                    'option_c_image' => $row[8] ?? null,
+                    'option_c_image' => $row[8] ?: null,
                     'option_d'       => $row[9] ?? '-',
-                    'option_d_image' => $row[10] ?? null,
+                    'option_d_image' => $row[10] ?: null,
                     'correct_answer' => $row[11] ?? 'A',
                     'explanation'    => $row[12] ?? '-',
                 ]);
+                $count++;
             }
             fclose($handle);
-            return back()->with('success', 'Sukses mempublikasikan soal ke aplikasi Mobile!');
+            DB::commit();
+            return back()->with('success', "Berhasil! $count soal telah dipublikasikan ke Mobile.");
         } catch (\Exception $e) {
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /**
-     * ✨ FUNGSI HAPUS PAKET TERBIT
-     */
     public function destroyPackage($class_id)
     {
         Question::where('class_id', $class_id)->delete();

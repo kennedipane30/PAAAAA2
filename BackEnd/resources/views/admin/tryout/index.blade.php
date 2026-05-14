@@ -24,6 +24,7 @@
                 </div>
             </div>
 
+            {{-- ✨ PERBAIKAN: Tambahkan enctype="multipart/form-data" agar file terkirim ✨ --}}
             <form action="{{ route('admin.tryout.upload') }}" method="POST" enctype="multipart/form-data" class="flex gap-4">
                 @csrf
                 <select name="class_id" class="bg-gray-50 border-none rounded-2xl px-4 text-xs font-bold focus:ring-2 focus:ring-[#990000]" required>
@@ -40,12 +41,22 @@
         </div>
     </div>
 
+    {{-- Alert Berhasil --}}
     @if(session('success'))
-        <div class="bg-green-600 text-white p-4 rounded-2xl font-bold text-xs uppercase">{{ session('success') }}</div>
+        <div class="bg-green-600 text-white p-4 rounded-2xl mb-4 font-bold text-xs uppercase shadow-lg shadow-green-100">
+            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+        </div>
     @endif
 
-    {{-- 3. TABEL REVIEW DRAFT --}}
-    <div class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden">
+    {{-- Alert Gagal --}}
+    @if(session('error'))
+        <div class="bg-red-600 text-white p-4 rounded-2xl mb-4 font-bold text-xs uppercase shadow-lg">
+            <i class="fas fa-exclamation-triangle mr-2"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    {{-- 3. TABEL REVIEW DRAFT (Penyedia soal dari pengajar) --}}
+    <div class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-10">
         <div class="p-8 border-b border-gray-50 flex justify-between items-center">
             <h3 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Review Kiriman Pengajar</h3>
             <span class="text-[10px] font-bold text-gray-400 uppercase bg-gray-50 px-4 py-2 rounded-full">DRAFT</span>
@@ -55,9 +66,9 @@
             <table class="w-full text-left">
                 <thead class="bg-gray-50/50">
                     <tr>
-                        <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Kelas</th>
-                        <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status Pengajar</th>
-                        <th class="p-6 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Aksi</th>
+                        <th class="p-6 text-[10px] font-black text-gray-400 uppercase">Kelas</th>
+                        <th class="p-6 text-[10px] font-black text-gray-400 uppercase">Status Pengajar</th>
+                        <th class="p-6 text-center text-[10px] font-black text-gray-400 uppercase">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -85,7 +96,7 @@
         </div>
     </div>
 
-    {{-- ✨ 4. BAGIAN BARU: DAFTAR PAKET TERBIT (MOBILE LIVE) ✨ --}}
+    {{-- 4. TABEL PAKET TERBIT (MOBILE LIVE) --}}
     <div class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden border-t-8 border-green-500">
         <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-green-50/30">
             <h3 class="text-xl font-black text-gray-800 uppercase tracking-tighter">🚀 Paket Terbit (Live di Mobile)</h3>
@@ -94,7 +105,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-50">
-                    <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <tr class="text-[10px] font-black text-gray-400 uppercase">
                         <th class="p-6">Program Kelas</th>
                         <th class="p-6">Total Soal Live</th>
                         <th class="p-6 text-center">Aksi</th>
@@ -115,12 +126,11 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="3" class="p-10 text-center text-gray-300 uppercase font-black text-xs">Belum ada paket yang live.</td></tr>
+                    <tr><td colspan="3" class="p-10 text-center text-gray-300 uppercase font-black text-xs">Belum ada paket yang live di Mobile.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-
 </div>
 @endsection
