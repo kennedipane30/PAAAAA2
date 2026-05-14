@@ -31,13 +31,13 @@ class ModuleWeekListPage extends StatelessWidget {
         itemBuilder: (context, index) {
           int weekNumber = index + 1;
 
-          // ✨ PERBAIKAN LOGIKA PENCARIAN (Mencari yang ada filenya dulu)
+          // Mencari data materi yang memiliki file_path (Prioritas data yang sudah diupload)
           var materialData = allMaterials.firstWhere(
             (m) => 
                 (m['week'].toString() == weekNumber.toString()) && 
                 (m['material_name'].toString().trim().toLowerCase() == subjectName.trim().toLowerCase()) &&
-                (m['file_path'] != null), // Cari yang file_path-nya tidak null
-            orElse: () => allMaterials.firstWhere( // Jika tidak ada yang punya file, cari data kosongnya
+                (m['file_path'] != null),
+            orElse: () => allMaterials.firstWhere(
               (m) => 
                   (m['week'].toString() == weekNumber.toString()) && 
                   (m['material_name'].toString().trim().toLowerCase() == subjectName.trim().toLowerCase()),
@@ -82,13 +82,15 @@ class ModuleWeekListPage extends StatelessWidget {
               trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isUploaded ? spektaRed : Colors.grey[300]),
               onTap: () {
                 if (isUploaded) {
-                  // Gunakan IP 10.0.2.2 untuk emulator agar bisa akses localhost
+                  // ✨ KUNCI PREVIEW: Mengarahkan ke halaman viewer, bukan mendownload
                   String pdfUrl = "http://10.0.2.2:8000/storage/${materialData['file_path']}";
                   
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => PdfViewerPage(
-                    pdfUrl: pdfUrl, 
-                    title: "Week $weekNumber - $subjectName",
-                  )));
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => PdfViewerPage(
+                      pdfUrl: pdfUrl, 
+                      title: "Materi Week $weekNumber - $subjectName",
+                    ),
+                  ));
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Materi belum diunggah untuk minggu ini."))
