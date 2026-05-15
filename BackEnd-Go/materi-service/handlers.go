@@ -5,19 +5,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetMaterials(c *gin.Context) {
-	classID := c.Param("class_id")
-	var materials []Material
-	DB.Where("class_id = ?", classID).Order("week asc").Find(&materials)
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": materials})
-}
+func GetClassContent(c *gin.Context) {
+	var input struct { ClassID string `json:"class_id"` }
+	c.ShouldBindJSON(&input)
 
-func SyncMaterial(c *gin.Context) {
-	var m Material
-	if err := c.ShouldBindJSON(&m); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	DB.Save(&m)
-	c.JSON(200, gin.H{"message": "Materi Synced Successfully"})
+	var materials []Material
+	var practices []PracticeQuestion
+
+	DB.Where("class_id = ?", input.ClassID).Order("week asc").Find(&materials)
+	DB.Table("practice_questions").Where("class_id = ?", input.ClassID).Find(&practices)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"materi": materials,
+		"practice_questions": practices,
+		"enroll_status": "active",
+	})
 }

@@ -1,35 +1,22 @@
+// tryout-service/main.go
 package main
-
 import (
-	"fmt"
-	"log"
-	"os"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
 )
 
-var DB *gorm.DB
-
 func main() {
-	godotenv.Load()
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
-	
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil { log.Fatal(err) }
-	db.AutoMigrate(&Tryout{}, &Question{}, &TryoutResult{})
-	DB = db
+    godotenv.Load()
+    InitDB() // Fungsi koneksi ke specta_tryout_db
 
-	r := gin.Default()
-	api := r.Group("/api")
-	{
-		api.POST("/tryouts/sync", SyncTryoutData)
-		api.Use(AuthMiddleware())
-		api.GET("/tryouts", GetTryouts)
-		api.GET("/tryouts/:id/questions", GetQuestions)
-		api.POST("/tryouts/submit", SubmitResult)
-	}
-	r.Run(":" + os.Getenv("PORT"))
+    r := gin.Default()
+    r.Use(CORSMiddleware())
+    
+    api := r.Group("/api") {
+        // Flutter: getQuestions(), submitTryout(), getLearningReport()
+        api.POST("/tryout/questions", GetQuestions)
+        api.POST("/tryout/submit", SubmitResult)
+        api.GET("/learning-report", GetLearningReport)
+    }
+    r.Run(":9002")
 }

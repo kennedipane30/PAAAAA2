@@ -57,28 +57,35 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
   Future<void> _fetchDetail() async {
     try {
-      // Pemanggilan ke Microservice Go (Port 9000)
-      var resp = await AuthService.getClassContent(widget.classId, widget.token);
-      
-      if (resp.statusCode == 200) {
-        var data = jsonDecode(resp.body);
-        if (mounted) {
-          setState(() {
-            // Mapping data dari JSON Go ke State Flutter
-            status = data['enroll_status'] ?? "active"; 
-            materi = data['materi'] ?? [];
-            tryouts = data['tryouts'] ?? [];
-            practiceQuestions = data['practice_questions'] ?? []; 
-            basePrice = int.tryParse(data['price'].toString()) ?? 0;
-            description = data['description'] ?? "Deskripsi program dimuat dari server.";
-            isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => isLoading = false);
+      // ✨ MODIFIKASI: Memanggil 9001 dan 9002 secara paralel
+      final results = await Future.wait([
+        AuthService.getClassContent(widget.classId, widget.token), // Port 9001
+        AuthService.getTryoutList(widget.classId, widget.token),    // Port 9002
+      ]);
+
+      final materiResp = results[0];
+      final tryoutResp = results[1];
+
+      if (mounted) {
+        setState(() {
+          if (materiResp.statusCode == 200) {
+            var dataMateri = jsonDecode(materiResp.body);
+            materi = dataMateri['data'] ?? [];
+            description = dataMateri['description'] ?? "Materi belajar tersedia.";
+          }
+
+          if (tryoutResp.statusCode == 200) {
+            var dataTryout = jsonDecode(tryoutResp.body);
+            tryouts = dataTryout['data'] ?? [];
+          }
+
+          status = "active"; 
+          basePrice = int.tryParse(widget.userData['student']?['class']?['price']?.toString() ?? "0") ?? 0;
+          isLoading = false;
+        });
       }
     } catch (e) {
-      debugPrint("Error Fetch Detail: $e");
+      debugPrint("Error Microservice: $e");
       if (mounted) setState(() => isLoading = false);
     }
   }
@@ -94,7 +101,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
   void _navigateToPractice() {
     if (practiceQuestions.isEmpty) {
-      _showWarningSnack("Latihan soal belum tersedia untuk kelas ini.");
+      _showWarningSnack("Latihan soal belum tersedia.");
       return;
     }
     Navigator.push(context, MaterialPageRoute(builder: (context) => PracticeSubjectListPage(
@@ -188,14 +195,8 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       expandedHeight: 280.0, pinned: true, backgroundColor: spektaRed,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CircleAvatar(
-          backgroundColor: Colors.black26,
-          child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Image.asset(_getLocalAsset(), fit: BoxFit.cover),
-      ),
+        child: CircleAvatar(backgroundColor: Colors.black26, child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)))),
+      flexibleSpace: FlexibleSpaceBar(background: Image.asset(_getLocalAsset(), fit: BoxFit.cover)),
     );
   }
 
@@ -209,21 +210,10 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     );
   }
 
-  Widget _buildFeatureButton({
-    required IconData icon, 
-    required String title, 
-    required String subtitle, 
-    required VoidCallback onTap, 
-    bool isLocked = true,
-    Color color = const Color(0xFF990000)
-  }) {
+  Widget _buildFeatureButton({required IconData icon, required String title, required String subtitle, required VoidCallback onTap, bool isLocked = true, Color color = const Color(0xFF990000)}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -233,24 +223,9 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isLocked ? Colors.grey[100] : color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(isLocked ? Icons.lock_outline_rounded : icon, color: isLocked ? Colors.grey : color),
-                ),
+                Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: isLocked ? Colors.grey[100] : color.withOpacity(0.1), borderRadius: BorderRadius.circular(15)), child: Icon(isLocked ? Icons.lock_outline_rounded : icon, color: isLocked ? Colors.grey : color)),
                 const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : Colors.black)),
-                      Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                    ],
-                  ),
-                ),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : Colors.black)), Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500]))])),
                 if (!isLocked) const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
               ],
             ),
@@ -264,18 +239,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(child: Text(currency.format(basePrice), style: TextStyle(color: spektaRed, fontSize: 20, fontWeight: FontWeight.bold))),
-            ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentConfirmationPage(classId: widget.classId, className: widget.className, basePrice: basePrice, token: widget.token, userData: widget.userData))),
-              style: ElevatedButton.styleFrom(backgroundColor: spektaRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text("DAFTAR SEKARANG", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            )
-          ],
-        ),
-      ),
-    );
+      child: SafeArea(child: Row(children: [Expanded(child: Text(currency.format(basePrice), style: TextStyle(color: spektaRed, fontSize: 20, fontWeight: FontWeight.bold))), ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentConfirmationPage(classId: widget.classId, className: widget.className, basePrice: basePrice, token: widget.token, userData: widget.userData))), style: ElevatedButton.styleFrom(backgroundColor: spektaRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text("DAFTAR SEKARANG", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))])));
   }
 }

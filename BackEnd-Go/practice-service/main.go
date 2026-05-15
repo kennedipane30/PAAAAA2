@@ -1,4 +1,4 @@
-// materi-service/main.go
+// practice-service/main.go
 package main
 import (
     "github.com/gin-gonic/gin"
@@ -7,14 +7,14 @@ import (
 
 func main() {
     godotenv.Load()
-    InitDB() // Fungsi koneksi ke specta_materi_db
+    InitDB() // Fungsi koneksi ke specta_practice_db
 
     r := gin.Default()
     r.Use(CORSMiddleware())
     
     api := r.Group("/api") {
-        // Flutter: getClassContent()
-        api.POST("/class/content", GetClassContent) 
+        // Flutter: getPracticeData()
+        api.POST("/practice/questions", GetPracticeByClass) 
     }
-    r.Run(":9001")
+    r.Run(":9003")
 }
