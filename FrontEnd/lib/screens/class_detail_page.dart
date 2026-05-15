@@ -6,7 +6,7 @@ import '../services/auth_service.dart';
 import 'payment_confirmation_page.dart';
 import 'subject_list_page.dart'; 
 import 'practice_subject_list_page.dart'; 
-import 'tryout_detail_page.dart'; // ✨ Import halaman detail tryout
+import 'tryout_detail_page.dart';
 
 class ClassDetailPage extends StatefulWidget {
   final int classId;
@@ -44,7 +44,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     _fetchDetail();
   }
 
-  // --- FUNGSI MAPPING GAMBAR LOKAL ---
   String _getLocalAsset() {
     int cid = int.tryParse(widget.classId.toString()) ?? 0;
     switch (cid) {
@@ -58,27 +57,31 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
   Future<void> _fetchDetail() async {
     try {
+      // Pemanggilan ke Microservice Go (Port 9000)
       var resp = await AuthService.getClassContent(widget.classId, widget.token);
+      
       if (resp.statusCode == 200) {
         var data = jsonDecode(resp.body);
         if (mounted) {
           setState(() {
-            status = data['enroll_status'] ?? "none";
+            // Mapping data dari JSON Go ke State Flutter
+            status = data['enroll_status'] ?? "active"; 
             materi = data['materi'] ?? [];
             tryouts = data['tryouts'] ?? [];
             practiceQuestions = data['practice_questions'] ?? []; 
             basePrice = int.tryParse(data['price'].toString()) ?? 0;
-            description = data['description'] ?? "Deskripsi program belum tersedia.";
+            description = data['description'] ?? "Deskripsi program dimuat dari server.";
             isLoading = false;
           });
         }
+      } else {
+        if (mounted) setState(() => isLoading = false);
       }
     } catch (e) {
+      debugPrint("Error Fetch Detail: $e");
       if (mounted) setState(() => isLoading = false);
     }
   }
-
-  // --- LOGIKA NAVIGASI FITUR ---
 
   void _navigateToMaterials() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => SubjectListPage(
@@ -104,7 +107,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     if (tryouts.isEmpty) {
       _showWarningSnack("Tryout belum tersedia.");
     } else {
-       // ✨ NAVIGASI KE DETAIL TRYOUT (Mengambil paket pertama)
        Navigator.push(context, MaterialPageRoute(builder: (context) => TryoutDetailPage(
          tryoutData: tryouts[0], 
          token: widget.token
@@ -144,12 +146,9 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                         const Text("Tentang Kelas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(description, style: TextStyle(fontSize: 15, color: Colors.grey[700], height: 1.5)),
-                        
                         const SizedBox(height: 30),
                         const Text("Kurikulum & Fitur Belajar", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 15),
-                        
-                        // ✨ LIST FITUR MENJADI TOMBOL
                         _buildFeatureButton(
                           icon: Icons.menu_book_rounded,
                           title: "Materi Video & PDF",
@@ -157,7 +156,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                           onTap: _navigateToMaterials,
                           isLocked: !isActive,
                         ),
-                        
                         _buildFeatureButton(
                           icon: Icons.quiz_rounded,
                           title: "Latihan Soal Mingguan",
@@ -166,7 +164,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                           isLocked: !isActive,
                           color: Colors.blue,
                         ),
-
                         _buildFeatureButton(
                           icon: Icons.assignment_rounded,
                           title: "Simulasi Tryout",
@@ -175,7 +172,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                           isLocked: !isActive,
                           color: Colors.orange,
                         ),
-                        
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -183,7 +179,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 ),
               ],
             ),
-      // ✨ Tombol bawah hanya tampil untuk pendaftaran (Bukan untuk yang sudah aktif)
       bottomNavigationBar: (isActive || isAnotherClassActive) ? null : _buildPremiumBottomBar(),
     );
   }

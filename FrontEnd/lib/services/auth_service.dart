@@ -2,11 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  // Gunakan 10.0.2.2 agar Emulator Android bisa menjangkau Localhost Laptop
+  // Laravel Backend (Auth, Payment, User Profile)
   static const String baseUrl = 'http://10.0.2.2:8000/api';
+  
+  // ✨ MODIFIKASI: Go Microservice (Materials & Tryouts)
+  static const String goBaseUrl = 'http://10.0.2.2:9000/api';
 
   // ============================
-  // 🔐 1. AUTHENTICATION
+  // 🔐 1. AUTHENTICATION (Laravel)
   // ============================
 
   static Future<http.Response> register(Map<String, dynamic> data) async {
@@ -52,7 +55,7 @@ class AuthService {
   }
 
   // ============================
-  // 👤 2. USER PROFILE
+  // 👤 2. USER PROFILE (Laravel)
   // ============================
 
   static Future<Map<String, dynamic>?> getUserProfile(String token) async {
@@ -79,17 +82,17 @@ class AuthService {
   }
 
   // ============================
-  // 📚 3. CLASS & MATERIALS
+  // 📚 3. CLASS & MATERIALS (Microservice Go)
   // ============================
 
+  // ✨ MODIFIKASI: Diarahkan ke Go (GET materials/:id)
   static Future<http.Response> getClassContent(int classId, String token) async {
-    return await http.post(
-      Uri.parse('$baseUrl/class/content'),
+    return await http.get(
+      Uri.parse('$goBaseUrl/materials/$classId'),
       headers: {
         'Accept': 'application/json', 
         'Authorization': 'Bearer $token'
       },
-      body: {'class_id': classId.toString()},
     );
   }
 
@@ -115,7 +118,7 @@ class AuthService {
   }
 
   // ============================
-  // 🏷️ 4. PROMO & ANNOUNCEMENTS
+  // 🏷️ 4. PROMO & ANNOUNCEMENTS (Laravel)
   // ============================
 
   static Future<http.Response> getActivePromos() async {
@@ -168,7 +171,7 @@ class AuthService {
   }
 
   // ============================
-  // 💳 5. PAYMENT & REPORTS
+  // 💳 5. PAYMENT & REPORTS (Laravel)
   // ============================
 
   static Future<http.Response> getSnapToken({
@@ -204,7 +207,7 @@ class AuthService {
   }
 
   // ============================
-  // 📝 6. TRYOUT & TUTOR
+  // 📝 6. TRYOUT & TUTOR (Microservice Go)
   // ============================
 
   static Future<http.Response> getSiswaSchedule(String token) async {
@@ -217,18 +220,18 @@ class AuthService {
     );
   }
 
-  // ✨ MODIFIKASI: Ambil Soal Tryout (Pastikan Body & Header Sinkron)
+  // ✨ MODIFIKASI: Diarahkan ke Go (GET tryouts/:id/questions)
   static Future<http.Response> getQuestions(int tryoutId, String token) async {
-    return await http.post(
-      Uri.parse('$baseUrl/tryout/questions'),
+    return await http.get(
+      Uri.parse('$goBaseUrl/tryouts/$tryoutId/questions'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token'
       },
-      body: {'tryout_id': tryoutId.toString()}, // Key harus sinkron dengan Laravel
     );
   }
 
+  // ✨ MODIFIKASI: Diarahkan ke Go (POST tryouts/submit)
   static Future<http.Response> submitTryout({
     required int tryoutId,
     required Map<int, String> answers,
@@ -236,17 +239,20 @@ class AuthService {
   }) async {
     Map<String, String> stringAnswers = answers.map((key, value) => MapEntry(key.toString(), value));
     return await http.post(
-      Uri.parse('$baseUrl/tryout/submit'),
+      Uri.parse('$goBaseUrl/tryouts/submit'), // Diubah ke goBaseUrl
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token'
       },
-      body: jsonEncode({'tryout_id': tryoutId, 'answers': stringAnswers}),
+      body: jsonEncode({
+        'tryout_id': tryoutId, 
+        'answers': stringAnswers
+      }),
     );
   }
 
-  // ✨ MODIFIKASI: DEDICATED TUTOR (Sesuai Rute API Baru)
+  // --- TUTOR DATA (Laravel) ---
   static Future<http.Response> getTutorData(String token) async {
     return await http.get(
       Uri.parse('$baseUrl/tutor/form-data'),
@@ -270,7 +276,7 @@ class AuthService {
   }
 
   // ============================
-  // 🔑 7. FORGOT PASSWORD
+  // 🔑 7. FORGOT PASSWORD (Laravel)
   // ============================
 
   static Future<http.Response> forgotPassword(String email) async {
