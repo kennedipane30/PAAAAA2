@@ -7,22 +7,44 @@ use App\Models\TryoutSubmission;
 use App\Models\ClassModel;
 use App\Models\Question;
 use App\Models\Tryout;
+use App\Models\User; // ✨ Pastikan import model User
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log; // Tambahkan Log
+use Illuminate\Support\Facades\Log;
 
 class AdminTryoutController extends Controller
 {
     public function index()
     {
-        $classes = ClassModel::all();
-        $submissions = TryoutSubmission::with(['user', 'classModel'])->latest()->get();
+        $classes = ClassModel::all(); // Diambil dari DB Utama
 
+        // 1. Ambil submissions dari DB Tryout (Tanpa 'with' karena beda DB)
+        $submissions = TryoutSubmission::latest()->get();
+
+        // 2. ✨ MANUAL HYDRATION (Menggabungkan data antar Database)
+        $userIds = $submissions->pluck('user_id')->unique();
+        $classIds = $submissions->pluck('class_id')->unique();
+
+        // Ambil User dan Class dari Database Utama
+        $users = User::whereIn('usersID', $userIds)->get()->keyBy('usersID');
+        $allClasses = ClassModel::whereIn('class_id', $classIds)->get()->keyBy('class_id');
+
+        // Pasangkan secara manual ke dalam collection
+        foreach ($submissions as $sub) {
+            $sub->setRelation('user', $users->get($sub->user_id));
+            $sub->setRelation('classModel', $allClasses->get($sub->class_id));
+        }
+
+        // 3. Ambil statistik soal aktif
         $activeTryouts = Question::select('class_id', DB::raw('count(*) as total'))
                         ->groupBy('class_id')
-                        ->with('classModel')
                         ->get();
+
+        // Pasangkan data kelas ke statistik
+        foreach ($activeTryouts as $at) {
+            $at->setRelation('classModel', $allClasses->get($at->class_id));
+        }
 
         return view('admin.tryout.index', compact('submissions', 'classes', 'activeTryouts'));
     }
@@ -62,7 +84,7 @@ class AdminTryoutController extends Controller
         $class = ClassModel::find($request->class_id);
         $file = $request->file('file_csv');
         $handle = fopen($file->getRealPath(), "r");
-        fgetcsv($handle, 2000, ",");
+        fgetcsv($handle, 2000, ","); // Skip header
 
         DB::beginTransaction();
         try {
@@ -97,15 +119,20 @@ class AdminTryoutController extends Controller
                     'explanation'    => $row[12] ?? '-',
                 ]);
 
+                // ✨ SESUAIKAN: Format array untuk Go Tryout Service
                 $questionsForGo[] = [
                     'tryout_id'      => (int)$tryout->tryout_id,
                     'class_id'       => (int)$request->class_id,
                     'question'       => $row[1] ?? '-',
                     'question_image' => $row[2] ?: "",
                     'option_a'       => $row[3] ?? '-',
-                    'option_b'       => $row[4] ?? '-',
-                    'option_c'       => $row[5] ?? '-',
-                    'option_d'       => $row[6] ?? '-',
+                    'option_a_image' => $row[4] ?: "",
+                    'option_b'       => $row[5] ?? '-',
+                    'option_b_image' => $row[6] ?: "",
+                    'option_c'       => $row[7] ?? '-',
+                    'option_c_image' => $row[8] ?: "",
+                    'option_d'       => $row[9] ?? '-',
+                    'option_d_image' => $row[10] ?: "",
                     'correct_answer' => $row[11] ?? 'A',
                     'explanation'    => $row[12] ?? '-',
                 ];
@@ -114,9 +141,9 @@ class AdminTryoutController extends Controller
             fclose($handle);
             DB::commit();
 
-            // ✨ MODIFIKASI: Kirim ke Port 9002 (Tryout Service)
+            // ✨ SYNC KE MICROSERVICE GO
             try {
-                $response = Http::post(env('GO_TRYOUT_URL') . '/tryouts/sync', [
+                $response = Http::post(env('GO_TRYOUT_URL') . '/api/tryouts/sync', [
                     'tryout' => [
                         'tryout_id' => (int)$tryout->tryout_id,
                         'class_id'  => (int)$request->class_id,
@@ -127,10 +154,10 @@ class AdminTryoutController extends Controller
                 ]);
 
                 if (!$response->successful()) {
-                    Log::error("Tryout Service (9002) gagal merespon: " . $response->body());
+                    Log::error("Tryout Service Gagal: " . $response->body());
                 }
             } catch (\Exception $e) {
-                Log::error("Koneksi ke Tryout Service (9002) terputus.");
+                Log::error("Koneksi ke Tryout Service terputus.");
             }
 
             return back()->with('success', "Berhasil! $count soal tersinkron ke Service Tryout.");
