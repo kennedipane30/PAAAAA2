@@ -17,6 +17,29 @@ func NewPracticeHandler(uc usecase.PracticeUsecase) *PracticeHandler {
 	return &PracticeHandler{uc}
 }
 
+// ✨ Tambahkan Handler GetPractice untuk mengambil data
+func (h *PracticeHandler) GetPractice(c *gin.Context) {
+	classIDStr := c.Query("class_id")
+	if classIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "class_id is required"})
+		return
+	}
+
+	classID, _ := strconv.Atoi(classIDStr)
+	
+	// Kita ambil semua data kelas ini agar Flutter bisa melakukan grouping subject
+	data, err := h.uc.GetListByClass(uint(classID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "data": []interface{}{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   data,
+	})
+}
+
 func (h *PracticeHandler) Sync(c *gin.Context) {
 	var req []models.PracticeQuestion
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -7,6 +7,7 @@ import (
 
 type PracticeRepository interface {
 	BulkInsert(questions []models.PracticeQuestion) error
+	GetByClass(classID uint) ([]models.PracticeQuestion, error) // ✨ Tambahkan ini
 	GetByWeek(classID uint, subject string, week int) ([]models.PracticeQuestion, error)
 	DeleteByWeek(classID uint, subject string, week int) error
 }
@@ -20,8 +21,14 @@ func NewPracticeRepository(db *gorm.DB) PracticeRepository {
 }
 
 func (r *practiceRepo) BulkInsert(questions []models.PracticeQuestion) error {
-	// GORM Clause 'OnConflict' memastikan jika ID sudah ada, maka akan diupdate (Upsert)
 	return r.db.Save(&questions).Error
+}
+
+// ✨ Tambahkan implementasi GetByClass
+func (r *practiceRepo) GetByClass(classID uint) ([]models.PracticeQuestion, error) {
+	var results []models.PracticeQuestion
+	err := r.db.Where("class_id = ?", classID).Find(&results).Error
+	return results, err
 }
 
 func (r *practiceRepo) GetByWeek(classID uint, subject string, week int) ([]models.PracticeQuestion, error) {

@@ -57,35 +57,30 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
   Future<void> _fetchDetail() async {
     try {
-      // ✨ MODIFIKASI: Memanggil 9001 dan 9002 secara paralel
-      final results = await Future.wait([
-        AuthService.getClassContent(widget.classId, widget.token), // Port 9001
-        AuthService.getTryoutList(widget.classId, widget.token),    // Port 9002
-      ]);
+      // ✨ MEMANGGIL GATEWAY LARAVEL (PORT 8000)
+      final response = await AuthService.getClassContent(widget.classId, widget.token);
 
-      final materiResp = results[0];
-      final tryoutResp = results[1];
-
-      if (mounted) {
-        setState(() {
-          if (materiResp.statusCode == 200) {
-            var dataMateri = jsonDecode(materiResp.body);
-            materi = dataMateri['data'] ?? [];
-            description = dataMateri['description'] ?? "Materi belajar tersedia.";
-          }
-
-          if (tryoutResp.statusCode == 200) {
-            var dataTryout = jsonDecode(tryoutResp.body);
-            tryouts = dataTryout['data'] ?? [];
-          }
-
-          status = "active"; 
-          basePrice = int.tryParse(widget.userData['student']?['class']?['price']?.toString() ?? "0") ?? 0;
-          isLoading = false;
-        });
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            // ✨ SINKRONISASI KEY SESUAI AUTHCONTROLLER LARAVEL
+            status = decoded['enroll_status'] ?? "none";
+            materi = decoded['materi'] ?? [];
+            tryouts = decoded['tryouts'] ?? [];
+            practiceQuestions = decoded['practice_questions'] ?? [];
+            description = decoded['description'] ?? "Materi belajar tersedia untuk kelas ini.";
+            
+            // Mengambil harga dari database utama (via gateway)
+            basePrice = int.tryParse(decoded['price']?.toString() ?? "0") ?? 0;
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => isLoading = false);
       }
     } catch (e) {
-      debugPrint("Error Microservice: $e");
+      debugPrint("Error Fetching Content: $e");
       if (mounted) setState(() => isLoading = false);
     }
   }
@@ -114,6 +109,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     if (tryouts.isEmpty) {
       _showWarningSnack("Tryout belum tersedia.");
     } else {
+       // Mengambil paket tryout pertama jika ada
        Navigator.push(context, MaterialPageRoute(builder: (context) => TryoutDetailPage(
          tryoutData: tryouts[0], 
          token: widget.token
@@ -166,7 +162,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                         _buildFeatureButton(
                           icon: Icons.quiz_rounded,
                           title: "Latihan Soal Mingguan",
-                          subtitle: "Asah kemampuanmu setiap minggu",
+                          subtitle: practiceQuestions.isEmpty ? "Belum tersedia" : "Asah kemampuanmu setiap minggu",
                           onTap: _navigateToPractice,
                           isLocked: !isActive,
                           color: Colors.blue,

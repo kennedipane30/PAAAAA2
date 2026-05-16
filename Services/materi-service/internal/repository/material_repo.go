@@ -7,6 +7,7 @@ import (
 
 type MaterialRepository interface {
 	SyncMaterial(materi models.Material) error
+	GetByClass(classID uint) ([]models.Material, error) // ✨ Tambahkan ini
 	GetByClassAndSubject(classID uint, subjectName string) ([]models.Material, error)
 }
 
@@ -19,8 +20,13 @@ func NewMaterialRepository(db *gorm.DB) MaterialRepository {
 }
 
 func (r *materialRepo) SyncMaterial(materi models.Material) error {
-	// Upsert: Simpan jika tidak ada, Update jika ID sudah ada
 	return r.db.Save(&materi).Error
+}
+
+func (r *materialRepo) GetByClass(classID uint) ([]models.Material, error) {
+	var materials []models.Material
+	err := r.db.Where("class_id = ?", classID).Order("week asc").Find(&materials).Error
+	return materials, err
 }
 
 func (r *materialRepo) GetByClassAndSubject(classID uint, subjectName string) ([]models.Material, error) {

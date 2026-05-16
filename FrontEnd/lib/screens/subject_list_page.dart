@@ -19,7 +19,12 @@ class SubjectListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color spektaRed = const Color(0xFF990000);
     // Mengambil daftar subjek unik dari data materi yang dikirim Go
-    final subjects = materi.map((e) => e['material_name']).toSet().toList();
+ // Ubah bagian ini:
+  final subjects = materi
+      .where((e) => e['material_name'] != null || e['MaterialName'] != null) // Filter data rusak
+      .map((e) => (e['material_name'] ?? e['MaterialName'] ?? 'Tanpa Nama').toString())
+      .toSet()
+      .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),

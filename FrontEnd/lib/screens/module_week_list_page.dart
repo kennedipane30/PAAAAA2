@@ -32,8 +32,7 @@ class ModuleWeekListPage extends StatelessWidget {
           int weekNumber = index + 1;
           var materialData = allMaterials.firstWhere(
             (m) => (m['week'].toString() == weekNumber.toString()) && 
-                   (m['material_name'].toString().trim().toLowerCase() == subjectName.trim().toLowerCase()) &&
-                   (m['file_path'] != null),
+                  (m['material_name']?.toString().toLowerCase().trim() == subjectName.toLowerCase().trim()),
             orElse: () => null,
           );
 

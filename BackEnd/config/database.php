@@ -48,12 +48,13 @@ return [
             'driver' => 'pgsql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE_MATERI', 'specta_materi_db'),
+            'database' => env('DB_DATABASE_MATERI', 'specta_materi'), // ✨ Sesuai nama DB Microservice
             'username' => env('DB_USERNAME', 'postgres'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
         // 3. KONEKSI MICROSERVICE LATIHAN SOAL (Go Port 9003)
@@ -61,12 +62,13 @@ return [
             'driver' => 'pgsql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE_PRACTICE', 'specta_practice_db'),
+            'database' => env('DB_DATABASE_PRACTICE', 'specta_practice'), // ✨ Sesuai nama DB Microservice
             'username' => env('DB_USERNAME', 'postgres'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
         // 4. KONEKSI MICROSERVICE TRYOUT (Go Port 9002)
@@ -74,12 +76,13 @@ return [
             'driver' => 'pgsql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE_TRYOUT', 'specta_tryout_db'),
+            'database' => env('DB_DATABASE_TRYOUT', 'specta_tryout'), // ✨ Sesuai nama DB Microservice
             'username' => env('DB_USERNAME', 'postgres'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
     ],

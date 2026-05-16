@@ -10,6 +10,8 @@ class TryoutResult extends Model
     protected $connection = 'pgsql_tryout';
 
     protected $table = 'tryout_results';
+    protected $primaryKey = 'tryout_result_id';
+
 
     protected $fillable = [
         'user_id',
