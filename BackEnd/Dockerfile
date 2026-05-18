@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y \
 # Hapus cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instal ekstensi PHP yang dibutuhkan Laravel (Sudah mendukung PostgreSQL)
+# Instal ekstensi PHP yang dibutuhkan Laravel
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
-# Ambil Composer terbaru
-COPY --from=composer:latest /usr/local/bin/composer /usr/local/bin/composer
+# Ambil Composer terbaru (DIPERBAIKI DISINI)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Tentukan working directory
 WORKDIR /var/www
