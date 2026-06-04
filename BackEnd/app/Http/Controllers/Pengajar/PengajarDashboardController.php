@@ -9,6 +9,7 @@ use App\Models\PracticeQuestion;
 use App\Models\Schedule;
 use App\Models\TeacherAssignment;
 use App\Models\TryoutSubmission;
+use App\Models\ClassModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -21,13 +22,16 @@ class PengajarDashboardController extends Controller
         $teacherId = Auth::user()->usersID;
         $today = Carbon::today();
 
-        $assignments = TeacherAssignment::with('classModel')
+        // MODIFIKASI: Tambahkan eager loading 'subject' agar totalMapel bisa dihitung
+        $assignments = TeacherAssignment::with(['classModel', 'subject'])
             ->where('user_id', $teacherId)
             ->latest()
             ->get();
 
         $totalKelas = $assignments->pluck('class_id')->unique()->count();
-        $totalMapel = $assignments->pluck('subject_name')->unique()->count();
+
+        // MODIFIKASI: Ambil dari relasi subject (tabel materials)
+        $totalMapel = $assignments->pluck('subject.material_name')->unique()->count();
 
         $jadwalMendatang = Schedule::where('teacher_id', $teacherId)
             ->whereDate('date', '>=', $today->toDateString())
@@ -58,27 +62,24 @@ class PengajarDashboardController extends Controller
         $materiTerbaru = collect();
         $totalMateri = 0;
 
-        if (Schema::hasTable('materials') && Schema::hasColumn('materials', 'user_id')) {
+        if (Schema::connection('pgsql_materi')->hasTable('materials')) {
             $totalMateri = Material::where('user_id', $teacherId)->count();
 
             $materiTerbaru = Material::where('user_id', $teacherId)
-                ->with('class')
                 ->latest()
                 ->take(5)
                 ->get();
+
+            $classIds = $materiTerbaru->pluck('class_id')->unique();
+            $classes = ClassModel::whereIn('class_id', $classIds)->get()->keyBy('class_id');
+
+            foreach ($materiTerbaru as $materi) {
+                $materi->setRelation('class', $classes->get($materi->class_id));
+            }
         }
 
-        $totalLatihan = $this->safeTeacherCount(
-            PracticeQuestion::class,
-            'practice_questions',
-            $teacherId
-        );
-
-        $totalTryout = $this->safeTeacherCount(
-            TryoutSubmission::class,
-            'tryout_submissions',
-            $teacherId
-        );
+        $totalLatihan = $this->safeTeacherCount(PracticeQuestion::class, 'practice_questions', 'pgsql_practice', $teacherId);
+        $totalTryout = $this->safeTeacherCount(TryoutSubmission::class, 'tryout_submissions', 'pgsql_tryout', $teacherId);
 
         $aktivitasTerbaru = collect();
 
@@ -100,7 +101,8 @@ class PengajarDashboardController extends Controller
                 'title' => $jadwal->title,
                 'subtitle' => ($jadwal->class->program_name ?? 'Program') . ' • ' . Carbon::parse($jadwal->date)->translatedFormat('d M Y'),
                 'time' => $jadwal->created_at,
-                'sort_time' => Carbon::parse($jadwal->date . ' ' . $jadwal->start_time)->timestamp,
+                // MODIFIKASI: Gunakan toDateString() untuk mencegah double time specification
+                'sort_time' => Carbon::parse(Carbon::parse($jadwal->date)->toDateString() . ' ' . $jadwal->start_time)->timestamp,
             ]);
         }
 
@@ -111,7 +113,8 @@ class PengajarDashboardController extends Controller
                 'title' => $tutor->student->user->name ?? 'Siswa',
                 'subtitle' => 'Sesi dedicated tutor terkonfirmasi',
                 'time' => $tutor->created_at,
-                'sort_time' => Carbon::parse($tutor->date . ' ' . $tutor->time)->timestamp,
+                // MODIFIKASI: Gunakan toDateString() untuk mencegah double time specification
+                'sort_time' => Carbon::parse(Carbon::parse($tutor->date)->toDateString() . ' ' . $tutor->time)->timestamp,
             ]);
         }
 
@@ -121,32 +124,22 @@ class PengajarDashboardController extends Controller
             ->values();
 
         return view('pengajar.dashboard', compact(
-            'assignments',
-            'totalKelas',
-            'totalMapel',
-            'totalMateri',
-            'totalLatihan',
-            'totalTryout',
-            'jadwalMendatang',
-            'jadwalHariIni',
-            'jadwalTutor',
-            'tutorHariIni',
-            'materiTerbaru',
-            'aktivitasTerbaru'
+            'assignments', 'totalKelas', 'totalMapel', 'totalMateri', 'totalLatihan', 'totalTryout',
+            'jadwalMendatang', 'jadwalHariIni', 'jadwalTutor', 'tutorHariIni', 'materiTerbaru', 'aktivitasTerbaru'
         ));
     }
 
-    private function safeTeacherCount(string $modelClass, string $tableName, int $teacherId): int
+    private function safeTeacherCount(string $modelClass, string $tableName, string $connection, int $teacherId): int
     {
-        if (!class_exists($modelClass) || !Schema::hasTable($tableName)) {
+        if (!class_exists($modelClass) || !Schema::connection($connection)->hasTable($tableName)) {
             return 0;
         }
 
-        if (Schema::hasColumn($tableName, 'user_id')) {
+        if (Schema::connection($connection)->hasColumn($tableName, 'user_id')) {
             return $modelClass::where('user_id', $teacherId)->count();
         }
 
-        if (Schema::hasColumn($tableName, 'teacher_id')) {
+        if (Schema::connection($connection)->hasColumn($tableName, 'teacher_id')) {
             return $modelClass::where('teacher_id', $teacherId)->count();
         }
 

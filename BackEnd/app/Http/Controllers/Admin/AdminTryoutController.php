@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\TryoutSubmission;
 use App\Models\ClassModel;
 use App\Models\Question;
 use App\Models\Tryout;
-use App\Models\User; // ✨ Pastikan import model User
+use App\Models\TryoutResult;
+use App\Models\TryoutDraft; 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -15,162 +16,202 @@ use Illuminate\Support\Facades\Log;
 
 class AdminTryoutController extends Controller
 {
+    /**
+     * 1. DASHBOARD MONITORING TRYOUT
+     */
     public function index()
     {
-        $classes = ClassModel::all(); // Diambil dari DB Utama
-
-        // 1. Ambil submissions dari DB Tryout (Tanpa 'with' karena beda DB)
-        $submissions = TryoutSubmission::latest()->get();
-
-        // 2. ✨ MANUAL HYDRATION (Menggabungkan data antar Database)
-        $userIds = $submissions->pluck('user_id')->unique();
-        $classIds = $submissions->pluck('class_id')->unique();
-
-        // Ambil User dan Class dari Database Utama
-        $users = User::whereIn('usersID', $userIds)->get()->keyBy('usersID');
-        $allClasses = ClassModel::whereIn('class_id', $classIds)->get()->keyBy('class_id');
-
-        // Pasangkan secara manual ke dalam collection
-        foreach ($submissions as $sub) {
-            $sub->setRelation('user', $users->get($sub->user_id));
-            $sub->setRelation('classModel', $allClasses->get($sub->class_id));
-        }
-
-        // 3. Ambil statistik soal aktif
-        $activeTryouts = Question::select('class_id', DB::raw('count(*) as total'))
+        $classes = ClassModel::all();
+        // Menghitung jumlah draf soal per kelas
+        $draftStatus = TryoutDraft::select('class_id', DB::raw('count(*) as total'))
                         ->groupBy('class_id')
-                        ->get();
+                        ->get()
+                        ->keyBy('class_id');
 
-        // Pasangkan data kelas ke statistik
-        foreach ($activeTryouts as $at) {
-            $at->setRelation('classModel', $allClasses->get($at->class_id));
-        }
+        $activePackages = Tryout::with('classModel')->withCount('questions')->latest()->get();
 
-        return view('admin.tryout.index', compact('submissions', 'classes', 'activeTryouts'));
+        return view('admin.tryout.index', compact('classes', 'draftStatus', 'activePackages'));
     }
 
-    public function exportCsv($class_id)
+    /**
+     * 2. REVIEW DRAF SOAL GURU (Melihat 15 soal gabungan sebelum publish)
+     */
+    public function reviewDrafts($class_id)
     {
-        $questions = TryoutSubmission::where('class_id', $class_id)->get();
+        $class = ClassModel::findOrFail($class_id);
+        // Mengambil semua draf dari berbagai mapel di kelas yang sama
+        $drafts = TryoutDraft::where('class_id', $class_id)
+                    ->orderBy('subject_name')
+                    ->orderBy('id')
+                    ->get();
+
+        return view('admin.tryout.review_drafts', compact('class', 'drafts'));
+    }
+
+    /**
+     * 3. DOWNLOAD DRAF (EXPORT CSV)
+     */
+    public function exportDraftCsv($class_id)
+    {
+        $drafts = TryoutDraft::where('class_id', $class_id)->get();
         $class = ClassModel::find($class_id);
-        $fileName = 'Master_Kurasi_' . str_replace(' ', '_', $class->program_name ?? 'Kelas') . '.csv';
+        if ($drafts->isEmpty()) return back()->with('error', 'Data draf kosong.');
 
+        $fileName = 'Draf_Soal_' . str_replace(' ', '_', $class->program_name) . '.csv';
         $headers = ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=$fileName"];
-        $columns = ['No', 'Pertanyaan', 'Gbr_Soal', 'Opsi A', 'Gbr_A', 'Opsi B', 'Gbr_B', 'Opsi C', 'Gbr_C', 'Opsi D', 'Gbr_D', 'Kunci', 'Pembahasan'];
 
-        $callback = function() use($questions, $columns) {
+        return response()->stream(function() use($drafts) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-            $no = 1;
-            foreach ($questions as $q) {
-                fputcsv($file, [
-                    $no++, $q->question, $q->question_image,
-                    $q->option_a, $q->option_a_image,
-                    $q->option_b, $q->option_b_image,
-                    $q->option_c, $q->option_c_image,
-                    $q->option_d, $q->option_d_image,
-                    $q->correct_answer, $q->explanation
-                ]);
+            fputcsv($file, ['Mapel', 'Pertanyaan', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Kunci', 'Pembahasan']);
+            foreach ($drafts as $d) {
+                fputcsv($file, [$d->subject_name, $d->question, $d->option_a, $d->option_b, $d->option_c, $d->option_d, $d->option_e, $d->correct_answer, $d->explanation]);
             }
             fclose($file);
-        };
-        return response()->stream($callback, 200, $headers);
+        }, 200, $headers);
     }
 
-    public function uploadMaster(Request $request)
+    /**
+     * 4. GABUNGKAN & PUBLISH KE MOBILE
+     * ✨ MODIFIKASI: Menangani 15 soal gabungan dan Fix Error SQL Value Too Long
+     */
+    public function publishToMobile(Request $request)
     {
-        $request->validate(['class_id' => 'required', 'file_csv' => 'required|mimes:csv,txt']);
+        $request->validate([
+            'class_id' => 'required', 
+            'title'    => 'required|string|max:255', 
+            'duration' => 'required|integer'
+        ]);
 
-        $class = ClassModel::find($request->class_id);
-        $file = $request->file('file_csv');
-        $handle = fopen($file->getRealPath(), "r");
-        fgetcsv($handle, 2000, ","); // Skip header
+        $classId = $request->class_id;
+        // Ambil SEMUA draf (misal 15 soal dari 3 mapel berbeda)
+        $drafts  = TryoutDraft::where('class_id', $classId)->get();
+        
+        if ($drafts->isEmpty()) {
+            return back()->with('error', 'Tidak ada draf soal untuk dipublish di kelas ini.');
+        }
 
         DB::beginTransaction();
         try {
-            $tryout = Tryout::updateOrCreate(
-                ['class_id' => $request->class_id],
-                [
-                    'title' => 'Tryout Akbar ' . $class->program_name,
-                    'duration' => 60,
-                    'is_active' => true
-                ]
-            );
+            // A. Buat Header Paket Tryout Resmi di Laravel
+            $tryout = Tryout::create([
+                'class_id'         => $classId,
+                'title'            => trim($request->title),
+                'duration_minutes' => (int)$request->duration, 
+                'status'           => 'published',
+                'is_active'        => true
+            ]);
 
             $questionsForGo = [];
-            $count = 0;
-            while (($row = fgetcsv($handle, 2000, ",")) !== FALSE) {
-                if (empty($row[1]) && empty($row[2])) continue;
+            
+            foreach ($drafts as $d) {
+                // ✨ FIX: Pastikan Kunci Jawaban hanya 1 karakter (A/B/C/D/E)
+                // Ini mencegah error "value too long for type character(1)"
+                $cleanKey = substr(trim(strtoupper($d->correct_answer)), 0, 1);
+                if (empty($cleanKey)) $cleanKey = 'A'; // Default jika kosong
 
-                $q = Question::create([
-                    'class_id'       => $request->class_id,
+                // B. Simpan ke database Laravel (Tabel Questions resmi untuk Mobile)
+                Question::create([
                     'tryout_id'      => $tryout->tryout_id,
-                    'question'       => $row[1] ?? '-',
-                    'question_image' => $row[2] ?: null,
-                    'option_a'       => $row[3] ?? '-',
-                    'option_a_image' => $row[4] ?: null,
-                    'option_b'       => $row[5] ?? '-',
-                    'option_b_image' => $row[6] ?: null,
-                    'option_c'       => $row[7] ?? '-',
-                    'option_c_image' => $row[8] ?: null,
-                    'option_d'       => $row[9] ?? '-',
-                    'option_d_image' => $row[10] ?: null,
-                    'correct_answer' => $row[11] ?? 'A',
-                    'explanation'    => $row[12] ?? '-',
+                    'class_id'       => $classId,
+                    'subject'        => $d->subject_name, // Menyimpan "Biology", "Mathematics", dll
+                    'question'       => $d->question,      // Teks pertanyaan asli
+                    'option_a'       => $d->option_a,
+                    'option_b'       => $d->option_b,
+                    'option_c'       => $d->option_c,
+                    'option_d'       => $d->option_d,
+                    'option_e'       => $d->option_e,
+                    'correct_answer' => $cleanKey, 
+                    'explanation'    => $d->explanation,
                 ]);
 
-                // ✨ SESUAIKAN: Format array untuk Go Tryout Service
+                // C. Siapkan data array untuk sinkronisasi ke Microservice Go (Port 9003)
                 $questionsForGo[] = [
                     'tryout_id'      => (int)$tryout->tryout_id,
-                    'class_id'       => (int)$request->class_id,
-                    'question'       => $row[1] ?? '-',
-                    'question_image' => $row[2] ?: "",
-                    'option_a'       => $row[3] ?? '-',
-                    'option_a_image' => $row[4] ?: "",
-                    'option_b'       => $row[5] ?? '-',
-                    'option_b_image' => $row[6] ?: "",
-                    'option_c'       => $row[7] ?? '-',
-                    'option_c_image' => $row[8] ?: "",
-                    'option_d'       => $row[9] ?? '-',
-                    'option_d_image' => $row[10] ?: "",
-                    'correct_answer' => $row[11] ?? 'A',
-                    'explanation'    => $row[12] ?? '-',
+                    'class_id'       => (int)$classId,
+                    'subject_name'   => $d->subject_name,
+                    'question'       => $d->question,
+                    'option_a'       => $d->option_a,
+                    'option_b'       => $d->option_b,
+                    'option_c'       => $d->option_c,
+                    'option_d'       => $d->option_d,
+                    'option_e'       => $d->option_e,
+                    'correct_answer' => $cleanKey,
+                    'explanation'    => $d->explanation,
                 ];
-                $count++;
             }
-            fclose($handle);
+
+            // D. Sinkronisasi ke GO Service (Port 9003)
+            $goUrl = env('GO_TRYOUT_URL', 'http://127.0.0.1:9003');
+            Http::timeout(20)->post($goUrl . '/api/tryouts/sync', [
+                'tryout' => [
+                    'tryout_id' => (int)$tryout->tryout_id,
+                    'class_id'  => (int)$classId,
+                    'title'     => $tryout->title,
+                    'duration'  => (int)$request->duration,
+                    'is_active' => true
+                ],
+                'questions' => $questionsForGo
+            ]);
+
+            // E. Hapus draf soal yang baru saja dipublish agar Review bersih kembali
+            TryoutDraft::where('class_id', $classId)->delete();
+
             DB::commit();
-
-            // ✨ SYNC KE MICROSERVICE GO
-            try {
-                $response = Http::post(env('GO_TRYOUT_URL') . '/api/tryouts/sync', [
-                    'tryout' => [
-                        'tryout_id' => (int)$tryout->tryout_id,
-                        'class_id'  => (int)$request->class_id,
-                        'title'     => $tryout->title,
-                        'duration'  => 60
-                    ],
-                    'questions' => $questionsForGo
-                ]);
-
-                if (!$response->successful()) {
-                    Log::error("Tryout Service Gagal: " . $response->body());
-                }
-            } catch (\Exception $e) {
-                Log::error("Koneksi ke Tryout Service terputus.");
-            }
-
-            return back()->with('success', "Berhasil! $count soal tersinkron ke Service Tryout.");
+            return redirect()->route('admin.tryout.index')->with('success', 'Berhasil mempublish paket ('.count($questionsForGo).' soal) ke aplikasi mobile!');
+            
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal: ' . $e->getMessage());
+            Log::error("Publish Error: " . $e->getMessage());
+            return back()->with('error', 'Gagal Publish: ' . $e->getMessage());
         }
     }
 
-    public function destroyPackage($class_id)
-    {
-        Tryout::where('class_id', $class_id)->delete();
-        Question::where('class_id', $class_id)->delete();
-        return back()->with('success', 'Paket Tryout berhasil dihapus.');
+    /**
+     * 5. REKAP NILAI SISWA
+     */
+    public function pilihKelas() {
+        $classes = ClassModel::all();
+        return view('admin.tryout.pilih_kelas', compact('classes'));
+    }
+
+    public function pilihTryout($class_id) {
+        $class = ClassModel::findOrFail($class_id);
+        $tryouts = Tryout::where('class_id', $class_id)->get();
+        return view('admin.tryout.pilih_paket', compact('class', 'tryouts'));
+    }
+
+    public function lihatNilai($tryout_id) {
+        $tryout = Tryout::where('tryout_id', $tryout_id)->first();
+        if (!$tryout) {
+            return redirect()->route('admin.scores.index')->with('error', 'Paket Tryout tidak ditemukan.');
+        }
+
+        $results = TryoutResult::where('tryout_id', $tryout_id)->latest()->get();
+        foreach ($results as $res) {
+            $res->user_data = User::where('usersID', $res->user_id)->first();
+        }
+
+        return view('admin.tryout.scores', compact('tryout', 'results'));
+    }
+
+    /**
+     * 6. HAPUS DATA
+     */
+    public function deleteDraft($id) {
+        TryoutDraft::destroy($id);
+        return back()->with('success', 'Draf berhasil dihapus.');
+    }
+
+    public function destroyPackage($tryout_id) {
+        DB::beginTransaction();
+        try {
+            Tryout::where('tryout_id', $tryout_id)->delete();
+            Question::where('tryout_id', $tryout_id)->delete();
+            DB::commit();
+            return back()->with('success', 'Paket telah dihapus dari sistem.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus paket.');
+        }
     }
 }

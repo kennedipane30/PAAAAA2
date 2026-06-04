@@ -17,8 +17,8 @@ func NewPracticeHandler(uc usecase.PracticeUsecase) *PracticeHandler {
 	return &PracticeHandler{uc}
 }
 
-// ✨ DIUBAH: Nama method disesuaikan menjadi GetPractices agar sesuai dengan main.go
-func (h *PracticeHandler) GetPractices(c *gin.Context) {
+// ✨ Tambahkan Handler GetPractice untuk mengambil data
+func (h *PracticeHandler) GetPractice(c *gin.Context) {
 	classIDStr := c.Query("class_id")
 	if classIDStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "class_id is required"})
@@ -27,7 +27,7 @@ func (h *PracticeHandler) GetPractices(c *gin.Context) {
 
 	classID, _ := strconv.Atoi(classIDStr)
 	
-	// Ambil semua data kelas ini agar Flutter bisa melakukan grouping subject
+	// Kita ambil semua data kelas ini agar Flutter bisa melakukan grouping subject
 	data, err := h.uc.GetListByClass(uint(classID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "data": []interface{}{}})

@@ -11,8 +11,11 @@ import 'fitur/support_center_page.dart';
 import 'fitur/question_sharing_page.dart';
 import 'fitur/dedicated_tutor_page.dart';
 import 'fitur/consultation_page.dart';
+import 'fitur/tryout_page.dart';
+import 'notification_page.dart'; // ✨ TAMBAHKAN IMPORT INI
 
 import 'class_detail_page.dart';
+import 'subject_list_page.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -43,9 +46,17 @@ class _HomePageState extends State<HomePage> {
   Map? currentData;
 
   List bannerData = [];
+  List tryoutData = [];
+  List scheduleData = [];
 
+  bool isLoadingTryout = false;
   bool isEnrolled = false;
   bool isLoadingBanner = false;
+  bool isLoadingSchedule = false;
+  
+  // ✨ NOTIFIKASI: State untuk angka notifikasi
+  int unreadNotifications = 0;
+  bool isLoadingNotifications = false;
 
   int activeBannerIndex = 0;
 
@@ -74,6 +85,9 @@ class _HomePageState extends State<HomePage> {
     await Future.wait([
       refreshUserData(),
       fetchBanners(),
+      fetchTryouts(),
+      fetchSchedules(),
+      fetchNotificationCount(),
     ]);
   }
 
@@ -94,18 +108,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Bagian fungsi fetchBanners yang diperbaiki:
-
   Future<void> fetchBanners() async {
     try {
       setState(() => isLoadingBanner = true);
 
-      // ✨ MODIFIKASI: Tambahkan header Authorization agar tidak ditolak Laravel
       final response = await http.get(
         Uri.parse('$baseUrl/api/banners'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer ${widget.token}', // Token sangat penting di sini
+          'Authorization': 'Bearer ${widget.token}',
         },
       );
 
@@ -115,7 +126,6 @@ class _HomePageState extends State<HomePage> {
         final decoded = jsonDecode(response.body);
 
         setState(() {
-          // Sesuaikan dengan struktur JSON dari Laravel Anda
           bannerData = decoded['data'] ?? decoded['banners'] ?? [];
           activeBannerIndex = 0;
         });
@@ -131,6 +141,114 @@ class _HomePageState extends State<HomePage> {
         setState(() => isLoadingBanner = false);
       }
     }
+  }
+
+  Future<void> fetchTryouts() async {
+    try {
+      setState(() => isLoadingTryout = true);
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/tryouts'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        setState(() {
+          tryoutData = decoded['data'] ?? decoded['tryouts'] ?? [];
+        });
+      } else {
+        debugPrint('TRYOUT API ERROR: Status ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('TRYOUT ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingTryout = false);
+      }
+    }
+  }
+
+  Future<void> fetchSchedules() async {
+    try {
+      setState(() => isLoadingSchedule = true);
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/schedules/today'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        setState(() {
+          scheduleData = decoded['data'] ?? decoded['schedules'] ?? [];
+        });
+      } else {
+        debugPrint('SCHEDULE API ERROR: Status ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('SCHEDULE ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingSchedule = false);
+      }
+    }
+  }
+
+  // ✨ NOTIFIKASI: Fungsi untuk mengambil jumlah notifikasi dari API
+  Future<void> fetchNotificationCount() async {
+    try {
+      setState(() => isLoadingNotifications = true);
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/notifications/unread-count'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        setState(() {
+          unreadNotifications = decoded['unread_count'] ?? 0;
+        });
+      } else {
+        debugPrint('NOTIFICATION API ERROR: Status ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('NOTIFICATION COUNT ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingNotifications = false);
+      }
+    }
+  }
+
+  // ✨ NOTIFIKASI: Fungsi untuk handle klik notifikasi (DIPERBAIKI)
+  void _handleNotificationClick() {
+    // Navigasi ke halaman daftar notifikasi
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationPage(
+          token: widget.token,
+        ),
+      ),
+    ).then((_) {
+      // Refresh jumlah notifikasi saat kembali dari halaman notifikasi
+      fetchNotificationCount();
+    });
   }
 
   void _startBannerAutoSlide() {
@@ -220,6 +338,68 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
+  // --- Bagian fungsi _handleLearningMaterials di HomePage ---
+
+  Future<void> _handleLearningMaterials() async {
+    final student = currentData?['student'];
+
+    if (student == null || student['class_id'] == null) {
+      _showWarning('Kamu belum terdaftar di kelas mana pun. Daftar kelas dulu ya!');
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: primaryRed),
+      ),
+    );
+
+    try {
+      final classId = int.parse(student['class_id'].toString());
+      final response = await AuthService.getClassContent(classId, widget.token);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        
+        // ✨ Ambil harga dari response gateway
+        final int classPrice = int.tryParse(decoded['price']?.toString() ?? '0') ?? 0;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ClassDetailPage(
+              classId: classId,
+              className: decoded['program_name'] ?? "Materi Saya",
+              price: classPrice,
+              token: widget.token,
+              userData: currentData!,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      _showWarning("Gagal memuat materi kelas. Pastikan koneksi stabil.");
+    }
+  }
+
+  void _handleTryout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (c) => TryoutPage(
+          token: widget.token,
+          userData: currentData ?? widget.userData,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -244,16 +424,41 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 20),
+
+                    _sectionTitle(
+                      title: 'Jadwal Hari Ini',
+                      action: 'Lihat Semua',
+                      onTap: null,
+                    ),
+
                     const SizedBox(height: 12),
+
+                    _buildScheduleWidget(),
+
+                    const SizedBox(height: 28),
 
                     _sectionTitle(
                       title: 'Lanjutkan Belajar',
                       action: 'Lihat Semua',
+                      onTap: _handleLearningMaterials,
                     ),
 
                     const SizedBox(height: 14),
 
                     _buildContinueLearningCard(),
+
+                    const SizedBox(height: 28),
+
+                    _sectionTitle(
+                      title: 'Tryout',
+                      action: 'Lihat Semua',
+                      onTap: _handleTryout,
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    _buildTryoutSection(),
 
                     const SizedBox(height: 28),
 
@@ -283,8 +488,6 @@ class _HomePageState extends State<HomePage> {
                     _buildUpcomingClassCard(),
 
                     const SizedBox(height: 16),
-
-                    _buildAnnouncementCard(),
                   ],
                 ),
               ),
@@ -367,28 +570,39 @@ class _HomePageState extends State<HomePage> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              _buildGlassButton(Icons.notifications_none_rounded),
-              Positioned(
-                top: -6,
-                right: -4,
-                child: Container(
-                  height: 22,
-                  width: 22,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF2D2D),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '3',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
+              GestureDetector(
+                onTap: () => _handleNotificationClick(),
+                child: _buildGlassButton(Icons.notifications_none_rounded),
+              ),
+              
+              if (unreadNotifications > 0)
+                Positioned(
+                  top: -6,
+                  right: -4,
+                  child: GestureDetector(
+                    onTap: () => _handleNotificationClick(),
+                    child: Container(
+                      height: 22,
+                      width: 22,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF2D2D),
+                        shape: BoxShape.circle,
+                        border: Border.fromBorderSide(
+                          BorderSide(color: Colors.white, width: 1.5)
+                        ),
+                      ),
+                      child: Text(
+                        unreadNotifications > 9 ? '9+' : unreadNotifications.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
@@ -557,6 +771,9 @@ class _HomePageState extends State<HomePage> {
 
               final imageUrl = _imageUrl(imagePath);
 
+              print('IMAGE PATH = $imagePath');
+              print('IMAGE URL  = $imageUrl');
+
               return Container(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 7,
@@ -584,20 +801,31 @@ class _HomePageState extends State<HomePage> {
                             size: 38,
                           ),
                         )
-                      : Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            return Container(
-                              color: const Color(0xFFE5E7EB),
-                              child: const Icon(
-                                Icons.image_rounded,
-                                color: Colors.grey,
-                                size: 38,
-                              ),
-                            );
-                          },
-                        ),
+                      // : Image.network(
+                      //     imageUrl,
+                      //     fit: BoxFit.cover,
+                      //     errorBuilder: (_, __, ___) {
+                      //       return Container(
+                      //         color: const Color(0xFFE5E7EB),
+                      //         child: const Icon(
+                      //           Icons.image_rounded,
+                      //           color: Colors.grey,
+                      //           size: 38,
+                      //         ),
+                      //       );
+                      //     },
+                      //   ),
+                     : Image.network(
+  imageUrl,
+  fit: BoxFit.cover,
+  headers: const {
+    'User-Agent': 'Flutter',
+  },
+  errorBuilder: (context, error, stackTrace) {
+    print('BANNER ERROR = $error');
+    return const Icon(Icons.error);
+  },
+)
                 ),
               );
             },
@@ -633,6 +861,7 @@ class _HomePageState extends State<HomePage> {
   Widget _sectionTitle({
     required String title,
     required String action,
+    VoidCallback? onTap,
   }) {
     return Row(
       children: [
@@ -648,24 +877,344 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
 
-        Text(
-          action,
-          style: const TextStyle(
-            color: primaryRed,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
+        GestureDetector(
+          onTap: onTap,
+          child: Row(
+            children: [
+              Text(
+                action,
+                style: const TextStyle(
+                  color: primaryRed,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+
+              const SizedBox(width: 5),
+
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: primaryRed,
+                size: 13,
+              ),
+            ],
           ),
-        ),
-
-        const SizedBox(width: 5),
-
-        const Icon(
-          Icons.arrow_forward_ios_rounded,
-          color: primaryRed,
-          size: 13,
         ),
       ],
     );
+  }
+
+  Widget _buildScheduleWidget() {
+    if (isLoadingSchedule) {
+      return Container(
+        height: 90,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(23),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: primaryRed),
+        ),
+      );
+    }
+
+    if (scheduleData.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: const Color(0xFFFFE0E3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 46,
+              width: 46,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEEEE),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(
+                Icons.calendar_today_outlined,
+                color: primaryRed,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Tidak ada jadwal hari ini',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Jadwal dari guru akan muncul di sini',
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final displayList = scheduleData.take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(color: const Color(0xFFFFCDD2), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: primaryRed.withOpacity(0.07),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month_rounded,
+                  color: primaryRed, size: 15),
+              const SizedBox(width: 6),
+              Text(
+                _getTodayLabel(),
+                style: const TextStyle(
+                  color: primaryRed,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEEEE),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  '${scheduleData.length} jadwal',
+                  style: const TextStyle(
+                    color: primaryRed,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          ...displayList.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value as Map;
+            final isLast = index == displayList.length - 1;
+
+            return _buildScheduleItem(item, isLast: isLast);
+          }),
+
+          if (scheduleData.length > 3) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                '+ ${scheduleData.length - 3} jadwal lainnya',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleItem(Map item, {bool isLast = false}) {
+    final subject = item['subject_name'] ?? 'Mata Pelajaran';
+    final teacherName = item['teacher_name'] ?? '';
+    final startTime = item['start_time'] ?? '';
+    final endTime = item['end_time'] ?? '';
+    final statusLabel = item['status_label'] ?? 'TERJADWAL';
+    final statusColor = item['status_color'] ?? 'blue';
+
+    Color dotColor;
+    Color badgeBg;
+    Color badgeText;
+    String badgeLabel;
+
+    switch (statusColor) {
+      case 'green':
+        dotColor = const Color(0xFF3B6D11);
+        badgeBg = const Color(0xFFEAF3DE);
+        badgeText = const Color(0xFF27500A);
+        badgeLabel = 'Sedang berlangsung';
+        break;
+      case 'grey':
+        dotColor = Colors.grey.shade500;
+        badgeBg = const Color(0xFFF1EFE8);
+        badgeText = const Color(0xFF444441);
+        badgeLabel = 'Selesai';
+        break;
+      default:
+        dotColor = const Color(0xFF185FA5);
+        badgeBg = const Color(0xFFE6F1FB);
+        badgeText = const Color(0xFF0C447C);
+        badgeLabel = 'Terjadwal';
+    }
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Container(
+                  height: 10,
+                  width: 10,
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                if (!isLast)
+                  Container(
+                    width: 1.5,
+                    height: 38,
+                    color: const Color(0xFFFFCDD2),
+                  ),
+              ],
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          subject,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: textDark,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: badgeBg,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          badgeLabel,
+                          style: TextStyle(
+                            color: badgeText,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  Row(
+                    children: [
+                      if (startTime.isNotEmpty) ...[
+                        Icon(Icons.access_time_rounded,
+                            size: 11, color: Colors.grey.shade500),
+                        const SizedBox(width: 3),
+                        Text(
+                          endTime.isNotEmpty
+                              ? '$startTime – $endTime'
+                              : startTime,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      if (teacherName.isNotEmpty) ...[
+                        Icon(Icons.person_outline_rounded,
+                            size: 11, color: Colors.grey.shade500),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            teacherName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  if (!isLast) const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _getTodayLabel() {
+    final now = DateTime.now();
+    final days = [
+      'Minggu', 'Senin', 'Selasa', 'Rabu',
+      'Kamis', 'Jumat', 'Sabtu'
+    ];
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${days[now.weekday % 7]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
   Widget _buildContinueLearningCard() {
@@ -892,6 +1441,263 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildTryoutSection() {
+    if (isLoadingTryout) {
+      return Container(
+        height: 130,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(23),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: primaryRed),
+        ),
+      );
+    }
+
+    if (tryoutData.isEmpty) {
+      return _buildTryoutEmptyCard();
+    }
+
+    final firstTryout = tryoutData.first as Map;
+    return _buildTryoutHighlightCard(firstTryout);
+  }
+
+  Widget _buildTryoutEmptyCard() {
+    return GestureDetector(
+      onTap: _handleTryout,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: const Color(0xFFFFE0E3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 54,
+              width: 54,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEEEE),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(
+                Icons.assignment_outlined,
+                color: primaryRed,
+                size: 28,
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tryout Belum Tersedia',
+                    style: TextStyle(
+                      color: textDark,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pantau terus untuk jadwal tryout berikutnya',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: primaryRed,
+              size: 24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTryoutHighlightCard(Map tryout) {
+    final title = tryout['title'] ?? tryout['name'] ?? 'Tryout UTBK';
+    final description =
+        tryout['description'] ?? tryout['subtitle'] ?? 'Simulasi ujian lengkap';
+    final totalSoal =
+        tryout['total_questions'] ?? tryout['soal_count'] ?? '-';
+    final duration = tryout['duration'] ?? tryout['waktu'] ?? '-';
+    final isFree =
+        (tryout['is_free'] == true || tryout['price'] == 0);
+
+    return GestureDetector(
+      onTap: _handleTryout,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: const Color(0xFFFFCDD2), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: primaryRed.withOpacity(0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primaryRed,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.local_fire_department_rounded,
+                          color: Colors.white, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Mulai Sekarang',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isFree
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    isFree ? 'Gratis' : 'Berbayar',
+                    style: TextStyle(
+                      color: isFree
+                          ? const Color(0xFF2E7D32)
+                          : const Color(0xFFF57C00),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: textDark,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              description,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                _tryoutMetaChip(Icons.quiz_outlined, '$totalSoal soal'),
+                const SizedBox(width: 8),
+                _tryoutMetaChip(Icons.timer_outlined, '$duration menit'),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: primaryRed,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: const Text(
+                    'Mulai',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tryoutMetaChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.grey.shade700),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMainMenuGrid() {
     final menus = [
       {
@@ -899,8 +1705,8 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Materi lengkap',
         'icon': Icons.menu_book_rounded,
         'gradient': [
-          Color(0xFFFF512F),
-          Color(0xFFFF8A65),
+          const Color(0xFFFF512F),
+          const Color(0xFFFF8A65),
         ],
       },
       {
@@ -908,8 +1714,17 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Tutor pilihan',
         'icon': Icons.person_rounded,
         'gradient': [
-          Color(0xFF5B45F1),
-          Color(0xFF8B7CF6),
+          const Color(0xFF5B45F1),
+          const Color(0xFF8B7CF6),
+        ],
+      },
+      {
+        'title': 'Tryout',
+        'subtitle': 'Simulasi ujian',
+        'icon': Icons.assignment_outlined,
+        'gradient': [
+          const Color(0xFFD32F2F),
+          const Color(0xFFEF9A9A),
         ],
       },
       {
@@ -917,8 +1732,8 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Bank soal',
         'icon': Icons.history_edu_rounded,
         'gradient': [
-          Color(0xFF00A873),
-          Color(0xFF4ADE80),
+          const Color(0xFF00A873),
+          const Color(0xFF4ADE80),
         ],
       },
       {
@@ -926,8 +1741,8 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Tentang kami',
         'icon': Icons.info_outline_rounded,
         'gradient': [
-          Color(0xFF1769E8),
-          Color(0xFF60A5FA),
+          const Color(0xFF1769E8),
+          const Color(0xFF60A5FA),
         ],
       },
       {
@@ -935,8 +1750,8 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Konsultasi',
         'icon': Icons.chat_rounded,
         'gradient': [
-          Color(0xFFE0003D),
-          Color(0xFFFF4D6D),
+          const Color(0xFFE0003D),
+          const Color(0xFFFF4D6D),
         ],
       },
       {
@@ -944,8 +1759,8 @@ class _HomePageState extends State<HomePage> {
         'subtitle': 'Pusat bantuan',
         'icon': Icons.support_agent_rounded,
         'gradient': [
-          Color(0xFF475569),
-          Color(0xFF94A3B8),
+          const Color(0xFF475569),
+          const Color(0xFF94A3B8),
         ],
       },
     ];
@@ -1179,100 +1994,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAnnouncementCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFEEEE),
-            Colors.white,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(21),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 48,
-            width: 48,
-            decoration: BoxDecoration(
-              color: primaryRed.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.campaign_rounded,
-              color: primaryRed,
-              size: 25,
-            ),
-          ),
 
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pengumuman',
-                  style: TextStyle(
-                    color: textDark,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Jadwal Tryout UTBK Gelombang 2 telah tersedia!',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Icon(
-            Icons.chevron_right_rounded,
-            color: Colors.grey.shade500,
-            size: 25,
-          ),
-        ],
-      ),
-    );
-  }
 
   void _openClassIfEnrolled() {
-    if (isEnrolled && currentData?['student'] != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ClassDetailPage(
-            classId: int.parse(
-              currentData!['student']['class_id'].toString(),
-            ),
-            className: currentData!['student']['class']?['program_name'] ??
-                'Spekta Class',
-            token: widget.token,
-            userData: currentData!,
-          ),
-        ),
-      );
-    } else {
-      _showWarning(
-        'Kamu belum terdaftar di kelas mana pun. Daftar kelas dulu ya!',
-      );
-    }
+    _handleLearningMaterials();
   }
 
   void _handleMenuTap(String title) {
     switch (title) {
       case 'Learning Materials':
-        _openClassIfEnrolled();
+        _handleLearningMaterials();
         break;
 
       case 'Dedicated Tutor':
@@ -1285,6 +2016,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         );
+        break;
+
+      case 'Tryout':
+        _handleTryout();
         break;
 
       case 'Question Bank':
@@ -1340,3 +2075,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+

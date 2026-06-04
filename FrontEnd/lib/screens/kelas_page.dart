@@ -3,17 +3,21 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; 
 import 'class_detail_page.dart';
+import 'subject_list_page.dart';
+import '../services/auth_service.dart';
 
 class KelasPage extends StatefulWidget {
   final String token;
   final Map userData;
   final VoidCallback onGoToProfile;
+  final VoidCallback onGoToHome;
 
   const KelasPage({
     super.key,
     required this.token,
     required this.userData,
     required this.onGoToProfile,
+    required this.onGoToHome,
   });
 
   @override
@@ -26,13 +30,53 @@ class _KelasPageState extends State<KelasPage> {
   final Color spektaDark = const Color(0xFF1A1A1A);
 
   List programs = [];
+  Map? currentData;
   bool isLoading = true;
-  final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'IDR ', decimalDigits: 0);
+  final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   @override
   void initState() {
     super.initState();
-    _fetchPrograms(); 
+    currentData = widget.userData;
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await Future.wait([
+      _fetchPrograms(),
+      _refreshUserStatus(),
+    ]);
+  }
+
+  Future<void> _refreshUserStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/user'),
+        headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        if (mounted) setState(() => currentData = json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint("Error Refresh: $e");
+    }
+  }
+
+  Future<void> _fetchPrograms() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/classes'),
+        headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) setState(() => programs = data['data'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('CLASSES FETCH EXCEPTION: $e');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   String _getProgramImage(dynamic id) {
@@ -46,79 +90,6 @@ class _KelasPageState extends State<KelasPage> {
     }
   }
 
-  Future<void> _fetchPrograms() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/classes'), 
-        headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (mounted) setState(() { programs = data['data']; isLoading = false; });
-      }
-    } catch (e) {
-      if (mounted) setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _checkProfileAndNavigate(BuildContext context, Map<String, dynamic> item) async {
-    showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.white)));
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/user'),
-        headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
-      );
-      if (!mounted) return;
-      Navigator.pop(context); 
-
-      if (response.statusCode == 200) {
-        final latestUserData = json.decode(response.body);
-        var student = latestUserData['student'];
-        
-        bool isComplete = student != null &&
-            student['parent_name'] != null && student['parent_name'] != "-" &&
-            student['address'] != null && student['address'] != "-" &&
-            student['parent_phone'] != null && student['parent_phone'] != "-";
-
-        if (isComplete) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ClassDetailPage(
-            classId: int.parse(item['class_id'].toString()), 
-            className: item['program_name'], 
-            token: widget.token,
-            userData: latestUserData, 
-          )));
-        } else {
-          _showPremiumProfileDialog(context);
-        }
-      }
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-    }
-  }
-
-  void _showPremiumProfileDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.assignment_ind_rounded, size: 60, color: spektaRed),
-            const SizedBox(height: 20),
-            const Text("Biodata Belum Lengkap", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () { Navigator.pop(context); widget.onGoToProfile(); },
-              style: ElevatedButton.styleFrom(backgroundColor: spektaRed, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-              child: const Text("LENGKAPI SEKARANG", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,9 +98,14 @@ class _KelasPageState extends State<KelasPage> {
           ? Center(child: CircularProgressIndicator(color: spektaRed))
           : CustomScrollView(
               slivers: [
-                SliverAppBar(expandedHeight: 120.0, pinned: true, elevation: 0, backgroundColor: spektaRed, flexibleSpace: FlexibleSpaceBar(title: const Text("Study Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)), background: Container(color: spektaRed))),
+                SliverAppBar(
+                  expandedHeight: 100.0, pinned: true, elevation: 0, centerTitle: true,
+                  backgroundColor: spektaRed, automaticallyImplyLeading: false,
+                  leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28), onPressed: widget.onGoToHome),
+                  flexibleSpace: FlexibleSpaceBar(centerTitle: true, title: const Text("Study Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 25, 20, 100),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   sliver: SliverList(delegate: SliverChildBuilderDelegate((context, index) => _buildProgramCard(context, programs[index]), childCount: programs.length)),
                 ),
               ],
@@ -138,50 +114,98 @@ class _KelasPageState extends State<KelasPage> {
   }
 
   Widget _buildProgramCard(BuildContext context, Map<String, dynamic> item) {
-    dynamic currentEnrolledId = widget.userData['student']?['class_id'];
-    bool isMyClass = currentEnrolledId?.toString() == item['class_id'].toString();
-    bool hasOtherClass = currentEnrolledId != null && !isMyClass;
+    dynamic activeClassId = currentData?['student']?['class_id'];
+    bool isMyClass = activeClassId?.toString() == item['class_id'].toString();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 30),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 25, offset: const Offset(0, 12))]),
+      margin: const EdgeInsets.only(bottom: 25),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(35)),
-                // ✨ Gambar tetap berwarna (Efek greyscale dihapus)
-                child: Image.asset(_getProgramImage(item['class_id']), height: 200, width: double.infinity, fit: BoxFit.cover),
-              ),
-              if (isMyClass)
-                Positioned(top: 20, left: 20, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10)), child: const Text("PROGRAM ANDA ✅", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)))),
-              if (hasOtherClass)
-                Positioned(top: 20, left: 20, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(10)), child: const Text("TERKUNCI 🔒", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)))),
-              Positioned(top: 20, right: 20, child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(15)), child: Text(currencyFormat.format(int.parse(item['price'].toString())), style: TextStyle(color: spektaRed, fontWeight: FontWeight.w900, fontSize: 12)))),
+              ClipRRect(borderRadius: const BorderRadius.vertical(top: Radius.circular(25)), child: Image.asset(_getProgramImage(item['class_id']), height: 180, width: double.infinity, fit: BoxFit.cover)),
+              if (isMyClass) Positioned(top: 15, left: 15, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(8)), child: const Text("PROGRAM ANDA ✅", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)))),
+              Positioned(top: 15, right: 15, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(10)), child: Text(currencyFormat.format(int.tryParse(item['price'].toString()) ?? 0), style: TextStyle(color: spektaRed, fontWeight: FontWeight.w900, fontSize: 12))))
             ],
           ),
           Padding(
-            padding: const EdgeInsets.all(25.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("OFFICIAL ACADEMY PROGRAM", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                const Text("OFFICIAL ACADEMY PROGRAM", style: TextStyle(color: Colors.grey, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+                const SizedBox(height: 6),
+                Text(item['program_name'], style: TextStyle(color: spektaDark, fontSize: 20, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 8),
-                Text(item['program_name'], style: TextStyle(color: spektaDark, fontSize: 22, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 10),
-                Text(item['description'] ?? "Segera bergabung dan raih impianmu.", maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.4)),
-                const SizedBox(height: 25),
+                Text(item['description'] ?? "...", maxLines: 2, style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.4)),
+                const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () => _checkProfileAndNavigate(context, item),
-                  style: ElevatedButton.styleFrom(backgroundColor: hasOtherClass ? Colors.grey[300] : spektaYellow, minimumSize: const Size(double.infinity, 55), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)), elevation: 0),
-                  child: Text(hasOtherClass ? "LIHAT DETAIL (LOCKED)" : "VIEW DETAILS", style: TextStyle(color: hasOtherClass ? Colors.grey[600] : Colors.black, fontWeight: FontWeight.w900)),
+                  onPressed: () => _navigateToDetail(context, item),
+                  style: ElevatedButton.styleFrom(backgroundColor: spektaYellow, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
+                  child: const Text("VIEW DETAILS", style: TextStyle(fontWeight: FontWeight.w900)),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+// --- Bagian fungsi _navigateToDetail di KelasPage ---
+
+  Future<void> _navigateToDetail(BuildContext context, Map<String, dynamic> item) async {
+    await _refreshUserStatus(); // Ambil status terbaru
+    if (!mounted) return;
+
+    final classId = int.parse(item['class_id'].toString());
+    int classPrice = int.tryParse(item['price'].toString()) ?? 0;
+
+    dynamic activeClassId = currentData?['student']?['class_id'];
+    bool isEnrolledInThis = activeClassId?.toString() == classId.toString();
+
+    if (isEnrolledInThis) {
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+
+      try {
+        final response = await AuthService.getClassContent(classId, widget.token);
+        if (!mounted) return;
+        Navigator.pop(context); // Tutup loading
+
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          final String enrollStatus = decoded['enroll_status'] ?? "none";
+
+          if (enrollStatus == 'active') {
+            // 🚀 BYPASS: Jika sudah aktif, langsung ke daftar Mata Pelajaran
+            Navigator.push(context, MaterialPageRoute(builder: (context) => SubjectListPage(
+              classId: classId,
+              className: decoded['program_name'] ?? item['program_name'],
+              token: widget.token,
+              // ✨ FIX: Hapus parameter 'subjects' karena sudah dihapus di constructor SubjectListPage
+              materi: decoded['materi'] ?? [], 
+            )));
+            return; 
+          }
+        }
+      } catch (e) {
+        if (mounted) Navigator.pop(context);
+        debugPrint("Error Auto Navigate: $e");
+      }
+    }
+
+    // 🏠 JIKA BELUM BELI / BELUM AKTIF: Ke Halaman Detail (ClassDetailPage)
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => ClassDetailPage(
+          classId: classId, 
+          className: item['program_name'], 
+          price: classPrice, 
+          token: widget.token,
+          userData: currentData!, 
+        ),
       ),
     );
   }

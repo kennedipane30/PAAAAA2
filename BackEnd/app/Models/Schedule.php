@@ -14,29 +14,38 @@ class Schedule extends Model
 
     protected $fillable = [
         'class_id',
+        'subject_id',
         'teacher_id',
         'title',
         'date',
         'start_time',
-        'end_time'
-        // 'location' sudah dihapus sesuai permintaan sebelumnya
+        'end_time',
+        'meeting_link',
+        'status'
     ];
 
     /**
-     * Relasi ke ClassModel
-     * Nama fungsi 'class' harus sama dengan yang dipanggil di Controller with(['class'])
+     * Relasi ke Mata Pelajaran (Model Subject)
      */
-    public function class()
+    public function subject()
     {
-        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
+        /**
+         * MODIFIKASI PENTING:
+         * Parameter ke-2: 'subject_id' adalah kolom Foreign Key di tabel schedules.
+         * Parameter ke-3: 'material_id' adalah kolom Primary Key di tabel materials (milik Model Subject).
+         */
+        return $this->belongsTo(Subject::class, 'subject_id', 'material_id');
     }
 
-    /**
-     * Relasi ke User (Pengajar)
-     * teacher_id merujuk ke usersID di tabel users
-     */
+    // Relasi ke Pengajar
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id', 'usersID');
+    }
+
+    // Relasi ke Kelas
+    public function class()
+    {
+        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
     }
 }

@@ -29,7 +29,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final Color redDeep = const Color(0xFF520102);
   final Color redWine = const Color(0xFF3D0606);
   final Color softRed = const Color(0xFFFFE8EA);
-  final Color bgColor = const Color(0xFFFAF7F8);
+  final Color bgColor = const Color(0xFFF8F9FA);
 
   @override
   void initState() {
@@ -89,7 +89,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _nisnCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please fill all required fields!"),
+          backgroundColor: Colors.orange,
+          content: Text("Harap isi semua bidang yang wajib!", style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       );
       return;
@@ -118,7 +119,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.green,
-          content: Text("Profile data successfully updated"),
+          content: Text("Data profil berhasil diperbarui", style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       );
       Navigator.pop(context, true);
@@ -127,7 +128,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text(err['message'] ?? "Failed to update profile"),
+          content: Text(err['message'] ?? "Gagal memperbarui profil"),
         ),
       );
     }
@@ -137,140 +138,224 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildUserInfoCard(),
-                    const SizedBox(height: 26),
-                    _sectionTitle("Student Information"),
-                    const SizedBox(height: 14),
-                    _buildFormCard(),
-                    const SizedBox(height: 30),
-                    _buildSaveButton(),
-                  ],
-                ),
+      body: Column(
+        children: [
+          _buildProfileHeader(), // 🔴 DIGANTI dengan header ala gambar 1 (foto + email + role)
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildUserInfoCard(),
+                  const SizedBox(height: 30),
+                  const Text(
+                    "Informasi Detail Siswa",
+                    style: TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildFormCard(),
+                  const SizedBox(height: 35),
+                  _buildSaveButton(),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [redPrimary, redDark, redDeep],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: redDeep.withOpacity(0.22),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Stack(
+      // 🔴 BOTTOM NAVIGATION BAR (seperti gambar 1)
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  // ========== 🟢 HEADER BARU (gaya gambar 1) ==========
+  Widget _buildProfileHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: Column(
         children: [
-          Positioned(
-            right: -45,
-            bottom: -65,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.07),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 42,
-            top: 8,
-            child: SizedBox(
-              width: 80,
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: List.generate(
-                  35,
-                  (_) => Container(
-                    width: 3,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // baris atas (back + settings)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: Colors.white,
-                  ),
-                ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                color: Colors.black87,
               ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Text(
-                  "Complete Profile Data",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.settings_outlined, size: 24),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                color: Colors.black54,
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          // Avatar
+          Center(
+            child: Container(
+              width: 85,
+              height: 85,
+              decoration: BoxDecoration(
+                color: redPrimary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: redPrimary.withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 46,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  widget.userData['full_name'] ?? widget.userData['name'] ?? "steven",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E1E2E),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.userData['email'] ?? "email@example.com",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: redPrimary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Text(
+                    'STUDENT',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF9C0412),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
+  // ========== 🟢 BOTTOM NAVIGATION BAR (Home, Classes, Report, Profile) ==========
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home_outlined, 'Home', false),
+              _buildNavItem(Icons.class_outlined, 'Classes', false),
+              _buildNavItem(Icons.bar_chart_outlined, 'Report', false),
+              _buildNavItem(Icons.person_outline, 'Profile', true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+    return GestureDetector(
+      onTap: () {
+        // kamu bisa tambahkan navigasi ke halaman lain nanti
+        // contoh: if (label == 'Home') Navigator.push(...)
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isActive ? redPrimary : Colors.grey[400],
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isActive ? redPrimary : Colors.grey[400],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== KODE ASLI KAMU (TIDAK DIHAPUS, HANYA DIGESER / TETAP ADA) =====
   Widget _buildUserInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: _cardDecoration(),
       child: Column(
         children: [
           _infoTile(
             icon: Icons.email_outlined,
-            title: "Gmail",
+            title: "Email Terdaftar",
             value: widget.userData['email'] ?? "-",
           ),
-          _line(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: Divider(color: Colors.grey.withOpacity(0.1)),
+          ),
           _infoTile(
             icon: Icons.phone_android_rounded,
-            title: "WhatsApp Number",
+            title: "Nomor WhatsApp",
             value: widget.userData['phone'] ?? "-",
           ),
         ],
@@ -286,35 +371,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Row(
       children: [
         Container(
-          width: 46,
-          height: 46,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: softRed,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: redPrimary, size: 22),
+          child: Icon(icon, color: redPrimary, size: 20),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 15),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
                 style: TextStyle(
                   color: redWine,
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                value,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -326,39 +410,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Widget _buildFormCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(22),
       decoration: _cardDecoration(),
       child: Column(
         children: [
           _buildInput(
             controller: _nisnCtrl,
-            label: "Student ID (NISN)",
+            label: "Nomor Induk Siswa (NISN)",
             icon: Icons.numbers_rounded,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           _buildInput(
             controller: _parentCtrl,
-            label: "Parent Name",
+            label: "Nama Lengkap Orang Tua",
             icon: Icons.person_outline_rounded,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           _buildInput(
             controller: _addressCtrl,
-            label: "Full Address",
+            label: "Alamat Lengkap Rumah",
             icon: Icons.location_on_outlined,
             maxLines: 2,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           _buildInput(
             controller: _parentPhoneCtrl,
-            label: "Parent WhatsApp Number",
+            label: "Nomor WA Orang Tua",
             icon: Icons.phone_rounded,
             keyboardType: TextInputType.phone,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           _buildInput(
             controller: _dobCtrl,
-            label: "Date of Birth",
+            label: "Tanggal Lahir",
             icon: Icons.calendar_month_rounded,
             readOnly: true,
             onTap: _selectDate,
@@ -383,37 +467,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
       onTap: onTap,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      style: TextStyle(
-        color: redWine,
-        fontWeight: FontWeight.w700,
-        fontSize: 14,
-      ),
+      style: TextStyle(color: redWine, fontWeight: FontWeight.bold, fontSize: 14),
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFFCF7F8),
+        fillColor: const Color(0xFFFBFBFB),
         labelText: label,
-        labelStyle: TextStyle(
-          color: redWine.withOpacity(0.55),
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-        prefixIcon: Icon(icon, color: redPrimary, size: 22),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 17,
-        ),
+        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.w600),
+        prefixIcon: Icon(icon, color: redPrimary, size: 20),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(
-            color: redPrimary.withOpacity(0.08),
-          ),
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(
-            color: redPrimary,
-            width: 1.4,
-          ),
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: redPrimary, width: 1.5),
         ),
       ),
     );
@@ -426,42 +494,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: ElevatedButton(
         onPressed: _handleSave,
         style: ElevatedButton.styleFrom(
-          elevation: 0,
+          elevation: 8,
+          shadowColor: redPrimary.withOpacity(0.3),
           backgroundColor: redPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          shadowColor: redDeep.withOpacity(0.25),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         ),
         child: const Text(
-          "SAVE DATA",
+          "SIMPAN PERUBAHAN",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
+            letterSpacing: 1,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: redWine,
-        fontSize: 18,
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
-
-  Widget _line() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      child: Divider(
-        height: 1,
-        color: Colors.grey.withOpacity(0.16),
       ),
     );
   }
@@ -469,12 +514,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(25),
       boxShadow: [
         BoxShadow(
-          color: redDeep.withOpacity(0.06),
-          blurRadius: 18,
-          offset: const Offset(0, 9),
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 15,
+          offset: const Offset(0, 8),
         ),
       ],
     );

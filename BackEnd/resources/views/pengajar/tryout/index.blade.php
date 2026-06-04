@@ -1,498 +1,223 @@
 @extends('layouts.spekta')
 
-@section('title', 'Kirim Soal Tryout')
-@section('subtitle', 'Kelola paket soal tryout sesuai penugasan')
+@section('title', 'Bank Soal Tryout - Spekta Academy')
 
 @section('content')
 @php
-    $assignmentCollection = collect($assignments);
-    $totalAssignment = $assignmentCollection->count();
-    $totalProgram = $assignmentCollection->pluck('class_id')->unique()->count();
-    $totalSubject = $assignmentCollection->pluck('subject_name')->unique()->count();
+    // Menghitung total seluruh soal yang sudah dibuat oleh guru ini di semua kelas/mapel
+    $totalSoalSelesai = \DB::table('tryout_drafts')
+        ->where('user_id', Auth::user()->usersID)
+        ->count();
+    
+    $totalAssignment = count($assignments);
 @endphp
 
-<div class="to-page">
-
-    {{-- HERO --}}
-    <section class="to-hero">
-        <div>
-            <span>Tryout Question Center</span>
-            <h1>Kirim Soal Tryout</h1>
-            <p>
-                Pilih program kelas dan mata pelajaran yang Anda ampu untuk membuat atau mengelola paket soal tryout.
-            </p>
+<div class="cp-page">
+    {{-- 1. HEADER HERO --}}
+    <section class="tm-hero-header">
+        <div class="tm-hero-content">
+            <div class="tm-hero-text">
+                <span class="tm-pre-title">TEACHER TRYOUT PORTAL</span>
+                <h1 class="tm-main-title">Tryout Question Center</h1>
+                <p class="tm-sub-title">Kontribusikan draf soal terbaik Anda. Admin akan mengkurasi draf tersebut menjadi satu paket Tryout resmi.</p>
+            </div>
         </div>
-
-        <div class="to-hero-summary">
-            <div>
-                <strong>{{ $totalProgram }}</strong>
-                <span>Program</span>
+        
+        <div class="tm-hero-summary">
+            <div class="summary-card">
+                <i class="fa-solid fa-briefcase"></i>
+                <div class="summary-data">
+                    <strong>{{ $totalAssignment }}</strong>
+                    <span>Penugasan</span>
+                </div>
             </div>
-
-            <div>
-                <strong>{{ $totalSubject }}</strong>
-                <span>Mapel</span>
-            </div>
-
-            <div>
-                <strong>{{ $totalAssignment }}</strong>
-                <span>Penugasan</span>
+            <div class="summary-card highlight">
+                <i class="fa-solid fa-file-circle-check"></i>
+                <div class="summary-data">
+                    <strong>{{ $totalSoalSelesai }}</strong>
+                    <span>Total Soal</span>
+                </div>
             </div>
         </div>
     </section>
 
-    {{-- ALERT --}}
     @if(session('success'))
-        <div class="to-alert success">
+        <div class="tm-alert-modern success">
             <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="to-alert error">
-            <i class="fa-solid fa-circle-exclamation"></i>
+        <div class="tm-alert-modern error" style="background: #fee2e2; color: #b91c1c; border-left: 5px solid #ef4444;">
+            <i class="fa-solid fa-circle-xmark"></i>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
-    @if($errors->any())
-        <div class="to-alert error">
-            <i class="fa-solid fa-circle-exclamation"></i>
+    {{-- 2. MAIN TABLE --}}
+    <section class="cp-main-card">
+        <div class="card-header-flex">
             <div>
-                <strong>Data belum valid.</strong>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-    @endif
-
-    {{-- MAIN PANEL --}}
-    <section class="to-panel">
-        <div class="to-panel-head">
-            <div>
-                <span>Teaching Assignment</span>
-                <h2>Daftar Paket Tryout yang Dapat Dikelola</h2>
-                <p>
-                    Setiap baris menampilkan program dan bidang soal yang menjadi tanggung jawab Anda.
-                </p>
+                <h2>Daftar Penugasan Soal</h2>
+                <p>Klik tombol input untuk mengelola soal di setiap mata pelajaran.</p>
             </div>
         </div>
 
-        @if($assignments->isEmpty())
-            <div class="to-empty">
-                <i class="fa-solid fa-stopwatch"></i>
-                <strong>Belum ada penugasan tryout.</strong>
-                <span>Admin perlu menugaskan Anda pada program dan mata pelajaran tertentu terlebih dahulu.</span>
-            </div>
-        @else
-            <div class="to-table-wrap">
-                <table class="to-table">
-                    <thead>
+        <div class="table-responsive">
+            <table class="cp-table-modern">
+                <thead>
+                    <tr>
+                        <th width="25%">PROGRAM KELAS</th>
+                        <th width="20%" class="text-center">MATA PELAJARAN</th>
+                        <th width="35%" class="text-center">PROGRESS ANDA</th>
+                        <th width="20%" class="text-right">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($assignments as $assign)
+                        @php 
+                            // Ambil nama mapel resmi dari database
+                            $subjectName = $assign->subject->name ?? 'Umum';
+                            
+                            // HITUNG SOAL: Pastikan filter ini SAMA dengan saat simpan/import di Controller
+                            $count = \DB::table('tryout_drafts')
+                                ->where('user_id', Auth::user()->usersID)
+                                ->where('class_id', $assign->class_id)
+                                ->where('subject_name', trim($subjectName))
+                                ->count();
+                        @endphp
                         <tr>
-                            <th>Program Kelas</th>
-                            <th>Bidang Soal</th>
-                            <th>Jenis Konten</th>
-                            <th>Mode Input</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($assignments as $assign)
-                            <tr>
-                                <td>
-                                    <div class="to-program">
-                                        <div>
-                                            {{ strtoupper(substr($assign->classModel->program_name ?? 'P', 0, 1)) }}
+                            <td class="align-middle">
+                                <div class="program-info">
+                                    <div class="program-icon-box">
+                                        <i class="fa-solid fa-school-flag"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ $assign->classModel->program_name ?? 'Program' }}</strong>
+                                        <small>ID Kelas: #{{ $assign->class_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="subject-tag">
+                                    <i class="fa-solid fa-book-bookmark mr-1"></i>
+                                    {{ $subjectName }}
+                                </span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <div class="progress-container-flex">
+                                    {{-- Info Jumlah Soal --}}
+                                    <div class="contribution-info {{ $count > 0 ? 'active' : '' }}">
+                                        <div class="info-content">
+                                            <strong>{{ $count }} Soal</strong>
+                                            <span>{{ $count > 0 ? 'TERUPLOAD' : 'BELUM ADA' }}</span>
                                         </div>
-
-                                        <section>
-                                            <strong>{{ $assign->classModel->program_name ?? 'Program Kelas' }}</strong>
-                                            <span>ID Kelas: {{ $assign->class_id }}</span>
-                                        </section>
+                                        @if($count > 0)
+                                            <i class="fa-solid fa-circle-check check-icon" style="color: #10b981;"></i>
+                                        @else
+                                            <i class="fa-solid fa-circle-minus" style="color: #cbd5e1;"></i>
+                                        @endif
                                     </div>
-                                </td>
-
-                                <td>
-                                    <span class="to-subject">
-                                        {{ $assign->subject_name }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="to-type">
-                                        <i class="fa-solid fa-stopwatch"></i>
-                                        Tryout
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div class="to-mode">
-                                        <strong>Input Paket Soal</strong>
-                                        <span>Soal, opsi jawaban, kunci, dan pembahasan</span>
+                                    
+                                    {{-- Tombol Tarik/Hapus Masal (Hanya muncul jika sudah ada soal) --}}
+                                    @if($count > 0)
+                                        <form action="{{ route('pengajar.tryout.deleteAll') }}" method="POST" onsubmit="return confirm('Tarik kembali semua soal {{ $subjectName }}?')">
+                                            @csrf
+                                            <input type="hidden" name="class_id" value="{{ $assign->class_id }}">
+                                            <input type="hidden" name="subject_name" value="{{ $subjectName }}">
+                                            <button type="submit" class="btn-action-delete" title="Tarik/Hapus Semua Draf Mapel Ini">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="text-right align-middle">
+                                <a href="{{ route('pengajar.tryout.create', [$assign->class_id, $subjectName]) }}" 
+                                   class="btn-input-modern {{ $count > 0 ? 'btn-has-content' : '' }}">
+                                    <span>{{ $count > 0 ? 'EDIT / TAMBAH' : 'INPUT SOAL' }}</span>
+                                    <div class="icon-circle">
+                                        <i class="fa-solid fa-{{ $count > 0 ? 'pen-to-square' : 'pen-nib' }}"></i>
                                     </div>
-                                </td>
-
-                                <td>
-                                    <span class="to-status">
-                                        <i class="fa-solid fa-circle"></i>
-                                        Aktif
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <a href="{{ route('pengajar.tryout.create', [$assign->class_id, $assign->subject_name]) }}" class="to-action">
-                                        Buat Paket Soal
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center" style="padding: 50px;">
+                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" style="opacity: 0.2; margin-bottom: 15px;">
+                                <p style="color: #94a3b8; font-weight: 700;">Belum ada penugasan soal untuk Anda.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </section>
-
 </div>
 
 <style>
-    .to-page {
-        width: 100%;
+    .cp-page { padding: 10px; font-family: 'Montserrat', sans-serif; }
+    
+    /* Hero Section */
+    .tm-hero-header {
+        background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+        border-radius: 28px; padding: 40px; color: white;
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
     }
+    .tm-main-title { font-size: 34px; font-weight: 900; }
+    .tm-hero-summary { display: flex; gap: 15px; }
+    .summary-card { background: rgba(255,255,255,0.04); padding: 18px 22px; border-radius: 20px; display: flex; align-items: center; gap: 15px; }
+    .summary-card.highlight { background: #d90429; box-shadow: 0 10px 20px rgba(217, 4, 41, 0.3); }
 
-    .to-hero {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(120deg, #cf002b 0%, #85001d 52%, #182033 100%);
-        border-radius: 24px;
-        padding: 30px 34px;
-        color: #fff;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 24px;
-        margin-bottom: 22px;
-        box-shadow: 0 18px 38px rgba(134, 0, 24, .20);
+    /* Table Design */
+    .cp-main-card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.02); }
+    .cp-table-modern { width: 100%; border-collapse: separate; border-spacing: 0 15px; }
+    .cp-table-modern th { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; padding: 0 20px; }
+    .cp-table-modern td { padding: 20px; background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle !important; }
+    .cp-table-modern td:first-child { border-left: 1px solid #f1f5f9; border-radius: 20px 0 0 20px; }
+    .cp-table-modern td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 20px 20px 0; }
+
+    /* Content Styling */
+    .program-info { display: flex; align-items: center; gap: 15px; }
+    .program-icon-box { width: 44px; height: 44px; background: #f1f5f9; border-radius: 12px; display: grid; place-items: center; font-size: 18px; color: #475569; }
+    .subject-tag { background: #fdf2f2; color: #d90429; padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 11px; text-transform: uppercase; border: 1px solid #fee2e2; display: inline-flex; align-items: center; }
+
+    /* Progress Box */
+    .progress-container-flex { display: inline-flex; align-items: center; gap: 12px; }
+    .contribution-info { 
+        display: flex; align-items: center; gap: 15px; 
+        padding: 10px 20px; background: #f8fafc; 
+        border-radius: 15px; border: 1px solid #edf2f7;
+        min-width: 170px; text-align: left;
     }
+    .contribution-info.active { background: #f0fdf4; border-color: #dcfce7; }
+    .info-content strong { display: block; font-size: 14px; color: #111827; line-height: 1.2; font-weight: 900; }
+    .info-content span { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .to-hero::after {
-        content: "";
-        width: 280px;
-        height: 280px;
-        border-radius: 999px;
-        background: rgba(255,255,255,.09);
-        position: absolute;
-        right: -95px;
-        top: -130px;
+    /* Action Buttons */
+    .btn-action-delete { 
+        background: #fee2e2; color: #ef4444; border: none; 
+        width: 38px; height: 38px; border-radius: 10px; 
+        cursor: pointer; transition: 0.3s; display: grid; place-items: center;
     }
+    .btn-action-delete:hover { background: #ef4444; color: white; transform: scale(1.1); }
 
-    .to-hero > div {
-        position: relative;
-        z-index: 2;
+    .btn-input-modern {
+        display: inline-flex; align-items: center; gap: 12px;
+        background: #111827; color: white; padding: 6px 6px 6px 20px;
+        border-radius: 15px; text-decoration: none; transition: 0.3s;
+        white-space: nowrap; font-weight: 800; font-size: 12px;
     }
+    .btn-input-modern.btn-has-content { background: #059669; }
+    .btn-input-modern:hover { transform: translateX(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .btn-input-modern.btn-has-content:hover { background: #047857; }
+    
+    .icon-circle { width: 34px; height: 34px; background: rgba(255,255,255,0.15); border-radius: 10px; display: grid; place-items: center; font-size: 14px; }
 
-    .to-hero span,
-    .to-panel-head span {
-        display: block;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: .16em;
-        text-transform: uppercase;
-    }
-
-    .to-hero > div:first-child > span {
-        color: rgba(255,255,255,.78);
-        margin-bottom: 10px;
-    }
-
-    .to-hero h1 {
-        margin: 0 0 8px;
-        color: #fff;
-        font-size: 31px;
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        text-transform: uppercase;
-    }
-
-    .to-hero p {
-        margin: 0;
-        color: rgba(255,255,255,.86);
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.6;
-        max-width: 760px;
-    }
-
-    .to-hero-summary {
-        display: flex;
-        gap: 12px;
-        flex-shrink: 0;
-    }
-
-    .to-hero-summary div {
-        min-width: 112px;
-        padding: 16px;
-        border-radius: 18px;
-        background: rgba(255,255,255,.14);
-        border: 1px solid rgba(255,255,255,.16);
-        backdrop-filter: blur(12px);
-        text-align: center;
-    }
-
-    .to-hero-summary strong {
-        display: block;
-        font-size: 28px;
-        font-weight: 900;
-        line-height: 1;
-    }
-
-    .to-hero-summary span {
-        margin-top: 7px;
-        color: rgba(255,255,255,.75);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0;
-    }
-
-    .to-alert {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 14px 16px;
-        border-radius: 15px;
-        margin-bottom: 18px;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .to-alert.success {
-        background: #dcfce7;
-        color: #15803d;
-        border: 1px solid #bbf7d0;
-    }
-
-    .to-alert.error {
-        background: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    .to-alert ul {
-        margin: 6px 0 0;
-        padding-left: 18px;
-    }
-
-    .to-panel {
-        background: #fff;
-        border: 1px solid #edf0f4;
-        border-radius: 22px;
-        padding: 22px;
-        box-shadow: 0 14px 35px rgba(15,23,42,.05);
-    }
-
-    .to-panel-head {
-        margin-bottom: 18px;
-    }
-
-    .to-panel-head span {
-        color: #d90429;
-        margin-bottom: 8px;
-    }
-
-    .to-panel-head h2 {
-        margin: 0;
-        color: #111827;
-        font-size: 18px;
-        font-weight: 900;
-    }
-
-    .to-panel-head p {
-        margin: 6px 0 0;
-        color: #6b7280;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .to-table-wrap {
-        overflow-x: auto;
-    }
-
-    .to-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .to-table th {
-        text-align: left;
-        padding: 14px 12px;
-        border-bottom: 1px solid #edf0f4;
-        color: #6b7280;
-        font-size: 10px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        white-space: nowrap;
-    }
-
-    .to-table td {
-        padding: 16px 12px;
-        border-bottom: 1px solid #edf0f4;
-        vertical-align: middle;
-    }
-
-    .to-table tbody tr:hover {
-        background: #fff7f9;
-    }
-
-    .to-program {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .to-program > div {
-        width: 42px;
-        height: 42px;
-        display: grid;
-        place-items: center;
-        border-radius: 14px;
-        background: #ffe8ee;
-        color: #d90429;
-        font-size: 14px;
-        font-weight: 900;
-        flex-shrink: 0;
-    }
-
-    .to-program strong {
-        display: block;
-        color: #111827;
-        font-size: 13px;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-
-    .to-program span {
-        display: block;
-        margin-top: 4px;
-        color: #9ca3af;
-        font-size: 10px;
-        font-weight: 700;
-    }
-
-    .to-subject,
-    .to-type,
-    .to-status {
-        display: inline-flex;
-        align-items: center;
-        height: 30px;
-        padding: 0 11px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 900;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .to-subject {
-        background: #fff1f2;
-        color: #d90429;
-    }
-
-    .to-type {
-        gap: 7px;
-        background: #ffedd5;
-        color: #ea580c;
-    }
-
-    .to-status {
-        gap: 7px;
-        background: #dcfce7;
-        color: #16a34a;
-    }
-
-    .to-status i {
-        font-size: 7px;
-    }
-
-    .to-mode strong {
-        display: block;
-        color: #111827;
-        font-size: 12px;
-        font-weight: 900;
-    }
-
-    .to-mode span {
-        display: block;
-        margin-top: 4px;
-        color: #6b7280;
-        font-size: 11px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .to-action {
-        height: 38px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 14px;
-        border-radius: 12px;
-        background: #d90429;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .to-empty {
-        padding: 42px;
-        text-align: center;
-        background: #f8fafc;
-        border-radius: 18px;
-        color: #6b7280;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .to-empty i {
-        width: 58px;
-        height: 58px;
-        margin: 0 auto 14px;
-        display: grid;
-        place-items: center;
-        border-radius: 999px;
-        background: #ffe8ee;
-        color: #d90429;
-        font-size: 22px;
-    }
-
-    .to-empty strong {
-        display: block;
-        color: #111827;
-        font-size: 15px;
-        font-weight: 900;
-        margin-bottom: 5px;
-    }
-
-    @media (max-width: 900px) {
-        .to-hero {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .to-hero-summary {
-            width: 100%;
-        }
-
-        .to-hero-summary div {
-            flex: 1;
-        }
-    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .tm-alert-modern { padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; background: #dcfce7; color: #15803d; font-weight: 800; border-left: 5px solid #22c55e; }
 </style>
 @endsection

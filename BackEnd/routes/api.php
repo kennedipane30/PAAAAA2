@@ -3,23 +3,23 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Api\pengajar\DedicatedTutorController;
-use App\Http\Controllers\Api\QuestionBankController;
 use App\Http\Controllers\Api\PaymentController;
-use App\Models\Announcement;
-use App\Models\Material;
-use App\Models\ClassModel;
-use App\Models\TryoutResult;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\TryoutController; 
+use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\QuestionBankController; // ✅ IMPORT BERHASIL
+use App\Models\{Announcement, Material, ClassModel, TryoutResult};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\{Route, DB, Http};
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - Specta Academy (Mobile & Web)
+| API Routes - Specta Academy (Gateway & Auth System)
 |--------------------------------------------------------------------------
 */
 
-// --- 0. HANDSHAKE ---
+// --- 0. HANDSHAKE (Cek API Aktif) ---
 Route::get('/', function () {
     return response()->json(['status' => 'success', 'message' => 'Specta Academy API is Ready']);
 });
@@ -32,88 +32,113 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-// ✅ WEBHOOK MIDTRANS (Harus Publik)
+// Webhook Midtrans (Dipanggil otomatis oleh Midtrans)
 Route::post('/midtrans-callback', [PaymentController::class, 'handleNotification']);
-Route::post('/payment/callback', [PaymentController::class, 'handleNotification']);
 
-// --- 2. PROTECTED ROUTES (Wajib Bearer Token) ---
+// --- 2. PROTECTED ROUTES (Wajib Bearer Token / Login) ---
 Route::middleware('auth:sanctum')->group(function () {
 
-    // ✅ PENGUMUMAN & BANNER DINAMIS
-    Route::get('/announcements', function() {
-        return response()->json([
-            'status' => 'success',
-            'data' => Announcement::latest()->get()
-        ]);
+    // ✅ PROFILE & GLOBAL DATA
+    Route::get('/user', function (Request $request) {
+        $user = $request->user()->load(['role', 'student.class']);
+        $activeEnrollment = DB::table('enrollments')
+            ->where('user_id', $user->usersID)
+            ->where('status', 'active')
+            ->first();
+            
+        if ($activeEnrollment) {
+            if ($user->student) $user->student->class_id = $activeEnrollment->class_id;
+            $user->active_class_id = $activeEnrollment->class_id;
+        }
+        return response()->json($user);
     });
 
+    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
     Route::get('/banners', [BannerController::class, 'index']);
     Route::get('/promos', [PromoController::class, 'apiIndex']);
-
-    // ✅ PROFILE & CLASSES
-    Route::get('/user', function (Request $request) {
-        return $request->user()->load(['role', 'student.class']);
+    Route::get('/announcements', function() {
+        return response()->json(['status' => 'success', 'data' => Announcement::latest()->get()]);
     });
-    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
-    Route::post('/logout', [AuthController::class, 'logout']);
 
+    // ============================================================
+    // ✅ QUESTION BANK HUB (Fitur Berbagi Soal Siswa)
+    // ============================================================
+    Route::prefix('question-bank')->group(function () {
+        Route::get('/', [QuestionBankController::class, 'index']);       
+        Route::post('/upload', [QuestionBankController::class, 'store']); 
+    });
+
+    // ✅ NOTIFICATION SYSTEM
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);                    
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);   
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllRead']); 
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);      
+    });
+
+    // ✅ KATALOG KELAS
     Route::get('/classes', function () {
-        return response()->json([
-            'status' => 'success',
-            'data' => ClassModel::all()
-        ]);
+        $classes = ClassModel::all()->map(function ($item) {
+            $item->price = (int) $item->price;
+            $item->class_id = (int) $item->class_id;
+            return $item;
+        });
+        return response()->json(['status' => 'success', 'data' => $classes]);
     });
 
-    // --- KHUSUS SISWA ---
+    // ✅ JADWAL SYSTEM
+    Route::prefix('schedules')->group(function () {
+        Route::get('/today', [ScheduleController::class, 'today']); 
+        Route::get('/all', [ScheduleController::class, 'index']);   
+    });
+
+    // ✅ TRYOUT SYSTEM
+    Route::prefix('tryouts')->group(function () {
+        Route::get('/', [TryoutController::class, 'index']);           
+        Route::get('/history', [TryoutController::class, 'history']);  
+        Route::get('/my', [TryoutController::class, 'history']);       
+        Route::get('/questions', [TryoutController::class, 'questions']); 
+        Route::get('/{id}/questions', [TryoutController::class, 'questions']); 
+        Route::post('/{id}/submit', [TryoutController::class, 'submit']);      
+        Route::get('/results/{id}', [TryoutController::class, 'results']);
+    });
+
+    // ✅ KHUSUS ROLE SISWA
     Route::middleware('role:siswa')->group(function () {
-
-        // ✅ DATA UNTUK DIAGRAM GARIS (DINAMIS)
+        
+        // Report Grafik Belajar
         Route::get('/learning-report', function(Request $request) {
-            $user = $request->user();
-            $stats = TryoutResult::where('user_id', $user->usersID)
-                        ->latest()
-                        ->take(7)
-                        ->get()
-                        ->reverse()
-                        ->values();
-
-            return response()->json(['status' => 'success', 'data' => $stats]);
+            $data = TryoutResult::where('user_id', $request->user()->usersID)
+                ->latest()
+                ->take(7)
+                ->get()
+                ->reverse()
+                ->values();
+            return response()->json(['status' => 'success', 'data' => $data]);
         });
 
-        // ✅ KONTEN KELAS
-        Route::post('/class/join', [AuthController::class, 'joinClass']);
-        Route::get('/schedules', [AuthController::class, 'getSiswaSchedule']);
-
-        // ✅ MATERI
+        // Materi Belajar berdasarkan Kelas
         Route::get('/materials', function (Request $request) {
-            $classId = $request->class_id;
-            if (!$classId) {
-                return response()->json(['status' => 'error', 'message' => 'class_id diperlukan'], 400);
-            }
             return response()->json([
-                'status' => 'success',
-                'data' => Material::where('class_id', $classId)->orderBy('week', 'asc')->get()
+                'status' => 'success', 
+                'data' => Material::where('class_id', $request->class_id)->orderBy('week', 'asc')->get()
             ]);
         });
+        
+        Route::post('/class/content', [AuthController::class, 'getClassContent']);
 
-        // ✅ TRYOUT & LATIHAN
-        Route::post('/tryout/questions', [AuthController::class, 'getQuestions']);
-        Route::post('/tryout/submit', [AuthController::class, 'submitTryout']);
-
-        // ✨ MODIFIKASI: DEDICATED TUTOR (Sinkron dengan Flutter)
-        Route::get('/tutor/form-data', [DedicatedTutorController::class, 'getTutorFormData']);
-        Route::get('/tutor/history', [DedicatedTutorController::class, 'index']);
-        Route::post('/tutor/submit', [DedicatedTutorController::class, 'store']);
-
-        // Tetap pertahankan rute lama jika masih dipakai
-        Route::get('/dedicated-tutors', [DedicatedTutorController::class, 'index']);
-        Route::post('/dedicated-tutors', [DedicatedTutorController::class, 'store']);
+        // ============================================================
+        // ✅ DEDICATED TUTOR (Request & Sisa Kuota)
+        // ============================================================
+        // Endpoint untuk mengambil Riwayat, Daftar Topik, dan Info Sisa Kuota
+        Route::get('/tutor/history', [DedicatedTutorController::class, 'index']); 
+        
+        // Endpoint untuk mengirim Request Sesi Tutor Baru
+        Route::post('/tutor/submit', [DedicatedTutorController::class, 'store']); 
     });
 
-    // PROMO & PAYMENT
-    Route::post('/promo/check', [PromoController::class, 'checkPromo']);
+    // ✅ UTILITY ROUTES (Payment, Promo, Logout)
     Route::post('/payment/snap-token', [PaymentController::class, 'getSnapToken']);
+    Route::post('/promo/check', [PromoController::class, 'checkPromo']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
-
-
-Route::match(['get', 'post'], '/class/content', [AuthController::class, 'getClassContent']);
