@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spectaacademy/screens/pdf_viewer_page.dart'; // Sesuaikan path jika berbeda
+import 'package:spectaacademy/screens/pdf_viewer_page.dart';
 
 class ModuleWeekListPage extends StatelessWidget {
   final String subjectName;
@@ -17,19 +17,12 @@ class ModuleWeekListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color spektaRed = Color(0xFF990000);
 
-    debugPrint("Target Subject: $subjectName");
-    debugPrint("Total Materials Received: ${allMaterials.length}");
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
           subjectName, 
-          style: const TextStyle(
-            fontWeight: FontWeight.bold, 
-            color: Colors.white, 
-            fontSize: 18
-          )
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18)
         ),
         backgroundColor: spektaRed,
         foregroundColor: Colors.white,
@@ -42,11 +35,11 @@ class ModuleWeekListPage extends StatelessWidget {
         itemBuilder: (context, index) {
           int weekNumber = index + 1;
 
-          // Cari apakah ada materi yang cocok dengan Minggu dan Mata Pelajaran ini
+          // ✨ Mencari materi yang cocok berdasarkan mata pelajaran dan minggu
           var materialData = allMaterials.firstWhere(
             (m) {
-              final String mSubject = (m['subject_name'] ?? m['material_name'] ?? m['MaterialName'] ?? '').toString().toLowerCase().trim();
-              final String mWeek = (m['week'] ?? m['Week'] ?? '').toString();
+              final String mSubject = (m['subject_name'] ?? m['material_name'] ?? '').toString().toLowerCase().trim();
+              final String mWeek = (m['week'] ?? '').toString();
               return mWeek == weekNumber.toString() && mSubject == subjectName.toLowerCase().trim();
             },
             orElse: () => null,
@@ -81,63 +74,22 @@ class ModuleWeekListPage extends StatelessWidget {
               ),
               title: Text(
                 "Week $weekNumber", 
-                style: TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  color: isUploaded ? Colors.black : Colors.grey[400]
-                )
+                style: TextStyle(fontWeight: FontWeight.bold, color: isUploaded ? Colors.black : Colors.grey[400])
               ),
               subtitle: Text(
-                isUploaded 
-                  ? (materialData['title'] ?? materialData['Title'] ?? "Materi Tersedia") 
-                  : "Material not yet uploaded", 
-                style: TextStyle(
-                  fontSize: 12, 
-                  color: isUploaded ? Colors.grey[600] : Colors.grey[300]
-                )
+                isUploaded ? (materialData['title'] ?? "Materi Tersedia") : "Material not yet uploaded", 
+                style: TextStyle(fontSize: 12, color: isUploaded ? Colors.grey[600] : Colors.grey[300])
               ),
-              trailing: Icon(
-                Icons.arrow_forward_ios_rounded, 
-                size: 14, 
-                color: isUploaded ? spektaRed : Colors.grey[300]
-              ),
+              trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isUploaded ? spektaRed : Colors.grey[300]),
               onTap: () {
                 if (isUploaded) {
-                  String path = (materialData['file_path'] ?? materialData['FilePath'] ?? '').toString();
+                  String path = (materialData['file_path'] ?? '').toString();
+                  if (path.isEmpty) return;
                   
-                  if (path.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Path file tidak valid"),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-                  
-                  // Pastikan URL mengarah ke storage Laravel
                   String pdfUrl = "http://10.0.2.2:8000/storage/$path";
-                  
-                  debugPrint("📄 Opening PDF: $pdfUrl");
-                  debugPrint("🔑 Sending Token: ${token.isNotEmpty ? 'YES' : 'NO'}");
-                  
-                  // ✨ PERBAIKAN: Menambahkan parameter 'token'
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute(
-                      builder: (context) => PdfViewerPage(
-                        pdfUrl: pdfUrl, 
-                        title: "Week $weekNumber - $subjectName",
-                        token: token, // 👈 Token sekarang dikirim ke PdfViewerPage
-                      ),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => PdfViewerPage(pdfUrl: pdfUrl, title: "Week $weekNumber - $subjectName", token: token)));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Materi untuk minggu ini belum tersedia"),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Materi untuk minggu ini belum tersedia"), backgroundColor: Colors.orange));
                 }
               },
             ),

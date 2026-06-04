@@ -33,8 +33,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   String status = "none";
   late int basePrice; 
   late Map currentLocalUserData;
-  
-  // ✨ Variabel penampung nama kelas yang dinamis
   String displayClassName = "";
   String description = "";
   List materi = [];
@@ -48,16 +46,13 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Inisialisasi awal dari widget
     currentLocalUserData = widget.userData;
     displayClassName = widget.className;
     basePrice = widget.price; 
-    
     _fetchDetail();
   }
 
   String _getLocalAsset() {
-    // Menentukan gambar berdasarkan ID kelas
     int cid = widget.classId;
     switch (cid) {
       case 1: return 'assets/images/abdi_negara.png';
@@ -68,25 +63,16 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     }
   }
 
-  // lib/screens/class_detail_page.dart
-
 Future<void> _fetchDetail() async {
   if (!mounted) return;
   setState(() => isLoading = true);
   
   try {
-    print("DEBUG: Memanggil Gateway untuk Class ID: ${widget.classId}");
     final response = await AuthService.getClassContent(widget.classId, widget.token);
-    
-    print("DEBUG: Response Status: ${response.statusCode}");
-    print("DEBUG: Response Body: ${response.body}"); // ✨ LIHAT INI DI TERMINAL
-
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      
       if (mounted) {
         setState(() {
-          // Ambil nama kelas dari API, jika gagal pakai dari widget
           displayClassName = decoded['program_name'] ?? widget.className;
           status = decoded['enroll_status'] ?? "none";
           materi = decoded['materi'] ?? [];
@@ -98,22 +84,30 @@ Future<void> _fetchDetail() async {
       }
     }
   } catch (e) {
-    print("DEBUG ERROR: $e");
     if (mounted) setState(() => isLoading = false);
   }
 }
 
-  // --- Navigasi ---
   void _navigateToMaterials() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => SubjectListPage(
       classId: widget.classId, className: displayClassName, token: widget.token, materi: materi,
     )));
   }
 
-  void _navigateToPractice() {
-    if (practiceQuestions.isEmpty) { _showWarningSnack("Latihan soal belum tersedia."); return; }
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PracticeSubjectListPage(allExercises: practiceQuestions, token: widget.token)));
+void _navigateToPractice() {
+  // Jika list practiceQuestions kosong, tampilkan pesan oranye dan BERHENTI (return)
+  if (practiceQuestions.isEmpty) { 
+    _showWarningSnack("Latihan soal belum tersedia."); 
+    return; 
   }
+  // Jika tidak kosong, baru pindah halaman
+  Navigator.push(context, MaterialPageRoute(
+    builder: (context) => PracticeSubjectListPage(
+      allExercises: practiceQuestions, 
+      token: widget.token
+    )
+  ));
+}
 
   void _navigateToTryouts() {
     if (tryouts.isEmpty) { _showWarningSnack("Tryout belum tersedia."); } 
@@ -127,13 +121,16 @@ Future<void> _fetchDetail() async {
   @override
   Widget build(BuildContext context) {
     bool isActive = (status == 'active');
-    
-    // Cek apakah user punya kelas aktif (berdasarkan ID dari profil)
     dynamic studentClassId = currentLocalUserData['student']?['class_id'];
     bool isUserEnrolledInThis = studentClassId?.toString() == widget.classId.toString();
 
-    // Hitung jumlah mapel unik untuk subtitle
-    final subjectsCount = materi.map((e) => e['material_name']).toSet().length;
+    // ✨ DINAMIS: Menghitung jumlah mata pelajaran unik yang ada di database untuk kelas ini
+// ... di dalam build method ClassDetailPage
+final subjectsCount = materi
+    .map((e) => (e['subject_name'] ?? e['material_name'] ?? '').toString())
+    .where((s) => s.isNotEmpty)
+    .toSet()
+    .length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -152,7 +149,6 @@ Future<void> _fetchDetail() async {
                         children: [
                           _buildStatusBadge(isUserEnrolledInThis),
                           const SizedBox(height: 15),
-                          // ✨ Nama Kelas Dinamis
                           Text(displayClassName, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                           const SizedBox(height: 25),
                           const Text("Tentang Kelas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -165,7 +161,7 @@ Future<void> _fetchDetail() async {
                           _buildFeatureButton(
                             icon: Icons.menu_book_rounded,
                             title: "Materi Video & PDF",
-                            subtitle: materi.isEmpty ? "Materi segera hadir" : "$subjectsCount Mata Pelajaran tersedia",
+                            subtitle: subjectsCount == 0 ? "Materi segera hadir" : "$subjectsCount Mata Pelajaran tersedia",
                             onTap: _navigateToMaterials,
                             isLocked: !isActive,
                           ),

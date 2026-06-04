@@ -19,15 +19,14 @@ class SubjectListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color spektaRed = const Color(0xFF990000);
 
-    // ✨ MODIFIKASI: Logika pengambilan subjek unik yang lebih aman (Case Insensitive)
-    // Ini menangani jika Go mengirim "material_name" atau "MaterialName"
+    // ✨ PERBAIKAN: Mengambil SEMUA mata pelajaran unik dari list materi
     final subjects = materi
         .map((e) {
-          // Cek semua kemungkinan kunci yang mungkin dikirim oleh Go/Laravel
-          return (e['material_name'] ?? e['MaterialName'] ?? e['subject'] ?? 'Tanpa Nama').toString();
+          // Mengambil dari 'subject_name' atau 'material_name' sesuai kolom di database Anda
+          return (e['subject_name'] ?? e['material_name'] ?? e['MaterialName'] ?? 'Tanpa Nama').toString();
         })
-        .where((name) => name != 'Tanpa Nama') // Filter jika ada data kosong
-        .toSet() // Menghilangkan duplikat agar satu mapel hanya muncul sekali
+        .where((name) => name != 'Tanpa Nama' && name.isNotEmpty) 
+        .toSet() // Menghilangkan duplikat (supaya Matematika hanya muncul 1x meskipun ada 20 minggu)
         .toList();
 
     return Scaffold(
