@@ -14,21 +14,16 @@ class AuthService {
   static const String storageBaseUrl = 'http://$host:8000/storage';
   static const String alternativeBaseUrl = 'http://$host:8000/pdf-materi';
   
-  // ✨ Endpoint Microservices sesuai spesifikasi port Anda
-  static const String materiUrl   = 'http://$host:9001/api'; // Port 9001
-  static const String tryoutUrl   = 'http://$host:9002/api'; // Port 9002 (Simulasi)
+  // ✨ Endpoint Microservices sesuai spesifikasi port
+  static const String materiUrl   = 'http://$host:9001/api'; // Port 9001 (Materi)
+  static const String tryoutUrl   = 'http://$host:9002/api'; // Port 9002 (Tryout/Simulasi)
   static const String practiceUrl = 'http://$host:9003/api'; // Port 9003 (Latihan Soal)
 
   // ============================================================
   // 📥 DOWNLOAD & CACHE SERVICE (PDF)
   // ============================================================
   
-  static Future<String?> downloadMateri(
-    String filePath,
-    Function(int, int) onProgress, {
-    String? token,
-    int maxRetry = 3,
-  }) async {
+  static Future<String?> downloadMateri(String filePath, Function(int, int) onProgress, {String? token, int maxRetry = 3}) async {
     try {
       String? result = await _downloadWithAlternativeRoute(filePath, onProgress, token: token, maxRetry: maxRetry);
       if (result != null) return result;
@@ -92,6 +87,14 @@ class AuthService {
     } catch (e) { debugPrint('❌ Gagal hapus cache: $e'); }
   }
 
+  static Future<http.StreamedResponse> joinClass(int classId, String imagePath, String token) async {
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/enroll'));
+    request.headers.addAll({'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+    request.fields['class_id'] = classId.toString();
+    request.files.add(await http.MultipartFile.fromPath('payment_proof', imagePath));
+    return await request.send();
+  }
+
   // ============================================================
   // 🔐 AUTHENTICATION METHODS
   // ============================================================
@@ -131,80 +134,65 @@ class AuthService {
   }
 
   // ============================================================
-  // 📚 CONTENT & TRYOUT METHODS
+  // 📚 CONTENT & TRYOUT METHODS (MICROSERVICES)
   // ============================================================
   
   // 1. Mengambil Materi (Port 9001)
   static Future<http.Response> getClassContent(int classId, String token) async {
     return await http.get(
       Uri.parse('$materiUrl/materials?class_id=$classId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    ).timeout(const Duration(seconds: 15));
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    ).timeout(const Duration(seconds: 10), onTimeout: () => http.Response('[]', 408));
   }
 
   // 2. Mengambil Latihan Soal Mingguan (Port 9003)
   static Future<http.Response> getTryouts(String token, {int? classId}) async {
     String url = '$practiceUrl/tryouts';
     if (classId != null) url += '?class_id=$classId';
-    
     return await http.get(
       Uri.parse(url), 
-      headers: {
-        'Authorization': 'Bearer $token', 
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    ).timeout(const Duration(seconds: 15));
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    ).timeout(const Duration(seconds: 10), onTimeout: () => http.Response('[]', 408));
   }
 
   // 3. Mengambil Simulasi Tryout (Port 9002)
   static Future<http.Response> getSimulasi(String token, {int? classId}) async {
     String url = '$tryoutUrl/tryouts';
     if (classId != null) url += '?class_id=$classId';
-    
     return await http.get(
       Uri.parse(url), 
-      headers: {
-        'Authorization': 'Bearer $token', 
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    ).timeout(const Duration(seconds: 15));
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    ).timeout(const Duration(seconds: 10), onTimeout: () => http.Response('[]', 408));
   }
 
-  // ✨ PERBAIKAN: Mengambil soal Tryout dari tryoutUrl (Port 9002)
-  static Future<http.Response> getQuestions(int tryoutId, String token) async =>
-      await http.get(Uri.parse('$tryoutUrl/tryouts/$tryoutId/questions'), 
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  // ✨ Mengambil soal Tryout dari tryoutUrl (Port 9002)
+  static Future<http.Response> getQuestions(int tryoutId, String token) async {
+    return await http.get(
+      Uri.parse('$tryoutUrl/tryouts/$tryoutId/questions'), 
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'}
+    ).timeout(const Duration(seconds: 10)); // Jangan return 408 di sini agar catch di UI berfungsi
+  }
 
-  static Future<http.Response> getTryoutHistory(String token) async =>
-      await http.get(Uri.parse('$baseUrl/tryouts/my'), 
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
-
+  // Submit Hasil Tryout ke Port 9002
   static Future<http.Response> submitTryout({
     required int tryoutId,
     required Map<dynamic, dynamic> answers, 
     required String token,
   }) async {
     Map<String, String> stringAnswers = answers.map((k, v) => MapEntry(k.toString(), v.toString()));
-    return await http.post(Uri.parse('$baseUrl/tryouts/$tryoutId/submit'),
-      headers: {
-        'Content-Type': 'application/json', 
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json'
-      },
-      body: jsonEncode({'tryout_id': tryoutId, 'answers': stringAnswers}));
+    return await http.post(
+      Uri.parse('$tryoutUrl/tryouts/$tryoutId/submit'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+      body: jsonEncode({'tryout_id': tryoutId, 'answers': stringAnswers})
+    ).timeout(const Duration(seconds: 15));
   }
 
+  static Future<http.Response> getTryoutHistory(String token) async =>
+      await http.get(Uri.parse('$baseUrl/tryouts/my'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+
   static Future<http.Response> getLearningReport(String token) async =>
-      await http.get(Uri.parse('$baseUrl/learning-report'), 
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+      await http.get(Uri.parse('$baseUrl/learning-report'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
 
   static Future<http.Response> getAnnouncements(String token) async =>
-      await http.get(Uri.parse('$baseUrl/announcements'), 
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+      await http.get(Uri.parse('$baseUrl/announcements'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
 }

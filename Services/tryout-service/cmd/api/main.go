@@ -52,15 +52,14 @@ func main() {
 		api.POST("/tryouts/sync", handler.SyncTryout) 
 		api.POST("/tryouts/submissions/sync", handler.SyncSubmissions)
 		api.GET("/tryouts", handler.GetTryouts)
-		
-		// ✨ SINKRONISASI RUTE: Menangani /api/tryouts/1/questions
 		api.GET("/tryouts/:id/questions", handler.GetQuestions)
 		
-		// Backup rute lama
+		// ✨ TAMBAHKAN BARIS INI: Rute untuk simpan nilai (Submit)
+		api.POST("/tryouts/:id/submit", handler.SubmitTryout) 
+
 		api.GET("/questions", handler.GetQuestions)
 	}
 
-	// ✨ MODIFIKASI PORT: Gunakan 9002 (Practice sudah pakai 9003)
 	port := os.Getenv("PORT")
 	if port == "" { 
 		port = "9002" 

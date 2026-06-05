@@ -77,17 +77,17 @@ class _QuizPageState extends State<QuizPage> {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 45)),
             onPressed: () {
-              // ✨ MODIFIKASI: Penyesuaian Key ID untuk sinkronisasi ExplanationPage
+              // ✨ PROSES SINKRONISASI JAWABAN UNTUK EXPLANATION PAGE
               for (var i = 0; i < widget.questions.length; i++) {
-                // Mendukung key question_id atau practice_question_id dari Go
                 var qData = widget.questions[i];
-                int qId = int.parse((qData['question_id'] ?? qData['practice_question_id'] ?? 0).toString());
+                // Ekstrak ID yang kuat terhadap casing dari Go
+                int qId = int.parse((qData['question_id'] ?? qData['QuestionID'] ?? qData['id'] ?? qData['ID'] ?? 0).toString());
                 
                 String userChoice = _myAnswers[qId] ?? "-";
                 widget.questions[i]['user_answer'] = userChoice;
               }
 
-              Navigator.pop(context); // Tutup dialog
+              Navigator.pop(context); 
               Navigator.push(context, MaterialPageRoute(
                 builder: (context) => ExplanationPage(questions: widget.questions)
               ));
@@ -97,8 +97,8 @@ class _QuizPageState extends State<QuizPage> {
           ),
           TextButton(
             onPressed: () { 
-              Navigator.pop(context); // Tutup dialog
-              Navigator.pop(context); // Kembali ke menu sebelumnya
+              Navigator.pop(context); 
+              Navigator.pop(context); 
             }, 
             child: const Text("KEMBALI KE MENU")
           ),
@@ -110,8 +110,9 @@ class _QuizPageState extends State<QuizPage> {
   @override
   Widget build(BuildContext context) {
     var q = widget.questions[_currentIndex];
-    // Ambil ID secara dinamis
-    int currentQId = int.parse((q['question_id'] ?? q['practice_question_id'] ?? 0).toString());
+    
+    // ✨ AMBIL ID SECARA DINAMIS
+    int currentQId = int.parse((q['question_id'] ?? q['QuestionID'] ?? q['id'] ?? q['ID'] ?? 0).toString());
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -137,14 +138,15 @@ class _QuizPageState extends State<QuizPage> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20), 
                     decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(15)),
-                    child: Text(q['question'] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
+                    child: Text(q['question'] ?? q['Question'] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
                   ),
                   const SizedBox(height: 30),
 
-                  _buildOption("A", q['option_a'] ?? "", currentQId),
-                  _buildOption("B", q['option_b'] ?? "", currentQId),
-                  _buildOption("C", q['option_c'] ?? "", currentQId),
-                  _buildOption("D", q['option_d'] ?? "", currentQId),
+                  // Pastikan mengambil option_a atau OptionA
+                  _buildOption("A", q['option_a'] ?? q['OptionA'] ?? "", currentQId),
+                  _buildOption("B", q['option_b'] ?? q['OptionB'] ?? "", currentQId),
+                  _buildOption("C", q['option_c'] ?? q['OptionC'] ?? "", currentQId),
+                  _buildOption("D", q['option_d'] ?? q['OptionD'] ?? "", currentQId),
                 ]
               )
             )

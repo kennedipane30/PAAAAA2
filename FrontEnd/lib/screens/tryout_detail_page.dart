@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'quiz_page.dart';
-import '../services/auth_service.dart';
 import 'dart:convert';
+import '../services/auth_service.dart';
+import 'quiz_page.dart';
 
 class TryoutDetailPage extends StatelessWidget {
   final Map tryoutData;
@@ -54,7 +54,6 @@ class TryoutDetailPage extends StatelessWidget {
                 elevation: 8,
               ),
               onPressed: () async {
-                // 1. Tampilkan Loading
                 showDialog(
                   context: context, 
                   barrierDismissible: false, 
@@ -62,10 +61,10 @@ class TryoutDetailPage extends StatelessWidget {
                 );
 
                 try {
-                  // Ambil ID Tryout
-                  final int id = int.parse(tryoutData['tryout_id'].toString());
+                  // ✨ Pastikan key sesuai JSON (bisa tryout_id atau id atau ID)
+                  final dynamic rawId = tryoutData['tryout_id'] ?? tryoutData['id'] ?? tryoutData['ID'] ?? 0;
+                  final int id = int.parse(rawId.toString());
                   
-                  // 2. Panggil API ke Port 9002
                   var resp = await AuthService.getQuestions(id, token);
                   
                   if (!context.mounted) return;
@@ -74,7 +73,7 @@ class TryoutDetailPage extends StatelessWidget {
                   if (resp.statusCode == 200) {
                     var decoded = jsonDecode(resp.body);
                     
-                    // ✨ MODIFIKASI: Deteksi List secara fleksibel agar terbaca dari Go
+                    // ✨ FLEKSIBEL PARSING: Mendukung Go yang mengirim array langsung
                     List questions = [];
                     if (decoded is List) {
                       questions = decoded;
@@ -87,7 +86,6 @@ class TryoutDetailPage extends StatelessWidget {
                        return;
                     }
 
-                    // 3. Pindah ke Halaman Quiz
                     Navigator.pushReplacement(context, MaterialPageRoute(
                       builder: (_) => QuizPage(
                         questions: questions, 
@@ -100,14 +98,12 @@ class TryoutDetailPage extends StatelessWidget {
                   }
                 } catch (e) {
                   if (context.mounted) Navigator.pop(context);
-                  debugPrint("❌ Tryout Fetch Error: $e");
+                  debugPrint("❌ Tryout Error: $e");
                   _showError(context, "Kesalahan koneksi ke server Tryout.");
                 }
               },
-              child: const Text(
-                "MULAI UJIAN SEKARANG", 
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)
-              ),
+              child: const Text("MULAI UJIAN SEKARANG", 
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
             )
           ],
         ),
@@ -136,8 +132,6 @@ class TryoutDetailPage extends StatelessWidget {
   }
 
   void _showError(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(backgroundColor: Colors.red, content: Text(msg), behavior: SnackBarBehavior.floating)
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.red, content: Text(msg), behavior: SnackBarBehavior.floating));
   }
 }

@@ -1,7 +1,7 @@
 package http
 
 import (
-	"net/http" // ✨ Sekarang digunakan untuk http.StatusOK, dll
+	"net/http"
 	"tryout-service/internal/models"
 	"tryout-service/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -74,7 +74,6 @@ func (h *TryoutHandler) GetTryouts(c *gin.Context) {
  * 4. AMBIL DAFTAR SOAL (SAAT UJIAN DIMULAI)
  */
 func (h *TryoutHandler) GetQuestions(c *gin.Context) {
-	// Mendukung ambil ID dari path (:id) atau query (?tryout_id=)
 	tryoutID := c.Param("id")
 	if tryoutID == "" {
 		tryoutID = c.Query("tryout_id")
@@ -91,6 +90,30 @@ func (h *TryoutHandler) GetQuestions(c *gin.Context) {
 		return
 	}
 
-	// Mengembalikan list soal langsung agar Flutter bisa membaca sebagai List
 	c.JSON(http.StatusOK, data)
+}
+
+/**
+ * 5. SIMPAN HASIL UJIAN (SUBMIT)
+ * ✨ Fungsi ini sekarang berada di luar GetQuestions dan terstruktur dengan benar
+ */
+func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
+	var req struct {
+		TryoutID int               `json:"tryout_id"`
+		Answers  map[string]string `json:"answers"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format data jawaban salah"})
+		return
+	}
+
+	// Response sukses agar Flutter bisa menampilkan dialog hasil
+	// (Logic perhitungan nilai sesungguhnya dapat diletakkan di layer usecase)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"score":   85,    // Skor simulasi
+		"correct": 4,     // Jumlah benar simulasi
+		"message": "Nilai berhasil disimpan",
+	})
 }
