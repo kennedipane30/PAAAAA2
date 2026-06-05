@@ -5,7 +5,6 @@
 <?php
     $teacher = Auth::user();
     $jadwalUtama = $jadwalMendatang->first();
-    $tutorUtama = $jadwalTutor->first();
 ?>
 
 <div class="td-page">
@@ -57,12 +56,6 @@
                     <small>
                         <?php echo e(\Carbon\Carbon::parse($jadwalUtama->date)->translatedFormat('d M Y')); ?>,
                         <?php echo e(substr($jadwalUtama->start_time, 0, 5)); ?> WIB
-                    </small>
-                <?php elseif($tutorUtama): ?>
-                    <strong>Dedicated Tutor</strong>
-                    <small>
-                        <?php echo e(\Carbon\Carbon::parse($tutorUtama->date)->translatedFormat('d M Y')); ?>,
-                        <?php echo e(substr($tutorUtama->time, 0, 5)); ?> WIB
                     </small>
                 <?php else: ?>
                     <strong>Tidak ada agenda</strong>
@@ -263,18 +256,18 @@
                             </div>
 
                             <div class="td-assignment-actions">
-                            <a href="<?php echo e(route('pengajar.materi.pilih', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
-                                Materi
-                            </a>
+                                <a href="<?php echo e(route('pengajar.materi.pilih', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
+                                    Materi
+                                </a>
 
-                            <a href="<?php echo e(route('pengajar.tryout.create', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
-                                Tryout
-                            </a>
+                                <a href="<?php echo e(route('pengajar.tryout.create', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
+                                    Tryout
+                                </a>
 
-                            <a href="<?php echo e(route('pengajar.latihan.pilih', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
-                                Latihan
-                            </a>
-                        </div>
+                                <a href="<?php echo e(route('pengajar.latihan.pilih', ['class_id' => $assign->class_id, 'subject_id' => $assign->subject_id])); ?>">
+                                    Latihan
+                                </a>
+                            </div>
                         </article>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="td-empty">
@@ -286,110 +279,6 @@
                 </div>
             </section>
         </div>
-
-        
-        <aside class="td-right-column">
-
-            
-            <section class="td-side-panel">
-                <div class="td-side-heading">
-                    <span>Private Session</span>
-                    <h2>Dedicated Tutor</h2>
-                </div>
-
-                <div class="td-tutor-list">
-                    <?php $__empty_1 = true; $__currentLoopData = $jadwalTutor; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tutor): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <?php
-                            $studentName = $tutor->student->user->name ?? 'Siswa';
-                            $initial = strtoupper(substr($studentName, 0, 1));
-                        ?>
-
-                        <article class="td-tutor-item">
-                            <div class="td-tutor-avatar">
-                                <?php echo e($initial); ?>
-
-                            </div>
-
-                            <div>
-                                <h3><?php echo e($studentName); ?></h3>
-                                <p><?php echo e($tutor->material->title ?? $tutor->material->material_name ?? 'Materi Privat'); ?></p>
-                                <span>
-                                    <?php echo e(\Carbon\Carbon::parse($tutor->date)->translatedFormat('d M Y')); ?>,
-                                    <?php echo e(substr($tutor->time, 0, 5)); ?> WIB
-                                </span>
-                            </div>
-                        </article>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <div class="td-empty small">
-                            <i class="fa-solid fa-headset"></i>
-                            <strong>Belum ada tutor.</strong>
-                            <span>Sesi tutor yang sudah dikonfirmasi akan muncul di sini.</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </section>
-
-            
-            <section class="td-side-panel">
-                <div class="td-side-heading">
-                    <span>Latest Material</span>
-                    <h2>Materi Terbaru</h2>
-                </div>
-
-                <div class="td-material-list">
-                    <?php $__empty_1 = true; $__currentLoopData = $materiTerbaru; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $materi): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <article>
-                            <div>
-                                <i class="fa-solid fa-file-lines"></i>
-                            </div>
-
-                            <section>
-                                <h3><?php echo e($materi->title ?? $materi->material_name ?? 'Materi'); ?></h3>
-                                <p><?php echo e($materi->class->program_name ?? 'Program Kelas'); ?></p>
-                                <span><?php echo e($materi->created_at ? $materi->created_at->diffForHumans() : '-'); ?></span>
-                            </section>
-                        </article>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <div class="td-empty small">
-                            <i class="fa-solid fa-file-circle-plus"></i>
-                            <strong>Belum ada materi.</strong>
-                            <span>Materi yang Anda upload akan tampil di sini.</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </section>
-
-            
-            <section class="td-side-panel">
-                <div class="td-side-heading">
-                    <span>Recent Activity</span>
-                    <h2>Aktivitas Terbaru</h2>
-                </div>
-
-                <div class="td-activity-list">
-                    <?php $__empty_1 = true; $__currentLoopData = $aktivitasTerbaru; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $activity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <article>
-                            <div>
-                                <i class="fa-solid <?php echo e($activity['icon']); ?>"></i>
-                            </div>
-
-                            <section>
-                                <h3><?php echo e($activity['title']); ?></h3>
-                                <p><?php echo e($activity['subtitle']); ?></p>
-                                <span><?php echo e($activity['time'] ? $activity['time']->diffForHumans() : '-'); ?></span>
-                            </section>
-                        </article>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <div class="td-empty small">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                            <strong>Belum ada aktivitas.</strong>
-                            <span>Aktivitas pengajar akan muncul otomatis.</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </section>
-
-        </aside>
 
     </section>
 
@@ -586,8 +475,7 @@
 
     .td-stat-card,
     .td-action-strip,
-    .td-panel,
-    .td-side-panel {
+    .td-panel {
         background: #fff;
         border: 1px solid #edf0f4;
         box-shadow: 0 14px 35px rgba(15,23,42,.05);
@@ -725,20 +613,15 @@
     }
 
     .td-main-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 365px;
-        gap: 22px;
-        align-items: start;
+        display: block;
     }
 
-    .td-left-column,
-    .td-right-column {
+    .td-left-column {
         display: grid;
         gap: 22px;
     }
 
-    .td-panel,
-    .td-side-panel {
+    .td-panel {
         border-radius: 22px;
         padding: 22px;
     }
@@ -751,8 +634,7 @@
         margin-bottom: 20px;
     }
 
-    .td-panel-heading span,
-    .td-side-heading span {
+    .td-panel-heading span {
         display: block;
         color: #d90429;
         font-size: 10px;
@@ -762,8 +644,7 @@
         margin-bottom: 8px;
     }
 
-    .td-panel-heading h2,
-    .td-side-heading h2 {
+    .td-panel-heading h2 {
         margin: 0;
         color: #111827;
         font-size: 18px;
@@ -962,87 +843,6 @@
         font-weight: 900;
     }
 
-    .td-side-heading {
-        margin-bottom: 17px;
-    }
-
-    .td-tutor-list,
-    .td-material-list,
-    .td-activity-list {
-        display: grid;
-        gap: 12px;
-    }
-
-    .td-tutor-item {
-        display: grid;
-        grid-template-columns: 44px 1fr;
-        gap: 12px;
-        padding: 13px;
-        border-radius: 16px;
-        background: #f8fafc;
-        border: 1px solid #edf0f4;
-    }
-
-    .td-tutor-avatar {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 15px;
-        background: #dbeafe;
-        color: #2563eb;
-        font-weight: 900;
-    }
-
-    .td-tutor-item h3,
-    .td-material-list h3,
-    .td-activity-list h3 {
-        margin: 0;
-        color: #111827;
-        font-size: 12px;
-        font-weight: 900;
-    }
-
-    .td-tutor-item p,
-    .td-material-list p,
-    .td-activity-list p {
-        margin: 4px 0 4px;
-        color: #6b7280;
-        font-size: 11px;
-        font-weight: 700;
-        line-height: 1.4;
-    }
-
-    .td-tutor-item span,
-    .td-material-list span,
-    .td-activity-list span {
-        color: #9ca3af;
-        font-size: 10px;
-        font-weight: 800;
-    }
-
-    .td-material-list article,
-    .td-activity-list article {
-        display: grid;
-        grid-template-columns: 42px 1fr;
-        gap: 12px;
-        padding: 13px;
-        border-radius: 16px;
-        border: 1px solid #edf0f4;
-        background: #fff;
-    }
-
-    .td-material-list article > div,
-    .td-activity-list article > div {
-        width: 42px;
-        height: 42px;
-        display: grid;
-        place-items: center;
-        border-radius: 13px;
-        background: #ffe8ee;
-        color: #d90429;
-    }
-
     .td-empty {
         padding: 34px;
         text-align: center;
@@ -1051,10 +851,6 @@
         color: #6b7280;
         font-size: 12px;
         font-weight: 700;
-    }
-
-    .td-empty.small {
-        padding: 25px;
     }
 
     .td-empty i {
@@ -1086,14 +882,6 @@
         .td-stats {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-
-        .td-main-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .td-right-column {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
     }
 
     @media (max-width: 1100px) {
@@ -1113,10 +901,6 @@
 
         .td-action-strip {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .td-right-column {
-            grid-template-columns: 1fr;
         }
     }
 
@@ -1145,4 +929,5 @@
     }
 </style>
 <?php $__env->stopSection(); ?>
+
 <?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/pengajar/dashboard.blade.php ENDPATH**/ ?>

@@ -83,7 +83,7 @@
                 {{-- 3. PENGAJAR (READONLY - OTOMATIS) --}}
                 <div class="sc-input-group">
                     <label>Pengajar Terdaftar</label>
-                    <input type="text" id="teacherNameDisplay" class="sc-input-readonly" readonly placeholder="Akan terisi otomatis...">
+                    <input type="text" id="teacherNameDisplay" class="sc-input-readonly" readonly placeholder="Akan terisi otomatis berdasarkan mata pelajaran...">
                 </div>
 
                 {{-- 4. ATUR WAKTU --}}
@@ -106,22 +106,6 @@
                     <i class="fa-solid fa-paper-plane"></i> Publikasikan Jadwal
                 </button>
             </form>
-        </div>
-
-        <div class="sc-panel sc-calendar-panel">
-            <div class="sc-panel-heading">
-                <div class="sc-heading-icon"><i class="fa-regular fa-calendar-check"></i></div>
-                <h2>Ringkasan</h2>
-            </div>
-            <div class="sc-summary-info">
-                <p>Silakan pilih program dan mata pelajaran. Sistem akan mencocokkan guru yang bertugas secara otomatis dari database penugasan kurikulum.</p>
-                <div class="sc-calendar-days-name" style="display:grid; grid-template-columns: repeat(7,1fr); text-align:center; font-size:10px; font-weight:800; color:#94a3b8; margin-top:20px;">
-                    <span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span><span>M</span>
-                </div>
-                <div id="calendarDays" style="display:grid; grid-template-columns: repeat(7,1fr); gap:5px; margin-top:10px;">
-                    {{-- Mini Calendar Grid --}}
-                </div>
-            </div>
         </div>
     </section>
     @endif
@@ -203,21 +187,34 @@
 <style>
     .sc-page { font-family: 'Inter', sans-serif; padding: 10px; }
     .sc-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; }
-    .sc-title-wrapper { display: flex; align-items: center; gap: 15px; }
+    .sc-title-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 8px;}
     .sc-header h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0; }
     .sc-badge-live { background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
     .dot-pulse { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+    .sc-header p {margin: 0; color: #64748b; font-size: 14px;}
 
-    .sc-top-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 25px; margin-bottom: 30px; }
+    .sc-alert { display: flex; gap: 10px; align-items: center; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; font-size: 14px;}
+    .sc-alert.success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;}
+
+    /* Form Section dipindah menjadi block agar Full-width */
+    .sc-top-grid { display: block; margin-bottom: 30px; }
     .sc-panel { background: #fff; border-radius: 22px; padding: 25px; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+
+    .sc-panel-heading {display: flex; gap: 15px; align-items: center; margin-bottom: 20px;}
+    .sc-heading-icon { width: 45px; height: 45px; background: #fff1f2; color: #d90429; display: grid; place-items: center; border-radius: 12px; font-size: 20px;}
+    .sc-panel-heading h2 { margin: 0; font-size: 18px; font-weight: 800;}
+
     .sc-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .sc-input-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
     .sc-input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
     .sc-input-group label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-    .sc-input-group input, .sc-input-group select { padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; outline: none; transition: all 0.3s; }
+    .sc-input-group input, .sc-input-group select { padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; outline: none; transition: all 0.3s; font-family: inherit;}
+    .sc-input-group input:focus, .sc-input-group select:focus { border-color: #d90429; background: #fff;}
     .sc-input-readonly { background: #eff6ff !important; border-color: #bfdbfe !important; color: #1e40af; cursor: not-allowed; }
-    .sc-submit { background: linear-gradient(135deg, #d90429 0%, #ef233c 100%); color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; box-shadow: 0 10px 20px rgba(217, 4, 41, 0.2); }
+
+    .sc-submit { background: linear-gradient(135deg, #d90429 0%, #ef233c 100%); color: #fff; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; box-shadow: 0 10px 20px rgba(217, 4, 41, 0.2); transition: 0.3s; display: inline-flex; gap: 10px; align-items: center;}
+    .sc-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(217, 4, 41, 0.3); }
 
     .sc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
     .sc-stat-card { background: #fff; border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #f1f5f9; }
@@ -229,16 +226,26 @@
     .sc-stat-info strong { font-size: 24px; font-weight: 900; color: #0f172a; display: block; }
 
     .sc-table-panel { background: #fff; border-radius: 22px; padding: 25px; border: 1px solid #f1f5f9; }
-    .sc-table { width: 100%; border-collapse: collapse; }
+    .sc-table-wrap { overflow-x: auto;}
+    .sc-table { width: 100%; border-collapse: collapse; min-width: 800px;}
     .sc-table th { text-align: left; padding: 15px; font-size: 11px; color: #94a3b8; text-transform: uppercase; border-bottom: 2px solid #f8fafc; }
-    .sc-table td { padding: 15px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
+    .sc-table td { padding: 15px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; color: #334155;}
+    .sc-table tbody tr:last-child td {border-bottom: none;}
     .sc-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .sc-status-badge.ongoing { background: #dcfce7; color: #15803d; }
     .sc-status-badge.scheduled { background: #e0f2fe; color: #0369a1; }
     .sc-status-badge.finished { background: #f1f5f9; color: #64748b; }
-    .btn-delete { color: #d90429; border: none; background: none; cursor: pointer; font-size: 16px; opacity: 0.7; transition: 0.3s; }
-    .btn-delete:hover { opacity: 1; transform: scale(1.1); }
+    .btn-delete { color: #d90429; border: none; background: #fff1f2; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.3s; display: grid; place-items: center;}
+    .btn-delete:hover { transform: scale(1.05); background: #fecdd3;}
+
+    /* Responsiveness */
+    @media (max-width: 768px) {
+        .sc-input-row, .sc-input-row.three-col { grid-template-columns: 1fr; }
+        .sc-stats { grid-template-columns: 1fr; }
+        .sc-header { flex-direction: column; align-items: flex-start; gap: 15px;}
+    }
 </style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const BASE_URL = "{{ url('/') }}";

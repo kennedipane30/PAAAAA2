@@ -1,5 +1,5 @@
-<?php $__env->startSection('title', 'Tambah Pengajar'); ?>
-<?php $__env->startSection('subtitle', 'Tambah akun pengajar baru Spekta Academy'); ?>
+<?php $__env->startSection('title', 'Edit Pengajar'); ?>
+<?php $__env->startSection('subtitle', 'Perbarui data akun pengajar Spekta Academy'); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="teacher-form-page">
@@ -7,8 +7,8 @@
     <section class="form-hero">
         <div>
             <span>Teacher Account</span>
-            <h1>Tambah Pengajar</h1>
-            <p>Daftarkan akun pengajar baru agar dapat mengakses portal Spekta Academy.</p>
+            <h1>Edit Pengajar</h1>
+            <p>Perbarui data akun pengajar. Password boleh dikosongkan jika tidak ingin diubah.</p>
         </div>
 
         <a href="<?php echo e(route('admin.manajemen-pengajar.index')); ?>">
@@ -34,19 +34,23 @@
     <section class="form-card">
         <div class="card-heading">
             <div>
-                <h2>Form Tambah Pengajar</h2>
-                <p>Isi data pengajar dengan benar. Akun akan langsung bisa digunakan sesuai status yang dipilih.</p>
+                <h2>Form Edit Pengajar</h2>
+                <p>Data yang diubah akan langsung tersimpan ke akun pengajar.</p>
+            </div>
+            <div class="heading-icon">
+                <i class="fa-solid fa-user-pen"></i>
             </div>
         </div>
 
-        <form action="<?php echo e(route('admin.manajemen-pengajar.store')); ?>" method="POST" class="teacher-form">
+        <form action="<?php echo e(route('admin.manajemen-pengajar.update', $teacher->usersID)); ?>" method="POST" class="teacher-form">
             <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
 
             <div class="input-group">
                 <label>Nama Lengkap</label>
                 <div>
                     <i class="fa-solid fa-user"></i>
-                    <input type="text" name="name" value="<?php echo e(old('name')); ?>" placeholder="Contoh: Kennedi Pane" required>
+                    <input type="text" name="name" value="<?php echo e(old('name', $teacher->name)); ?>" required>
                 </div>
             </div>
 
@@ -54,7 +58,7 @@
                 <label>Email Address</label>
                 <div>
                     <i class="fa-solid fa-envelope"></i>
-                    <input type="email" name="email" value="<?php echo e(old('email')); ?>" placeholder="teacher@gmail.com" required>
+                    <input type="email" name="email" value="<?php echo e(old('email', $teacher->email)); ?>" required>
                 </div>
             </div>
 
@@ -62,15 +66,15 @@
                 <label>Nomor Telepon</label>
                 <div>
                     <i class="fa-solid fa-phone"></i>
-                    <input type="text" name="phone" value="<?php echo e(old('phone')); ?>" placeholder="081234567890" required>
+                    <input type="text" name="phone" value="<?php echo e(old('phone', $teacher->phone)); ?>" required>
                 </div>
             </div>
 
             <div class="input-group">
-                <label>Password</label>
+                <label>Password Baru</label>
                 <div>
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" name="password" placeholder="Minimal 6 karakter" required>
+                    <input type="password" name="password" placeholder="Kosongkan jika tidak diubah">
                 </div>
             </div>
 
@@ -79,9 +83,21 @@
                 <div>
                     <i class="fa-solid fa-circle-check"></i>
                     <select name="is_verified" required>
-                        <option value="1" <?php echo e(old('is_verified', '1') == '1' ? 'selected' : ''); ?>>Aktif</option>
-                        <option value="0" <?php echo e(old('is_verified') == '0' ? 'selected' : ''); ?>>Nonaktif</option>
+                        <option value="1" <?php echo e(old('is_verified', $teacher->is_verified ? '1' : '0') == '1' ? 'selected' : ''); ?>>Aktif</option>
+                        <option value="0" <?php echo e(old('is_verified', $teacher->is_verified ? '1' : '0') == '0' ? 'selected' : ''); ?>>Nonaktif</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="profile-summary">
+                <div class="summary-avatar">
+                    <?php echo e(strtoupper(substr($teacher->name, 0, 1))); ?>
+
+                </div>
+                <div>
+                    <strong><?php echo e($teacher->name); ?></strong>
+                    <span><?php echo e($teacher->email); ?></span>
+                    <small>Bergabung <?php echo e($teacher->created_at?->translatedFormat('d M Y')); ?></small>
                 </div>
             </div>
 
@@ -91,8 +107,8 @@
                 </a>
 
                 <button type="submit" class="submit-btn">
-                    <i class="fa-solid fa-user-plus"></i>
-                    Simpan Pengajar
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Simpan Perubahan
                 </button>
             </div>
         </form>
@@ -151,7 +167,6 @@
         font-size: 12px;
         font-weight: 900;
         white-space: nowrap;
-        text-decoration: none;
     }
 
     .form-alert {
@@ -182,7 +197,7 @@
         border-radius: 22px;
         box-shadow: 0 14px 35px rgba(15, 23, 42, .05);
         padding: 24px;
-        width: 100%;
+        max-width: 880px;
     }
 
     .card-heading {
@@ -206,6 +221,17 @@
         font-size: 12px;
         font-weight: 600;
         line-height: 1.5;
+    }
+
+    .heading-icon {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        border-radius: 16px;
+        background: #ffe8ee;
+        color: #d90429;
+        flex-shrink: 0;
     }
 
     .teacher-form {
@@ -237,7 +263,6 @@
         font-size: 13px;
     }
 
-    /* Input dan Select digabungkan stylingnya */
     .input-group input,
     .input-group select {
         width: 100%;
@@ -251,7 +276,6 @@
         font-size: 13px;
         font-weight: 700;
         font-family: inherit;
-        appearance: none; /* Menghilangkan style default panah browser pada select agar lebih rapi */
     }
 
     .input-group input:focus,
@@ -261,12 +285,43 @@
         box-shadow: 0 0 0 4px rgba(217, 4, 41, .08);
     }
 
-    /* Supaya panah select tetap muncul dengan gaya custom */
-    .input-group select {
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
-        background-repeat: no-repeat;
-        background-position: right 15px center;
-        background-size: 10px auto;
+    .profile-summary {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #f8fafc;
+        border: 1px solid #edf0f4;
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .summary-avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        background: #ffe8ee;
+        color: #d90429;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .profile-summary strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .profile-summary span,
+    .profile-summary small {
+        display: block;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 3px;
     }
 
     .form-actions {
@@ -289,7 +344,6 @@
         font-size: 12px;
         font-weight: 900;
         font-family: inherit;
-        text-decoration: none;
     }
 
     .cancel-btn {
@@ -326,5 +380,4 @@
     }
 </style>
 <?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/pengajar/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/pengajar/edit.blade.php ENDPATH**/ ?>
