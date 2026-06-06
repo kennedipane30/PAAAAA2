@@ -70,30 +70,52 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     }
   }
 
+  // ✨ MODIFIKASI: Pencarian ID User yang Profesional & Dinamis
+  int _getCurrentUserId() {
+    try {
+      var data = currentLocalUserData;
+      
+      // [DEBUG] Mencetak struktur data ke console agar mudah ditelusuri jika terjadi error
+      print("🔍 STRUKTUR DATA LOGIN: $data");
+
+      // Cek berbagai kemungkinan struktur JSON dari backend Laravel Anda
+      if (data.containsKey('usersID') && data['usersID'] != null) {
+        return int.parse(data['usersID'].toString());
+      } else if (data.containsKey('user_id') && data['user_id'] != null) {
+        return int.parse(data['user_id'].toString());
+      } else if (data.containsKey('user') && data['user'] != null) {
+        if (data['user'].containsKey('id')) return int.parse(data['user']['id'].toString());
+        if (data['user'].containsKey('usersID')) return int.parse(data['user']['usersID'].toString());
+      } else if (data.containsKey('student') && data['student'] != null) {
+        if (data['student'].containsKey('user_id')) return int.parse(data['student']['user_id'].toString());
+      } else if (data.containsKey('id') && data['id'] != null) {
+        return int.parse(data['id'].toString());
+      }
+    } catch (e) {
+      print("❌ Gagal membaca User ID dari Map: $e");
+    }
+
+    print("⚠️ PERINGATAN: ID User tidak ditemukan di Map userData!");
+    return 0; 
+  }
+
   Future<void> _fetchDetail() async {
     if (!mounted) return;
     setState(() => isLoading = true);
 
     try {
-      // ✨ Ambil User ID untuk dikirim ke Backend Go
-      // Tujuannya agar Backend tahu siswa mana yang sedang dicek status TO-nya
-      int currentUserId = 0;
-      if (currentLocalUserData['id'] != null) {
-        currentUserId = int.parse(currentLocalUserData['id'].toString());
-      } else if (currentLocalUserData['user'] != null && currentLocalUserData['user']['id'] != null) {
-        currentUserId = int.parse(currentLocalUserData['user']['id'].toString());
-      }
+      int currentUserId = _getCurrentUserId(); 
 
       // 1. Ambil Materi (Port 9001)
       final matRes =
           await AuthService.getClassContent(widget.classId, widget.token);
 
-      // 2. Ambil Simulasi Tryout (Port 9002) - ✨ SEKARANG MENGIRIM userId
+      // 2. Ambil Simulasi Tryout (Port 9002) 
       final tryoutRes =
           await AuthService.getSimulasi(
               widget.token, 
               classId: widget.classId, 
-              userId: currentUserId // <-- PENTING
+              userId: currentUserId 
           );
 
       // 3. Ambil Latihan Soal (Port 9003)
@@ -164,33 +186,32 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       _showWarningSnack("Latihan soal belum tersedia.");
       return;
     }
+    
+    int currentUserId = _getCurrentUserId(); 
+
     Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => PracticeSubjectListPage(
-                allExercises: practiceQuestions, token: widget.token)));
+                allExercises: practiceQuestions, 
+                token: widget.token,
+                userId: currentUserId, 
+            )));
   }
 
-void _navigateToTryouts() {
+  void _navigateToTryouts() {
     if (tryouts.isEmpty) {
       _showWarningSnack("Tryout belum tersedia.");
     } else {
-      // 1. Ekstrak User ID
-      int currentUserId = 0;
-      if (currentLocalUserData['id'] != null) {
-        currentUserId = int.parse(currentLocalUserData['id'].toString());
-      } else if (currentLocalUserData['user'] != null && currentLocalUserData['user']['id'] != null) {
-        currentUserId = int.parse(currentLocalUserData['user']['id'].toString());
-      }
+      int currentUserId = _getCurrentUserId(); 
 
-      // 2. Teruskan User ID saat navigasi
       Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => TryoutListPage(
                   tryouts: tryouts, 
                   token: widget.token,
-                  userId: currentUserId, // ✨ INI YANG HARUS DITAMBAHKAN
+                  userId: currentUserId, 
               )));
     }
   }
@@ -271,7 +292,7 @@ void _navigateToTryouts() {
                             subtitle: practiceQuestions.isEmpty
                                 ? "Belum tersedia"
                                 : "${practiceQuestions.length} Soal tersedia",
-                            onTap: _navigateToPractice,
+                            onTap: _navigateToPractice, 
                             isLocked: !isActive,
                             color: Colors.blue,
                           ),

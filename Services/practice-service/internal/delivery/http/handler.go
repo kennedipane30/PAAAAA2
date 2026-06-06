@@ -25,15 +25,13 @@ func (h *PracticeHandler) GetPractice(c *gin.Context) {
 	}
 
 	classID, _ := strconv.Atoi(classIDStr)
-	
+
 	data, err := h.uc.GetListByClass(uint(classID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	// ✨ MODIFIKASI: Kirim data langsung sebagai array [...]
-	// Agar di Flutter: pracDecoded is List bernilai TRUE
 	c.JSON(http.StatusOK, data)
 }
 
@@ -60,4 +58,32 @@ func (h *PracticeHandler) DeleteWeek(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
+}
+
+// ✨ FUNGSI BARU UNTUK MENERIMA JAWABAN DARI FLUTTER
+// Struct sementara untuk membaca payload dari Flutter
+type SubmitReq struct {
+	UserID     uint   `json:"user_id" binding:"required"`
+	QuestionID uint   `json:"question_id" binding:"required"`
+	Answer     string `json:"answer" binding:"required"`
+}
+
+func (h *PracticeHandler) SubmitAnswer(c *gin.Context) {
+	var req SubmitReq
+	
+	// Validasi input JSON
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
+		return
+	}
+
+	// Panggil usecase (otak logika)
+	res, err := h.uc.SubmitAnswer(req.UserID, req.QuestionID, req.Answer)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process answer", "details": err.Error()})
+		return
+	}
+
+	// Kembalikan respon ke Flutter
+	c.JSON(http.StatusOK, res)
 }

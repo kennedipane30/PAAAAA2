@@ -155,6 +155,19 @@ class AuthService {
     ).timeout(const Duration(seconds: 10), onTimeout: () => http.Response('[]', 408));
   }
 
+  // ✨ MODIFIKASI: 2b. Fungsi Baru untuk Mengirim Jawaban Latihan Soal ke Golang (Port 9003)
+  static Future<http.Response> submitPracticeAnswer(String token, int userId, int questionId, String answer) async {
+    return await http.post(
+      Uri.parse('$practiceUrl/practice/submit'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "user_id": userId,
+        "question_id": questionId,
+        "answer": answer
+      }),
+    ).timeout(const Duration(seconds: 10));
+  }
+
   // 3. Mengambil Simulasi Tryout (Port 9002)
   static Future<http.Response> getSimulasi(String token, {int? classId, int? userId}) async {
     String url = '$tryoutUrl/tryouts';
@@ -164,7 +177,7 @@ class AuthService {
     return await http.get(Uri.parse(url), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'}).timeout(const Duration(seconds: 15));
   }
 
-  // ✨ Mengambil soal Tryout dari tryoutUrl (Port 9002)
+  // Mengambil soal Tryout dari tryoutUrl (Port 9002)
   static Future<http.Response> getQuestions(int tryoutId, String token) async {
     return await http.get(
       Uri.parse('$tryoutUrl/tryouts/$tryoutId/questions'), 
@@ -175,7 +188,7 @@ class AuthService {
   // Submit Hasil Tryout ke Port 9002
   static Future<http.Response> submitTryout({
     required int tryoutId,
-    required int userId, // ✨ TAMBAHAN BARU
+    required int userId, 
     required Map<dynamic, dynamic> answers, 
     required String token,
   }) async {
@@ -183,10 +196,9 @@ class AuthService {
     return await http.post(
       Uri.parse('$tryoutUrl/tryouts/$tryoutId/submit'),
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token', 'Accept': 'application/json'},
-      // ✨ Masukkan user_id ke dalam body JSON
       body: jsonEncode({
         'tryout_id': tryoutId, 
-        'user_id': userId, // ✨ TAMBAHAN BARU
+        'user_id': userId, 
         'answers': stringAnswers
       })
     ).timeout(const Duration(seconds: 15));
@@ -196,7 +208,6 @@ class AuthService {
   // 📈 REPORTING & HISTORY (MENGGUNAKAN MICROSERVICE GO)
   // ============================================================
 
-  // ✨ MENGARAH KE PORT 9002 BUKAN baseUrl (8000) AGAR GRAFIK MUNCUL
   static Future<http.Response> getTryoutHistory(String token, int userId) async {
     return await http.get(
       Uri.parse('$tryoutUrl/tryouts/history?user_id=$userId'), 

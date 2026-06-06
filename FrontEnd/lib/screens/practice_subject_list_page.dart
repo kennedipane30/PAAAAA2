@@ -4,18 +4,20 @@ import 'practice_week_list_page.dart';
 class PracticeSubjectListPage extends StatelessWidget {
   final List allExercises;
   final String token;
+  final int userId; // ✨ MODIFIKASI 1: Tambahkan variabel userId
 
   const PracticeSubjectListPage({
     super.key, 
     required this.allExercises, 
-    required this.token
+    required this.token,
+    required this.userId, // ✨ MODIFIKASI 2: Wajibkan userId saat halaman ini dipanggil
   });
 
   @override
   Widget build(BuildContext context) {
     const Color spektaRed = Color(0xFF990000);
 
-    // ✨ MODIFIKASI: Cek semua kemungkinan key (subject, Subject, subject_name)
+    // Cek semua kemungkinan key (subject, Subject, subject_name)
     final subjects = allExercises
         .map((e) {
           var name = e['subject'] ?? e['Subject'] ?? e['subject_name'] ?? '';
@@ -85,6 +87,7 @@ class PracticeSubjectListPage extends StatelessWidget {
                         subjectName: sName,
                         allExercises: allExercises,
                         token: token,
+                        userId: userId, // ✨ MODIFIKASI 3: Teruskan userId ke halaman Week List
                       )
                     )
                   );
