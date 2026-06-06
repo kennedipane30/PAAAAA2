@@ -15,23 +15,17 @@ class TryoutPage extends StatefulWidget {
   State<TryoutPage> createState() => _TryoutPageState();
 }
 
-class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateMixin {
-  // Gunakan 10.0.2.2 untuk emulator
+class _TryoutPageState extends State<TryoutPage> {
   static const String host = '10.0.2.2';
-  static const String baseUrl = 'http://$host:8000'; // Laravel (untuk Riwayat)
-  static const String tryoutServiceUrl = 'http://$host:9002/api'; // Go (untuk Soal)
+  static const String baseUrl = 'http://$host:8000'; 
+  static const String tryoutServiceUrl = 'http://$host:9002/api'; 
   
   static const Color primaryRed = Color(0xFF9C0412);
   static const Color darkRed = Color(0xFF340506);
   static const Color textDark = Color(0xFF172033);
 
-  late TabController _tabController;
-
   List _allTryouts = [];
-  List _myHistory = [];
-
   bool _loadingAll = false;
-  bool _loadingHistory = false;
 
   bool get _hasClass => _classId != null;
 
@@ -41,7 +35,6 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
     return int.tryParse(raw.toString());
   }
 
-  // ✨ Helper untuk mendapatkan userId yang aman
   int get _userId {
     final id = widget.userData['id'] ?? widget.userData['user']?['id'] ?? 0;
     return int.tryParse(id.toString()) ?? 0;
@@ -50,17 +43,9 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     if (_hasClass) {
       _fetchAllTryouts();
-      _fetchHistory();
     }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchAllTryouts() async {
@@ -71,7 +56,7 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
       final uri = Uri.parse('$tryoutServiceUrl/tryouts').replace(
         queryParameters: {
           if (_classId != null) 'class_id': _classId.toString(),
-          'user_id': _userId.toString(), // Wajib agar backend tahu siswa mana
+          'user_id': _userId.toString(), 
         },
       );
       
@@ -95,69 +80,6 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
     }
   }
 
-  Future<void> _fetchHistory() async {
-    if (!mounted) return;
-    setState(() => _loadingHistory = true);
-    try {
-      final historyUri = Uri.parse('$baseUrl/api/tryouts/history');
-      final res = await http.get(historyUri, headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer ${widget.token}',
-      });
-
-      if (res.statusCode == 200) {
-        final decoded = jsonDecode(res.body);
-        if (mounted) {
-          setState(() {
-            _myHistory = decoded['data'] ?? [];
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ TRYOUT HISTORY EXCEPTION: $e');
-    } finally {
-      if (mounted) setState(() => _loadingHistory = false);
-    }
-  }
-
-  Future<void> _openResult(dynamic submissionId) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: primaryRed)),
-    );
-
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/tryouts/results/$submissionId'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ${widget.token}',
-        },
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context); // Tutup loading
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List questionsWithAnswers = decoded['data'] ?? [];
-        
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ExplanationPage(questions: questionsWithAnswers),
-          ),
-        );
-      } else {
-        _showErrorSnackBar("Gagal memuat detail pembahasan.");
-      }
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-      _showErrorSnackBar("Terjadi kesalahan koneksi server.");
-    }
-  }
-
   void _showAlreadyDoneDialog() {
     showDialog(
       context: context,
@@ -170,15 +92,8 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
             Text("Akses Terkunci", style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-        content: const Text("Anda sudah menyelesaikan Tryout ini. Skor Anda sudah tersimpan dan tidak dapat diubah lagi. Silakan buka menu 'Riwayat Saya' untuk melihat pembahasan."),
+        content: const Text("Anda sudah menyelesaikan Tryout ini. Skor Anda sudah tersimpan dan tidak dapat diubah lagi."),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _tabController.animateTo(1);
-            },
-            child: const Text("LIHAT RIWAYAT", style: TextStyle(color: primaryRed, fontWeight: FontWeight.bold)),
-          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("TUTUP", style: TextStyle(color: Colors.grey)),
@@ -194,7 +109,6 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
     );
   }
 
-  // ✨ MODIFIKASI: Menambahkan userId saat navigasi ke TryoutDetailPage
   void _openDetail(Map tryout, bool isDone) {
     Navigator.push(
       context, 
@@ -202,11 +116,10 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
         tryoutData: tryout, 
         token: widget.token,
         isDone: isDone,
-        userId: _userId, // ✨ INI YANG MENYELESAIKAN ERROR KOMPILASI
+        userId: _userId, 
       )),
     ).then((_) {
       _fetchAllTryouts();
-      _fetchHistory();
     });
   }
 
@@ -214,41 +127,21 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            expandedHeight: 130, pinned: true, elevation: 0,
-            backgroundColor: primaryRed, foregroundColor: Colors.white,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 56),
-              title: const Text('Tryout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 22, letterSpacing: -0.5)),
-              background: Container(
-                decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFC50337), primaryRed, darkRed])),
-                child: const Align(alignment: Alignment.bottomRight, child: Opacity(opacity: 0.08, child: Icon(Icons.assignment_rounded, size: 160, color: Colors.white))),
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(46),
-              child: Container(
-                color: primaryRed,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.white, unselectedLabelColor: Colors.white54,
-                  indicatorColor: Colors.white, indicatorWeight: 3,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                  tabs: const [Tab(text: 'Semua Tryout'), Tab(text: 'Riwayat Saya')],
-                ),
-              ),
-            ),
-          ),
-        ],
-        body: !_hasClass
-            ? _buildNoClassState()
-            : TabBarView(
-                controller: _tabController,
-                children: [_buildAllTryouts(), _buildHistory()],
-              ),
+      appBar: AppBar(
+        title: const Text(
+          'Tryout Kelas Kamu',
+          style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
+        ),
+        backgroundColor: primaryRed,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context), // ✨ Diubah dari onTap menjadi onPressed
+        ),
       ),
+      body: !_hasClass
+          ? _buildNoClassState()
+          : _buildAllTryouts(),
     );
   }
 
@@ -258,33 +151,20 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
     
     return RefreshIndicator(
       color: primaryRed, onRefresh: _fetchAllTryouts,
-      child: ListView.builder(
+      child: ListView.separated(
         padding: const EdgeInsets.all(18),
         itemCount: _allTryouts.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) => _buildTryoutCard(_allTryouts[index] as Map, index),
-      ),
-    );
-  }
-
-  Widget _buildHistory() {
-    if (_loadingHistory) return const Center(child: CircularProgressIndicator(color: primaryRed));
-    if (_myHistory.isEmpty) return _buildEmptyState(icon: Icons.history_rounded, title: 'Belum Ada Riwayat', subtitle: 'Hasil pengerjaan Anda akan muncul di sini.');
-    
-    return RefreshIndicator(
-      color: primaryRed, onRefresh: _fetchHistory,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(18),
-        itemCount: _myHistory.length,
-        itemBuilder: (context, index) => _buildHistoryCard(_myHistory[index] as Map),
       ),
     );
   }
 
   Widget _buildTryoutCard(Map tryout, int index) {
     final title = tryout['title'] ?? 'Tryout UTBK';
-    final duration = tryout['duration'] ?? '-';
     final isActive = tryout['is_active'] != 0; 
     final isCompleted = tryout['is_done'] == true || tryout['is_done'] == 1 || tryout['is_done'] == "1";
+    final score = tryout['score'] != null ? tryout['score'].toString() : '-';
 
     return GestureDetector(
       onTap: () {
@@ -292,84 +172,31 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
         if (isCompleted) {
           _showAlreadyDoneDialog();
         } else {
-          // Kirim isCompleted agar halaman detail tau statusnya
           _openDetail(tryout, isCompleted);
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6))],
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                height: 52, width: 52,
-                decoration: BoxDecoration(
-                  color: isCompleted ? Colors.grey.shade400 : (isActive ? primaryRed : Colors.grey.shade200),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text('${index + 1}', style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 20, fontWeight: FontWeight.w900)),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(color: isActive ? textDark : Colors.grey, fontSize: 14, fontWeight: FontWeight.w900)),
-                    Row(
-                      children: [
-                        Text('$duration menit • Simulasi UTBK', style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
-                        if (isCompleted) ...[
-                          const SizedBox(width: 8),
-                          const Icon(Icons.check_circle, color: Colors.green, size: 12),
-                          const Text(" SELESAI", style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
-                        ]
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Icon(isCompleted ? Icons.lock_outline_rounded : Icons.chevron_right_rounded, color: isCompleted ? Colors.grey : primaryRed, size: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistoryCard(Map history) {
-    final dynamic submissionId = history['result_id'] ?? history['id'] ?? history['submission_id'];
-    final title = history['title'] ?? history['tryout_name'] ?? 'Tryout';
-    final score = history['score'] ?? '-';
-    final date = history['completed_at'] ?? history['created_at'] ?? '';
-
-    String formattedDate = date.toString().length >= 10 ? date.toString().substring(0, 10) : date.toString();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(
-              height: 58, width: 58,
-              decoration: BoxDecoration(color: primaryRed.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(score.toString(), style: const TextStyle(color: primaryRed, fontSize: 16, fontWeight: FontWeight.w900)),
-                  Text('Nilai', style: TextStyle(color: primaryRed.withOpacity(0.7), fontSize: 9, fontWeight: FontWeight.w700)),
-                ],
+              height: 44, width: 44,
+              decoration: BoxDecoration(
+                color: isCompleted ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, 
+                color: isCompleted ? const Color(0xFF2E7D32) : const Color(0xFFE65100), 
+                size: 22,
               ),
             ),
             const SizedBox(width: 14),
@@ -377,28 +204,43 @@ class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateM
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w900)),
-                  Text(formattedDate, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+                  Text(
+                    title, 
+                    maxLines: 2, 
+                    overflow: TextOverflow.ellipsis, 
+                    style: TextStyle(color: isActive ? textDark : Colors.grey, fontSize: 14, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isCompleted ? 'Sudah Dikerjakan' : 'Belum Dikerjakan', 
+                    style: TextStyle(
+                      color: isCompleted ? const Color(0xFF2E7D32) : const Color(0xFFE65100), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (submissionId != null && submissionId.toString().isNotEmpty) {
-                  _openResult(submissionId);
-                } else {
-                  _showErrorSnackBar("ID Riwayat tidak valid. Silakan tarik ke bawah untuk refresh.");
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, 
-                foregroundColor: primaryRed, 
-                elevation: 0,
-                side: const BorderSide(color: primaryRed, width: 1.2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              child: const Text('Pembahasan', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Nilai',
+                  style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  score,
+                  style: TextStyle(
+                    color: isCompleted ? primaryRed : textDark,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

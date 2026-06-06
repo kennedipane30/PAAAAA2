@@ -432,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 28), // Jarak setelah Jadwal
 
                     _sectionTitle(
-                      title: 'Tryout',
+                      title: 'Tryout Kamu',
                       action: 'Lihat Semua',
                       onTap: _handleTryout,
                     ),
@@ -540,51 +540,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-          ),
-
-          const SizedBox(width: 10),
-
-          _buildGlassButton(Icons.search_rounded),
-
-          const SizedBox(width: 8),
-
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              GestureDetector(
-                onTap: () => _handleNotificationClick(),
-                child: _buildGlassButton(Icons.notifications_none_rounded),
-              ),
-              
-              if (unreadNotifications > 0)
-                Positioned(
-                  top: -6,
-                  right: -4,
-                  child: GestureDetector(
-                    onTap: () => _handleNotificationClick(),
-                    child: Container(
-                      height: 22,
-                      width: 22,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFF2D2D),
-                        shape: BoxShape.circle,
-                        border: Border.fromBorderSide(
-                          BorderSide(color: Colors.white, width: 1.5)
-                        ),
-                      ),
-                      child: Text(
-                        unreadNotifications > 9 ? '9+' : unreadNotifications.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
           ),
         ],
       ),
@@ -779,7 +734,7 @@ class _HomePageState extends State<HomePage> {
                             size: 38,
                           ),
                         )
-                     : Image.network(
+                      : Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
                           headers: const {
@@ -1024,7 +979,6 @@ class _HomePageState extends State<HomePage> {
     final teacherName = item['teacher_name'] ?? '';
     final startTime = item['start_time'] ?? '';
     final endTime = item['end_time'] ?? '';
-    final statusLabel = item['status_label'] ?? 'TERJADWAL';
     final statusColor = item['status_color'] ?? 'blue';
 
     Color dotColor;
@@ -1183,10 +1137,10 @@ class _HomePageState extends State<HomePage> {
   Widget _buildTryoutSection() {
     if (isLoadingTryout) {
       return Container(
-        height: 130,
+        height: 76,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(23),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: const Center(
           child: CircularProgressIndicator(color: primaryRed),
@@ -1194,64 +1148,55 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (tryoutData.isEmpty) {
-      return _buildTryoutEmptyCard();
-    }
-
-    final firstTryout = tryoutData.first as Map;
-    return _buildTryoutHighlightCard(firstTryout);
-  }
-
-  Widget _buildTryoutEmptyCard() {
     return GestureDetector(
       onTap: _handleTryout,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(23),
-          border: Border.all(color: const Color(0xFFFFE0E3)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              height: 54,
-              width: 54,
+              height: 44,
+              width: 44,
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEEEE),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
-                Icons.assignment_outlined,
+                Icons.assignment_rounded,
                 color: primaryRed,
-                size: 28,
+                size: 22,
               ),
             ),
-
             const SizedBox(width: 14),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Tryout Belum Tersedia',
+                    'Tryout Kamu',
                     style: TextStyle(
                       color: textDark,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
-                    'Pantau terus untuk jadwal tryout berikutnya',
+                    tryoutData.isEmpty
+                        ? 'Mulai pengerjaan simulasi ujian'
+                        : 'Tersedia ${tryoutData.length} tryout siap dikerjakan',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 11,
@@ -1261,7 +1206,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
             const Icon(
               Icons.chevron_right_rounded,
               color: primaryRed,
@@ -1273,168 +1217,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTryoutHighlightCard(Map tryout) {
-    final title = tryout['title'] ?? tryout['name'] ?? 'Tryout UTBK';
-    final description =
-        tryout['description'] ?? tryout['subtitle'] ?? 'Simulasi ujian lengkap';
-    final totalSoal =
-        tryout['total_questions'] ?? tryout['soal_count'] ?? '-';
-    final duration = tryout['duration'] ?? tryout['waktu'] ?? '-';
-    final isFree =
-        (tryout['is_free'] == true || tryout['price'] == 0);
-
-    return GestureDetector(
-      onTap: _handleTryout,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(23),
-          border: Border.all(color: const Color(0xFFFFCDD2), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: primaryRed.withOpacity(0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: primaryRed,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.local_fire_department_rounded,
-                          color: Colors.white, size: 12),
-                      SizedBox(width: 4),
-                      Text(
-                        'Mulai Sekarang',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(),
-
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isFree
-                        ? const Color(0xFFE8F5E9)
-                        : const Color(0xFFFFF8E1),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    isFree ? 'Gratis' : 'Berbayar',
-                    style: TextStyle(
-                      color: isFree
-                          ? const Color(0xFF2E7D32)
-                          : const Color(0xFFF57C00),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: textDark,
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              description,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                _tryoutMetaChip(Icons.quiz_outlined, '$totalSoal soal'),
-                const SizedBox(width: 8),
-                _tryoutMetaChip(Icons.timer_outlined, '$duration menit'),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: primaryRed,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: const Text(
-                    'Mulai',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _tryoutMetaChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: Colors.grey.shade700),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildTryoutEmptyCard() {
+    return Container();
   }
 
   Widget _buildMainMenuGrid() {
