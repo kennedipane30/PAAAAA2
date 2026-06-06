@@ -5,14 +5,14 @@ class PracticeWeekListPage extends StatelessWidget {
   final String subjectName;
   final List allExercises;
   final String token;
-  final int userId; // ✨ MODIFIKASI: Tambahkan userId agar bisa diteruskan
+  final int userId; // ✨ MODIFIKASI: Tambahkan variabel userId
 
   const PracticeWeekListPage({
     super.key, 
     required this.subjectName, 
     required this.allExercises, 
     required this.token,
-    required this.userId, // ✨ MODIFIKASI: Wajibkan userId saat memanggil halaman ini
+    required this.userId, // ✨ MODIFIKASI: Wajibkan userId di constructor
   });
 
   @override
@@ -36,6 +36,7 @@ class PracticeWeekListPage extends StatelessWidget {
         itemBuilder: (context, index) {
           int weekNumber = index + 1;
 
+          // Filter lebih fleksibel untuk port 9003
           List weekSoals = allExercises.where((e) {
             final String dbSubject = (e['subject'] ?? e['Subject'] ?? e['subject_name'] ?? '').toString().toLowerCase().trim();
             final String dbWeek = (e['week'] ?? e['Week'] ?? '').toString();
@@ -66,8 +67,8 @@ class PracticeWeekListPage extends StatelessWidget {
               onTap: isAvailable 
                 ? () => Navigator.push(context, MaterialPageRoute(builder: (c) => PracticeQuizPage(
                     questions: weekSoals,
-                    token: token,       // ✨ MODIFIKASI: Kirim token ke halaman kuis
-                    userId: userId,     // ✨ MODIFIKASI: Kirim userId ke halaman kuis
+                    token: token,    // ✨ MODIFIKASI: Kirim token ke PracticeQuizPage
+                    userId: userId,  // ✨ MODIFIKASI: Kirim userId ke PracticeQuizPage
                   )))
                 : null,
             ),

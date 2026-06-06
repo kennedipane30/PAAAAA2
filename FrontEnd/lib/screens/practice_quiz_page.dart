@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import '../../services/auth_service.dart'; // ✨ Perbaikan path import otomatis
 
 class PracticeQuizPage extends StatefulWidget {
   final List questions;
@@ -18,14 +16,16 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
   String? selectedAnswer;
   
   bool isChecked = false;
-  bool isLoading = false; 
+  bool isQuizFinished = false; 
 
+  // Variabel Skor & UI
   bool isCorrect = false;
-  int attemptsLeft = 2;
+  int correctScore = 0; 
   String? hintText;
   String? explanationText;
-  String? trueAnswerFromApi;
+  String? trueAnswerLocal;
 
+  // Fungsi untuk Lanjut ke Soal Berikutnya / Finish
   void _next() {
     if (currentIndex < widget.questions.length - 1) {
       setState(() { 
@@ -34,71 +34,120 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
         isChecked = false; 
         hintText = null;
         explanationText = null;
-        trueAnswerFromApi = null;
-        attemptsLeft = 2;
+        trueAnswerLocal = null;
       });
     } else {
-      Navigator.pop(context);
+      // Jika ini soal terakhir, tampilkan halaman skor
+      setState(() { 
+        isQuizFinished = true; 
+      });
     }
   }
 
- // ✨ MODIFIKASI: Perbaikan fungsi _checkAnswer
-  Future<void> _checkAnswer() async {
+  // ✨ MODIFIKASI: Fungsi Cek Jawaban Lokal (Sangat Cepat, Tanpa Loading/API)
+  void _checkAnswer() {
     if (selectedAnswer == null) return;
     
-    setState(() { isLoading = true; });
-
-    try {
-      // 1. Ambil ID mentah dari JSON
-      var rawQid = widget.questions[currentIndex]['practice_question_id']; 
+    setState(() {
+      var q = widget.questions[currentIndex];
       
-      // 2. PAKSA konversi menjadi Integer (Int) yang aman
-      int qId = 0;
-      if (rawQid != null) {
-        qId = int.tryParse(rawQid.toString()) ?? 0;
-      }
+      // Ambil kunci jawaban asli dari data soal
+      trueAnswerLocal = (q['correct_answer'] ?? '').toString().toUpperCase().trim();
+      
+      // Cocokkan jawaban user
+      isCorrect = (selectedAnswer == trueAnswerLocal);
 
-      // [DEBUG] Hapus atau biarkan print ini untuk melihat apa yang dikirim ke terminal VS Code Anda
-      print("🚀 MENGIRIM KE GO -> UserID: ${widget.userId}, QuestionID: $qId, Answer: $selectedAnswer");
-
-      var response = await AuthService.submitPracticeAnswer(
-        widget.token, 
-        widget.userId, 
-        qId, 
-        selectedAnswer!
-      );
-
-      // [DEBUG] Lihat balasan asli dari Golang di terminal VS Code Anda
-      print("📥 RESPON GO -> Status: ${response.statusCode}, Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        setState(() {
-          isCorrect = data['is_correct'] ?? false;
-          attemptsLeft = data['attempts_left'] ?? 0;
-          hintText = data['hint']; 
-          explanationText = data['explanation']; 
-          trueAnswerFromApi = data['correct_answer']; 
-          
-          isChecked = isCorrect || attemptsLeft <= 0;
-        });
+      if (isCorrect) {
+        correctScore++; // Tambah skor jika benar
+        explanationText = q['explanation']; // Benar = Tampilkan Pembahasan
+        hintText = null;
       } else {
-        // ✨ Menampilkan error asli dari Golang ke layar HP agar kita tahu masalahnya
-        var errorData = jsonDecode(response.body);
-        String errorMsg = errorData['details'] ?? errorData['error'] ?? 'Gagal mengirim jawaban';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error API: $errorMsg")));
+        hintText = q['hint']; // Salah = Tampilkan Hint
+        explanationText = null; 
       }
-    } catch (e) {
-      print("❌ ERROR EXCEPTION: $e");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Terjadi kesalahan sistem.")));
-    } finally {
-      setState(() { isLoading = false; });
-    }
+      
+      // Langsung kunci soal
+      isChecked = true; 
+    });
+  }
+
+  // WIDGET Halaman Skor Akhir
+  Widget _buildSummaryScreen() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("HASIL LATIHAN", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
+        backgroundColor: const Color(0xFF990000),
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        automaticallyImplyLeading: false, 
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 120, color: Colors.amber.shade400),
+              const SizedBox(height: 20),
+              const Text("Latihan Selesai!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Text(
+                "Skor Kamu:\n$correctScore dari ${widget.questions.length} Benar", 
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, color: Colors.grey.shade700, height: 1.5)
+              ),
+              const SizedBox(height: 50),
+              
+              // Tombol Ulangi
+              SizedBox(
+                width: double.infinity, height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      currentIndex = 0;
+                      correctScore = 0;
+                      isQuizFinished = false;
+                      selectedAnswer = null;
+                      isChecked = false;
+                      hintText = null;
+                      explanationText = null;
+                      trueAnswerLocal = null;
+                    });
+                  },
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                  label: const Text("ULANGI LATIHAN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF990000), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                ),
+              ),
+              const SizedBox(height: 15),
+              
+              // Tombol Kembali
+              SizedBox(
+                width: double.infinity, height: 55,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF990000)),
+                  label: const Text("KEMBALI KE DAFTAR MINGGU", style: TextStyle(color: Color(0xFF990000), fontWeight: FontWeight.bold, fontSize: 16)),
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF990000), width: 2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isQuizFinished) {
+      return _buildSummaryScreen();
+    }
+
     var q = widget.questions[currentIndex];
+    bool isLastQuestion = currentIndex == widget.questions.length - 1;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Question ${currentIndex + 1} / ${widget.questions.length}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)), backgroundColor: const Color(0xFF990000), foregroundColor: Colors.white, elevation: 0),
@@ -117,18 +166,20 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
             
             const Spacer(),
 
-            if (hintText != null && !isChecked)
+            // Tampilkan KATA KUNCI (HANYA JIKA SALAH)
+            if (isChecked && !isCorrect && hintText != null)
               Container(width: double.infinity, padding: const EdgeInsets.all(15), margin: const EdgeInsets.only(bottom: 10), decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.orange)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text("JAWABAN SALAH (Sisa $attemptsLeft x Percobaan)", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.orange)),
+                    const Text("JAWABAN SALAH", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.orange)),
                     const SizedBox(height: 5),
                     Text("Kata Kunci: $hintText", style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.black87)),
                   ])),
 
-            if (isChecked && explanationText != null)
-              Container(width: double.infinity, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: isCorrect ? Colors.blue.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: isCorrect ? Colors.blue.shade100 : Colors.red.shade100)),
+            // Tampilkan PEMBAHASAN (HANYA JIKA BENAR)
+            if (isChecked && isCorrect && explanationText != null)
+              Container(width: double.infinity, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green.shade200)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(isCorrect ? "JAWABAN BENAR!" : "KESEMPATAN HABIS!", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: isCorrect ? Colors.blue : Colors.red)),
+                    const Text("JAWABAN BENAR!", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.green)),
                     const SizedBox(height: 8),
                     Text("Penjelasan:\n$explanationText", style: const TextStyle(fontSize: 12, color: Colors.black87)),
                   ])),
@@ -136,13 +187,12 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
             const SizedBox(height: 20),
             
             SizedBox(width: double.infinity, height: 55, child: ElevatedButton(
-                onPressed: isLoading 
-                    ? null 
-                    : (isChecked ? _next : (selectedAnswer != null ? _checkAnswer : null)),
+                onPressed: isChecked ? _next : (selectedAnswer != null ? _checkAnswer : null),
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF990000), disabledBackgroundColor: Colors.grey.shade300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
-                child: isLoading 
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(isChecked ? "NEXT QUESTION" : "CHECK ANSWER", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(isChecked 
+                        ? (isLastQuestion ? "FINISH" : "NEXT QUESTION") 
+                        : "CHECK ANSWER", 
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               )),
           ],
         ),
@@ -155,7 +205,7 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
     Color borderCol = Colors.grey.shade200;
     
     if (isChecked) {
-      if (trueAnswerFromApi == code || (isCorrect && isSelected)) {
+      if (trueAnswerLocal == code || (isCorrect && isSelected)) {
         borderCol = Colors.green; 
       } else if (isSelected && !isCorrect) {
         borderCol = Colors.red; 
@@ -171,7 +221,7 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
             Text("$code.", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(width: 12),
             Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87))),
-            if (isChecked && (trueAnswerFromApi == code || (isCorrect && isSelected))) 
+            if (isChecked && (trueAnswerLocal == code || (isCorrect && isSelected))) 
               const Icon(Icons.check_circle, color: Colors.green, size: 20),
             if (isChecked && isSelected && !isCorrect) 
               const Icon(Icons.cancel, color: Colors.red, size: 20),
