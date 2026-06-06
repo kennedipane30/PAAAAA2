@@ -33,8 +33,7 @@ func main() {
 	db := config.InitDB()
 	
 	// 2. Migrasi Tabel Otomatis
-	// ✨ MODIFIKASI: Tambahkan PracticeAttempt agar Golang membuat tabel riwayat di Database
-	db.AutoMigrate(&models.PracticeQuestion{}, &models.PracticeAttempt{}) 
+	db.AutoMigrate(&models.PracticeQuestion{}) 
 
 	// 3. Dependency Injection
 	repo := repository.NewPracticeRepository(db)
@@ -52,9 +51,6 @@ func main() {
 		api.GET("/tryouts", handler.GetPractice) 
 		api.GET("/practice", handler.GetPractice) // Backup rute
 		api.POST("/practice/sync", handler.Sync)
-		
-		// ✨ MODIFIKASI: Tambahkan rute untuk Flutter mengirim/mengecek jawaban
-		api.POST("/practice/submit", handler.SubmitAnswer) 
 	}
 
 	// 6. Penentuan Port (Gunakan os agar tidak error 'not used')
