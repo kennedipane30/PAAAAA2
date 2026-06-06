@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../tryout_detail_page.dart';
-import '../explanation_page.dart'; // Pastikan file ini sudah dibuat
+import '../explanation_page.dart'; 
 
 class TryoutPage extends StatefulWidget {
   final String token;
@@ -15,10 +15,12 @@ class TryoutPage extends StatefulWidget {
   State<TryoutPage> createState() => _TryoutPageState();
 }
 
-class _TryoutPageState extends State<TryoutPage>
-    with SingleTickerProviderStateMixin {
-  // Gunakan 10.0.2.2 untuk emulator, atau IP Laptop Anda untuk HP fisik
-  static const String baseUrl = 'http://10.0.2.2:8000';
+class _TryoutPageState extends State<TryoutPage> with SingleTickerProviderStateMixin {
+  // Gunakan 10.0.2.2 untuk emulator
+  static const String host = '10.0.2.2';
+  static const String baseUrl = 'http://$host:8000'; // Laravel (untuk Riwayat)
+  static const String tryoutServiceUrl = 'http://$host:9002/api'; // Go (untuk Soal)
+  
   static const Color primaryRed = Color(0xFF9C0412);
   static const Color darkRed = Color(0xFF340506);
   static const Color textDark = Color(0xFF172033);
@@ -31,13 +33,18 @@ class _TryoutPageState extends State<TryoutPage>
   bool _loadingAll = false;
   bool _loadingHistory = false;
 
-  // Mendapatkan Class ID Siswa dari data login secara otomatis
   bool get _hasClass => _classId != null;
 
   int? get _classId {
     final raw = widget.userData['student']?['class_id'];
     if (raw == null) return null;
     return int.tryParse(raw.toString());
+  }
+
+  // ✨ Helper untuk mendapatkan userId yang aman
+  int get _userId {
+    final id = widget.userData['id'] ?? widget.userData['user']?['id'] ?? 0;
+    return int.tryParse(id.toString()) ?? 0;
   }
 
   @override
@@ -56,14 +63,18 @@ class _TryoutPageState extends State<TryoutPage>
     super.dispose();
   }
 
-  /// FUNGSI 1: Ambil Daftar TO Berdasarkan Kelas
   Future<void> _fetchAllTryouts() async {
     if (!mounted) return;
     setState(() => _loadingAll = true);
+    
     try {
-      final uri = Uri.parse('$baseUrl/api/tryouts').replace(
-        queryParameters: _classId != null ? {'class_id': _classId.toString()} : {},
+      final uri = Uri.parse('$tryoutServiceUrl/tryouts').replace(
+        queryParameters: {
+          if (_classId != null) 'class_id': _classId.toString(),
+          'user_id': _userId.toString(), // Wajib agar backend tahu siswa mana
+        },
       );
+      
       final res = await http.get(uri, headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer ${widget.token}',
@@ -76,17 +87,14 @@ class _TryoutPageState extends State<TryoutPage>
             _allTryouts = decoded['data'] ?? [];
           });
         }
-      } else {
-        debugPrint("API Error Index: ${res.statusCode}");
       }
     } catch (e) {
-      debugPrint('TRYOUT ALL EXCEPTION: $e');
+      debugPrint('❌ TRYOUT ALL EXCEPTION: $e');
     } finally {
       if (mounted) setState(() => _loadingAll = false);
     }
   }
 
-  /// FUNGSI 2: Ambil Riwayat Nilai
   Future<void> _fetchHistory() async {
     if (!mounted) return;
     setState(() => _loadingHistory = true);
@@ -99,23 +107,11 @@ class _TryoutPageState extends State<TryoutPage>
 
       if (res.statusCode == 200) {
         final decoded = jsonDecode(res.body);
-        
-        // DEBUG: Cetak response API untuk melihat struktur data
-        debugPrint("📦 HISTORY API RESPONSE: ${res.body}");
-        
         if (mounted) {
           setState(() {
             _myHistory = decoded['data'] ?? [];
           });
-          
-          // DEBUG: Cetak sample data pertama jika ada
-          if (_myHistory.isNotEmpty) {
-            debugPrint("🔍 Sample history pertama: ${_myHistory.first}");
-            debugPrint("🔍 Key yang tersedia: ${(_myHistory.first as Map).keys.join(', ')}");
-          }
         }
-      } else {
-        debugPrint("❌ History API Error: ${res.statusCode}");
       }
     } catch (e) {
       debugPrint('❌ TRYOUT HISTORY EXCEPTION: $e');
@@ -124,10 +120,7 @@ class _TryoutPageState extends State<TryoutPage>
     }
   }
 
-  /// FUNGSI 3: Ambil Data Pembahasan (Integrasi ke ExplanationPage)
   Future<void> _openResult(dynamic submissionId) async {
-    debugPrint("🚀 Membuka pembahasan untuk ID: $submissionId");
-    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -150,8 +143,6 @@ class _TryoutPageState extends State<TryoutPage>
         final decoded = jsonDecode(response.body);
         final List questionsWithAnswers = decoded['data'] ?? [];
         
-        debugPrint("✅ Berhasil memuat ${questionsWithAnswers.length} soal untuk pembahasan");
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -159,18 +150,14 @@ class _TryoutPageState extends State<TryoutPage>
           ),
         );
       } else {
-        debugPrint("❌ Gagal memuat pembahasan: ${response.statusCode}");
-        debugPrint("❌ Response body: ${response.body}");
         _showErrorSnackBar("Gagal memuat detail pembahasan.");
       }
     } catch (e) {
-      debugPrint("❌ Error di _openResult: $e");
       if (mounted) Navigator.pop(context);
       _showErrorSnackBar("Terjadi kesalahan koneksi server.");
     }
   }
 
-  /// DIALOG PROTEKSI 1x KERJA
   void _showAlreadyDoneDialog() {
     showDialog(
       context: context,
@@ -188,7 +175,7 @@ class _TryoutPageState extends State<TryoutPage>
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _tabController.animateTo(1); // Pindah ke tab Riwayat otomatis
+              _tabController.animateTo(1);
             },
             child: const Text("LIHAT RIWAYAT", style: TextStyle(color: primaryRed, fontWeight: FontWeight.bold)),
           ),
@@ -203,15 +190,24 @@ class _TryoutPageState extends State<TryoutPage>
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
     );
   }
 
-  void _openDetail(Map tryout) {
+  // ✨ MODIFIKASI: Menambahkan userId saat navigasi ke TryoutDetailPage
+  void _openDetail(Map tryout, bool isDone) {
     Navigator.push(
       context, 
-      MaterialPageRoute(builder: (_) => TryoutDetailPage(tryoutData: tryout, token: widget.token)),
-    );
+      MaterialPageRoute(builder: (_) => TryoutDetailPage(
+        tryoutData: tryout, 
+        token: widget.token,
+        isDone: isDone,
+        userId: _userId, // ✨ INI YANG MENYELESAIKAN ERROR KOMPILASI
+      )),
+    ).then((_) {
+      _fetchAllTryouts();
+      _fetchHistory();
+    });
   }
 
   @override
@@ -284,12 +280,11 @@ class _TryoutPageState extends State<TryoutPage>
     );
   }
 
-  /// CARD TRYOUT: Logika Enabled/Disabled
   Widget _buildTryoutCard(Map tryout, int index) {
     final title = tryout['title'] ?? 'Tryout UTBK';
     final duration = tryout['duration'] ?? '-';
-    final isActive = tryout['is_active'] == true || tryout['is_active'] == 1;
-    final isCompleted = tryout['is_completed'] ?? false;
+    final isActive = tryout['is_active'] != 0; 
+    final isCompleted = tryout['is_done'] == true || tryout['is_done'] == 1 || tryout['is_done'] == "1";
 
     return GestureDetector(
       onTap: () {
@@ -297,7 +292,8 @@ class _TryoutPageState extends State<TryoutPage>
         if (isCompleted) {
           _showAlreadyDoneDialog();
         } else {
-          _openDetail(tryout);
+          // Kirim isCompleted agar halaman detail tau statusnya
+          _openDetail(tryout, isCompleted);
         }
       },
       child: Container(
@@ -347,24 +343,13 @@ class _TryoutPageState extends State<TryoutPage>
     );
   }
 
-  /// CARD RIWAYAT: Tombol Pembahasan (DIPERBAIKI - Menggunakan result_id)
   Widget _buildHistoryCard(Map history) {
-    // 🔥 PERBAIKAN: Menggunakan result_id (dari API Laravel)
-    // Mencoba beberapa kemungkinan key yang umum digunakan
-    final dynamic submissionId = history['result_id'] ?? 
-                                  history['id'] ?? 
-                                  history['submission_id'];
-    
+    final dynamic submissionId = history['result_id'] ?? history['id'] ?? history['submission_id'];
     final title = history['title'] ?? history['tryout_name'] ?? 'Tryout';
     final score = history['score'] ?? '-';
     final date = history['completed_at'] ?? history['created_at'] ?? '';
 
-    String formattedDate = date.toString().length >= 10 
-        ? date.toString().substring(0, 10) 
-        : date.toString();
-
-    // DEBUG: Cetak ID yang ditemukan
-    debugPrint("📋 Build History Card - FOUND ID: $submissionId, Title: $title");
+    String formattedDate = date.toString().length >= 10 ? date.toString().substring(0, 10) : date.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -397,15 +382,11 @@ class _TryoutPageState extends State<TryoutPage>
                 ],
               ),
             ),
-            // 🔥 Tombol Pembahasan - sekarang dengan ID yang benar
             ElevatedButton(
               onPressed: () {
                 if (submissionId != null && submissionId.toString().isNotEmpty) {
                   _openResult(submissionId);
                 } else {
-                  // Debug print untuk membantu mencari tahu kenapa ID null
-                  debugPrint("❌ ERROR: ID Riwayat Kosong! Data lengkap: $history");
-                  debugPrint("❌ Key yang tersedia: ${history.keys.join(', ')}");
                   _showErrorSnackBar("ID Riwayat tidak valid. Silakan tarik ke bawah untuk refresh.");
                 }
               },
@@ -417,8 +398,7 @@ class _TryoutPageState extends State<TryoutPage>
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
-              child: const Text('Pembahasan', 
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+              child: const Text('Pembahasan', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
             ),
           ],
         ),

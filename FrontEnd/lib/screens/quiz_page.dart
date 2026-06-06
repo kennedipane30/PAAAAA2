@@ -7,12 +7,16 @@ class QuizPage extends StatefulWidget {
   final List questions;
   final int tryoutId;
   final String token;
+  // ✨ PERBAIKAN 1: Tambahkan variabel userId di sini
+  final int userId; 
 
   const QuizPage({
     super.key, 
     required this.questions, 
     required this.tryoutId, 
-    required this.token
+    required this.token,
+    // ✨ PERBAIKAN 2: Jadikan userId sebagai parameter wajib (required)
+    required this.userId, 
   });
 
   @override
@@ -35,6 +39,7 @@ class _QuizPageState extends State<QuizPage> {
     try {
       var resp = await AuthService.submitTryout(
         tryoutId: widget.tryoutId, 
+        userId: widget.userId, // ✨ SEKARANG INI SUDAH VALID KARENA VARIABELNYA ADA
         answers: _myAnswers, 
         token: widget.token
       );
@@ -77,7 +82,6 @@ class _QuizPageState extends State<QuizPage> {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 45)),
             onPressed: () {
-              // ✨ PROSES SINKRONISASI JAWABAN UNTUK EXPLANATION PAGE
               for (var i = 0; i < widget.questions.length; i++) {
                 var qData = widget.questions[i];
                 // Ekstrak ID yang kuat terhadap casing dari Go
@@ -111,7 +115,7 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     var q = widget.questions[_currentIndex];
     
-    // ✨ AMBIL ID SECARA DINAMIS
+    // AMBIL ID SECARA DINAMIS
     int currentQId = int.parse((q['question_id'] ?? q['QuestionID'] ?? q['id'] ?? q['ID'] ?? 0).toString());
 
     return Scaffold(

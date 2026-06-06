@@ -12,7 +12,7 @@ import 'fitur/question_sharing_page.dart';
 import 'fitur/dedicated_tutor_page.dart';
 import 'fitur/consultation_page.dart';
 import 'fitur/tryout_page.dart';
-import 'notification_page.dart'; // ✨ TAMBAHKAN IMPORT INI
+import 'notification_page.dart';
 
 import 'class_detail_page.dart';
 import 'subject_list_page.dart';
@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingBanner = false;
   bool isLoadingSchedule = false;
   
-  // ✨ NOTIFIKASI: State untuk angka notifikasi
+  // State untuk angka notifikasi
   int unreadNotifications = 0;
   bool isLoadingNotifications = false;
 
@@ -205,7 +205,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // ✨ NOTIFIKASI: Fungsi untuk mengambil jumlah notifikasi dari API
   Future<void> fetchNotificationCount() async {
     try {
       setState(() => isLoadingNotifications = true);
@@ -235,9 +234,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // ✨ NOTIFIKASI: Fungsi untuk handle klik notifikasi (DIPERBAIKI)
   void _handleNotificationClick() {
-    // Navigasi ke halaman daftar notifikasi
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -246,7 +243,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     ).then((_) {
-      // Refresh jumlah notifikasi saat kembali dari halaman notifikasi
       fetchNotificationCount();
     });
   }
@@ -338,8 +334,6 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
-  // --- Bagian fungsi _handleLearningMaterials di HomePage ---
-
   Future<void> _handleLearningMaterials() async {
     final student = currentData?['student'];
 
@@ -366,7 +360,6 @@ class _HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         
-        // ✨ Ambil harga dari response gateway
         final int classPrice = int.tryParse(decoded['price']?.toString() ?? '0') ?? 0;
 
         Navigator.push(
@@ -436,19 +429,7 @@ class _HomePageState extends State<HomePage> {
 
                     _buildScheduleWidget(),
 
-                    const SizedBox(height: 28),
-
-                    _sectionTitle(
-                      title: 'Lanjutkan Belajar',
-                      action: 'Lihat Semua',
-                      onTap: _handleLearningMaterials,
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    _buildContinueLearningCard(),
-
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 28), // Jarak setelah Jadwal
 
                     _sectionTitle(
                       title: 'Tryout',
@@ -771,9 +752,6 @@ class _HomePageState extends State<HomePage> {
 
               final imageUrl = _imageUrl(imagePath);
 
-              print('IMAGE PATH = $imagePath');
-              print('IMAGE URL  = $imageUrl');
-
               return Container(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 7,
@@ -801,31 +779,16 @@ class _HomePageState extends State<HomePage> {
                             size: 38,
                           ),
                         )
-                      // : Image.network(
-                      //     imageUrl,
-                      //     fit: BoxFit.cover,
-                      //     errorBuilder: (_, __, ___) {
-                      //       return Container(
-                      //         color: const Color(0xFFE5E7EB),
-                      //         child: const Icon(
-                      //           Icons.image_rounded,
-                      //           color: Colors.grey,
-                      //           size: 38,
-                      //         ),
-                      //       );
-                      //     },
-                      //   ),
                      : Image.network(
-  imageUrl,
-  fit: BoxFit.cover,
-  headers: const {
-    'User-Agent': 'Flutter',
-  },
-  errorBuilder: (context, error, stackTrace) {
-    print('BANNER ERROR = $error');
-    return const Icon(Icons.error);
-  },
-)
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          headers: const {
+                            'User-Agent': 'Flutter',
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.error);
+                          },
+                        )
                 ),
               );
             },
@@ -1215,230 +1178,6 @@ class _HomePageState extends State<HomePage> {
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return '${days[now.weekday % 7]}, ${now.day} ${months[now.month - 1]} ${now.year}';
-  }
-
-  Widget _buildContinueLearningCard() {
-    final className =
-        currentData?['student']?['class']?['program_name'] ??
-        'TPS Kuantitatif UTBK 2024';
-
-    return Container(
-      height: 172,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFB90018),
-            primaryRed,
-            darkRed,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(23),
-        boxShadow: [
-          BoxShadow(
-            color: primaryRed.withOpacity(0.20),
-            blurRadius: 18,
-            offset: const Offset(0, 9),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 148,
-            width: 88,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF210206),
-                  primaryRed,
-                ],
-              ),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.18),
-              ),
-            ),
-            child: Stack(
-              children: [
-                const Positioned(
-                  top: 13,
-                  left: 10,
-                  right: 8,
-                  child: Text(
-                    'TPS\nKUANTITATIF',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      height: 1.0,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Container(
-                    height: 39,
-                    width: 39,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: primaryRed,
-                      size: 28,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFF2D2D),
-                      borderRadius: BorderRadius.horizontal(
-                        left: Radius.circular(99),
-                      ),
-                    ),
-                    child: const Text(
-                      '75%',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.28),
-                    ),
-                  ),
-                  child: const Text(
-                    'Kelas',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  className,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                const Text(
-                  'Bab 3 - Persamaan Kuadrat',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 13),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(99),
-                        child: LinearProgressIndicator(
-                          value: 0.75,
-                          minHeight: 6,
-                          backgroundColor: Colors.white24,
-                          valueColor: const AlwaysStoppedAnimation(
-                            Color(0xFFFF2D2D),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '12/16',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: _openClassIfEnrolled,
-                    borderRadius: BorderRadius.circular(99),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: const Text(
-                        'Lanjutkan',
-                        style: TextStyle(
-                          color: primaryRed,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildTryoutSection() {
@@ -1994,12 +1733,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
-  void _openClassIfEnrolled() {
-    _handleLearningMaterials();
-  }
-
   void _handleMenuTap(String title) {
     switch (title) {
       case 'Learning Materials':
@@ -2075,5 +1808,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-

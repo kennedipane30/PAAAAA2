@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strconv" // ✨ Tambahkan import strconv
 	"tryout-service/internal/models"
 	"tryout-service/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -21,9 +22,6 @@ type SyncRequest struct {
 	Questions []models.Question `json:"questions"`
 }
 
-/**
- * 1. SINKRONISASI PAKET SOAL
- */
 func (h *TryoutHandler) SyncTryout(c *gin.Context) {
 	var req SyncRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -39,9 +37,6 @@ func (h *TryoutHandler) SyncTryout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Paket Tryout Berhasil Masuk ke Go"})
 }
 
-/**
- * 2. SINKRONISASI HASIL/NILAI SISWA
- */
 func (h *TryoutHandler) SyncSubmissions(c *gin.Context) {
 	var s models.TryoutSubmission
 	if err := c.ShouldBindJSON(&s); err != nil {
@@ -57,12 +52,15 @@ func (h *TryoutHandler) SyncSubmissions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Riwayat berhasil disimpan di Go"})
 }
 
-/**
- * 3. AMBIL DAFTAR TRYOUT
- */
 func (h *TryoutHandler) GetTryouts(c *gin.Context) {
 	classID := c.Query("class_id")
-	data, err := h.uc.GetTryouts(classID)
+	userID := c.Query("user_id") 
+	
+	if userID == "" {
+		userID = "0" 
+	}
+
+	data, err := h.uc.GetTryouts(classID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Gagal mengambil daftar tryout"})
 		return
@@ -70,9 +68,6 @@ func (h *TryoutHandler) GetTryouts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": data})
 }
 
-/**
- * 4. AMBIL DAFTAR SOAL (SAAT UJIAN DIMULAI)
- */
 func (h *TryoutHandler) GetQuestions(c *gin.Context) {
 	tryoutID := c.Param("id")
 	if tryoutID == "" {
@@ -94,12 +89,12 @@ func (h *TryoutHandler) GetQuestions(c *gin.Context) {
 }
 
 /**
- * 5. SIMPAN HASIL UJIAN (SUBMIT)
- * ✨ Fungsi ini sekarang berada di luar GetQuestions dan terstruktur dengan benar
+ * 5. SIMPAN HASIL UJIAN (SUBMIT) & HITUNG NILAI ASLI
  */
 func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 	var req struct {
 		TryoutID int               `json:"tryout_id"`
+		UserID   int               `json:"user_id"` 
 		Answers  map[string]string `json:"answers"`
 	}
 
@@ -108,12 +103,27 @@ func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 		return
 	}
 
-	// Response sukses agar Flutter bisa menampilkan dialog hasil
-	// (Logic perhitungan nilai sesungguhnya dapat diletakkan di layer usecase)
+	// ✨ MODIFIKASI: Panggil fungsi perhitungan dari Usecase
+	tryoutIDStr := strconv.Itoa(req.TryoutID)
+	score, correctCount, err := h.uc.CalculateScore(tryoutIDStr, req.Answers)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghitung nilai ujian"})
+		return
+	}
+
+	// Simpan status ujian ke Database dengan skor yang asli!
+	submission := models.TryoutSubmission{
+		TryoutID: uint(req.TryoutID),
+		UserID:   uint(req.UserID),
+		Score:    float64(score), // ✨ Gunakan Skor Dinamis
+	}
+	h.uc.SyncSubmissions(submission)
+
+	// Kirim response dinamis ke Flutter
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"score":   85,    // Skor simulasi
-		"correct": 4,     // Jumlah benar simulasi
-		"message": "Nilai berhasil disimpan",
+		"score":   score,        // ✨ SKOR DINAMIS
+		"correct": correctCount, // ✨ JUMLAH BENAR DINAMIS
+		"message": "Nilai berhasil disimpan di database",
 	})
 }

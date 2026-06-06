@@ -8,7 +8,7 @@ import (
 type TryoutRepository interface {
 	SyncFullPackage(t *models.Tryout, qs []models.Question) error
 	SyncSubmissions(s *models.TryoutSubmission) error
-	GetByClass(classID string) ([]models.Tryout, error)
+	GetByClass(classID string, userID string) ([]map[string]interface{}, error) // Diubah return valuenya
 	GetQuestions(tryoutID string) ([]models.Question, error)
 }
 
@@ -23,33 +23,57 @@ func NewTryoutRepository(db *gorm.DB) TryoutRepository {
 // 1. Simpan Paket TO lengkap
 func (r *tryoutRepository) SyncFullPackage(t *models.Tryout, qs []models.Question) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Save(t).Error; err != nil {
-			return err
-		}
+		if err := tx.Save(t).Error; err != nil { return err }
 		tx.Where("tryout_id = ?", t.TryoutID).Delete(&models.Question{})
 		if len(qs) > 0 {
-			for i := range qs {
-				qs[i].TryoutID = t.TryoutID
-			}
-			if err := tx.Create(&qs).Error; err != nil {
-				return err
-			}
+			for i := range qs { qs[i].TryoutID = t.TryoutID }
+			if err := tx.Create(&qs).Error; err != nil { return err }
 		}
 		return nil
 	})
 }
 
-// 2. ✨ SIMPAN RIWAYAT (DARI LARAVEL KE DB GO)
+// 2. SIMPAN RIWAYAT
 func (r *tryoutRepository) SyncSubmissions(s *models.TryoutSubmission) error {
-	// Memasukkan baris baru ke tabel tryout_submissions
 	return r.db.Create(s).Error
 }
 
-// 3. Ambil Daftar TO
-func (r *tryoutRepository) GetByClass(classID string) ([]models.Tryout, error) {
-	var data []models.Tryout
-	err := r.db.Where("class_id = ?", classID).Find(&data).Error
-	return data, err
+// 3. ✨ PERBAIKAN: Ambil Daftar TO + Status "is_done"
+func (r *tryoutRepository) GetByClass(classID string, userID string) ([]map[string]interface{}, error) {
+	var tryouts []models.Tryout
+	// Ambil daftar tryout
+	if err := r.db.Where("class_id = ?", classID).Find(&tryouts).Error; err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+
+	// Looping tiap tryout, cek apakah userID ini sudah pernah submit
+	for _, t := range tryouts {
+		var count int64
+		// Cek di tabel submission
+		r.db.Model(&models.TryoutSubmission{}).
+			Where("tryout_id = ? AND user_id = ?", t.TryoutID, userID).
+			Count(&count)
+
+		isDone := false
+		if count > 0 {
+			isDone = true
+		}
+
+		// Bungkus ulang data menjadi map JSON
+		item := map[string]interface{}{
+			"tryout_id":       t.TryoutID,
+			"class_id":        t.ClassID,
+			"title":           t.Title,
+			"duration":        t.Duration,
+			"total_questions": t.TotalQuestions,
+			"is_done":         isDone, // 🔥 FLAG PENTING UNTUK FLUTTER
+		}
+		results = append(results, item)
+	}
+
+	return results, nil
 }
 
 // 4. Ambil Daftar Soal
