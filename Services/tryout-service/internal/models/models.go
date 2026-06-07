@@ -31,20 +31,6 @@ type Question struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-type TryoutResult struct {
-	ResultID     uint      `gorm:"primaryKey;column:result_id" json:"result_id"`
-	UserID       uint      `gorm:"column:user_id" json:"user_id"`
-	TryoutID     uint      `gorm:"column:tryout_id" json:"tryout_id"`
-	Score        int       `gorm:"column:score" json:"score"`
-	TotalCorrect int       `gorm:"column:total_correct" json:"total_correct"`
-	CreatedAt    time.Time `gorm:"column:created_at" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at" json:"updated_at"`
-}
-
-func (TryoutResult) TableName() string {
-	return "tryout_results"
-}
-
 type TryoutSubmission struct {
 	ID          uint      `gorm:"primaryKey;column:id" json:"id"`
 	UserID      uint      `gorm:"column:user_id" json:"user_id"`
@@ -52,4 +38,12 @@ type TryoutSubmission struct {
 	Answers     string    `gorm:"type:text;column:answers" json:"answers"`
 	Score       float64   `gorm:"column:score" json:"score"`
 	SubmittedAt time.Time `gorm:"column:submitted_at" json:"submitted_at"`
+}
+
+// ✨ STRUCT BARU: Untuk format balasan riwayat nilai ke Flutter
+type HistoryResponse struct {
+	TryoutID    uint    `json:"tryout_id"`
+	TryoutTitle string  `json:"title"`
+	Score       float64 `json:"score"`
+	SubmittedAt string  `json:"submitted_at"`
 }

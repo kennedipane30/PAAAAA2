@@ -27,6 +27,14 @@ class _QuizPageState extends State<QuizPage> {
   final Color spektaRed = const Color(0xFF990000);
 
   void _submitQuiz() async {
+    if (widget.userId == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Akses Ditolak: ID User tidak valid. Silakan relogin."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
     showDialog(
       context: context, 
       barrierDismissible: false, 
@@ -82,12 +90,12 @@ class _QuizPageState extends State<QuizPage> {
               for (var i = 0; i < widget.questions.length; i++) {
                 var qData = widget.questions[i];
                 int qId = int.parse((qData['question_id'] ?? qData['QuestionID'] ?? qData['id'] ?? qData['ID'] ?? 0).toString());
-                
                 String userChoice = _myAnswers[qId] ?? "-";
                 widget.questions[i]['user_answer'] = userChoice;
               }
 
               Navigator.pop(context); 
+              
               Navigator.pushReplacement(context, MaterialPageRoute(
                 builder: (context) => ExplanationPage(questions: widget.questions)
               ));
@@ -97,8 +105,9 @@ class _QuizPageState extends State<QuizPage> {
           ),
           TextButton(
             onPressed: () { 
+              // ✨ PERBAIKAN: Menutup Dialog dan Halaman Kuis secara bersamaan
               Navigator.pop(context); 
-              Navigator.pop(context); 
+              Navigator.pop(context, true); 
             }, 
             child: const Text("KEMBALI KE MENU")
           ),
@@ -110,7 +119,6 @@ class _QuizPageState extends State<QuizPage> {
   @override
   Widget build(BuildContext context) {
     var q = widget.questions[_currentIndex];
-    
     int currentQId = int.parse((q['question_id'] ?? q['QuestionID'] ?? q['id'] ?? q['ID'] ?? 0).toString());
 
     return Scaffold(
@@ -123,30 +131,22 @@ class _QuizPageState extends State<QuizPage> {
       ),
       body: Column(
         children: [
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / widget.questions.length, 
-            backgroundColor: Colors.red[50], 
-            color: spektaRed
-          ),
+          LinearProgressIndicator(value: (_currentIndex + 1) / widget.questions.length, backgroundColor: Colors.red[50], color: spektaRed),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(25), 
               child: Column(
                 children: [
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20), 
+                    width: double.infinity, padding: const EdgeInsets.all(20), 
                     decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(15)),
                     child: Text(q['question'] ?? q['Question'] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
                   ),
                   const SizedBox(height: 30),
-
-                  // Opsi Jawaban Murni Teks
                   _buildOption("A", q['option_a'] ?? q['OptionA'] ?? "", currentQId),
                   _buildOption("B", q['option_b'] ?? q['OptionB'] ?? "", currentQId),
                   _buildOption("C", q['option_c'] ?? q['OptionC'] ?? "", currentQId),
                   _buildOption("D", q['option_d'] ?? q['OptionD'] ?? "", currentQId),
-                  // Jika ada opsi E, tampilkan
                   if ((q['option_e'] ?? q['OptionE']) != null && (q['option_e'] ?? q['OptionE']).toString().trim().isNotEmpty)
                      _buildOption("E", q['option_e'] ?? q['OptionE'] ?? "", currentQId),
                 ]
@@ -156,17 +156,11 @@ class _QuizPageState extends State<QuizPage> {
           
           Container(
             padding: const EdgeInsets.all(20), 
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))]
-            ),
+            decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))]),
             child: Row(
               children: [
                 if (_currentIndex > 0) 
-                  IconButton(
-                    onPressed: () => setState(() => _currentIndex--), 
-                    icon: const Icon(Icons.arrow_back_ios)
-                  ),
+                  IconButton(onPressed: () => setState(() => _currentIndex--), icon: const Icon(Icons.arrow_back_ios)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
@@ -175,13 +169,8 @@ class _QuizPageState extends State<QuizPage> {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
                     ),
-                    onPressed: () => _currentIndex == widget.questions.length - 1 
-                      ? _submitQuiz() 
-                      : setState(() => _currentIndex++),
-                    child: Text(
-                      _currentIndex == widget.questions.length - 1 ? "SELESAI" : "BERIKUTNYA", 
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
-                    ),
+                    onPressed: () => _currentIndex == widget.questions.length - 1 ? _submitQuiz() : setState(() => _currentIndex++),
+                    child: Text(_currentIndex == widget.questions.length - 1 ? "SELESAI" : "BERIKUTNYA", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -197,21 +186,12 @@ class _QuizPageState extends State<QuizPage> {
     return GestureDetector(
       onTap: () => setState(() => _myAnswers[qId] = code),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 15), 
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: isSelected ? spektaRed.withOpacity(0.1) : Colors.white, 
-          borderRadius: BorderRadius.circular(15), 
-          border: Border.all(color: isSelected ? spektaRed : Colors.grey[300]!, width: 2)
-        ),
+        margin: const EdgeInsets.only(bottom: 15), padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: isSelected ? spektaRed.withOpacity(0.1) : Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: isSelected ? spektaRed : Colors.grey[300]!, width: 2)),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: isSelected ? spektaRed : Colors.grey[200], 
-              child: Text(code, style: TextStyle(color: isSelected ? Colors.white : Colors.black))
-            ),
-            const SizedBox(width: 15), 
-            Expanded(child: Text(text)),
+            CircleAvatar(backgroundColor: isSelected ? spektaRed : Colors.grey[200], child: Text(code, style: TextStyle(color: isSelected ? Colors.white : Colors.black))),
+            const SizedBox(width: 15), Expanded(child: Text(text)),
           ]
         )
       ),

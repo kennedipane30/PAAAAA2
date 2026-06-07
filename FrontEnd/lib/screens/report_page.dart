@@ -36,26 +36,44 @@ class _ReportPageState extends State<ReportPage> {
   String _fixImageUrl(String path) {
     if (path.isEmpty) return '';
     if (path.startsWith('http')) return path;
-    
-    if (!path.startsWith('/')) {
-      path = '/$path';
-    }
+    if (!path.startsWith('/')) path = '/$path';
     return 'http://10.0.2.2:8000/storage$path';
+  }
+
+  // ✨ PERBAIKAN: Gunakan fungsi tangguh untuk mencari User ID
+  int _getUserId() {
+    try {
+      var data = widget.userData;
+      if (data.containsKey('data') && data['data'] is Map) {
+        var inner = data['data'];
+        if (inner['id'] != null) return int.parse(inner['id'].toString());
+        if (inner['usersID'] != null) return int.parse(inner['usersID'].toString());
+        if (inner['user_id'] != null) return int.parse(inner['user_id'].toString());
+      }
+      if (data.containsKey('usersID') && data['usersID'] != null) return int.parse(data['usersID'].toString());
+      if (data.containsKey('user_id') && data['user_id'] != null) return int.parse(data['user_id'].toString());
+      if (data.containsKey('user') && data['user'] != null) {
+        if (data['user'].containsKey('id')) return int.parse(data['user']['id'].toString());
+        if (data['user'].containsKey('usersID')) return int.parse(data['user']['usersID'].toString());
+      }
+      if (data.containsKey('student') && data['student'] != null) {
+        if (data['student'].containsKey('user_id')) return int.parse(data['student']['user_id'].toString());
+      }
+      if (data.containsKey('id') && data['id'] != null) return int.parse(data['id'].toString());
+    } catch (e) {
+      debugPrint("❌ Gagal parse ID: $e");
+    }
+    return 0;
   }
 
   Future<void> _fetchReportData() async {
     try {
       final annRes = await AuthService.getAnnouncements(widget.token).catchError((_) => http.Response('[]', 500));
       
-      // ✨ PERBAIKAN: Ambil ID User dari profile
-      int currentUserId = 0;
-      if (widget.userData['id'] != null) {
-        currentUserId = int.parse(widget.userData['id'].toString());
-      } else if (widget.userData['user'] != null && widget.userData['user']['id'] != null) {
-        currentUserId = int.parse(widget.userData['user']['id'].toString());
-      }
+      // Ambil ID User dengan fungsi baru
+      int currentUserId = _getUserId();
+      debugPrint("📊 Mengambil riwayat untuk User ID: $currentUserId");
 
-      // ✨ PERBAIKAN: Memanggil Tryout History ke Port 9002 (Kirim userId)
       final reportRes = await AuthService.getTryoutHistory(widget.token, currentUserId);
 
       if (mounted) {
@@ -75,6 +93,7 @@ class _ReportPageState extends State<ReportPage> {
             tryoutTitles.clear();
             
             if (history.isNotEmpty) {
+              // Balik urutan agar data terlama di kiri, terbaru di kanan
               history = history.reversed.toList();
               int count = history.length > 7 ? 7 : history.length;
               
@@ -82,6 +101,7 @@ class _ReportPageState extends State<ReportPage> {
                 double score = double.parse((history[i]['score'] ?? 0).toString());
                 chartData.add(FlSpot(i.toDouble(), score));
                 
+                // Gunakan 'title' sesuai JSON response dari Golang
                 String title = history[i]['title'] ?? history[i]['tryout_name'] ?? 'TO ${i+1}';
                 tryoutTitles.add(title.length > 6 ? '${title.substring(0,6)}...' : title);
               }
@@ -120,8 +140,8 @@ class _ReportPageState extends State<ReportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Icon(Icons.campaign_rounded, color: spektaRed),
                       SizedBox(width: 10),
                       Text("Pengumuman Terbaru", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -153,8 +173,8 @@ class _ReportPageState extends State<ReportPage> {
 
                   const SizedBox(height: 40),
 
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Icon(Icons.auto_graph_rounded, color: spektaRed),
                       SizedBox(width: 10),
                       Text("Statistik Belajar (7 Terakhir)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -193,9 +213,13 @@ class _ReportPageState extends State<ReportPage> {
                                   getTitlesWidget: (value, meta) {
                                     int index = value.toInt();
                                     if (index >= 0 && index < tryoutTitles.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: Text(tryoutTitles[index], style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                      // Agar text rapi
+                                      return SideTitleWidget(
+                                        axisSide: meta.axisSide,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Text(tryoutTitles[index], style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                        ),
                                       );
                                     }
                                     return const Text('');
@@ -206,18 +230,24 @@ class _ReportPageState extends State<ReportPage> {
                                 sideTitles: SideTitles(
                                   showTitles: true,
                                   reservedSize: 40,
-                                  getTitlesWidget: (value, meta) => Text("${value.toInt()}", style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                  getTitlesWidget: (value, meta) => SideTitleWidget(
+                                    axisSide: meta.axisSide, 
+                                    child: Text("${value.toInt()}", style: const TextStyle(fontSize: 10, color: Colors.grey))
+                                  ),
                                 ),
                               ),
                             ),
                             borderData: FlBorderData(show: false),
                             minX: 0,
-                            maxX: chartData.isEmpty ? 0 : (chartData.length - 1).toDouble(),
+                            // ✨ FIX: Cegah error FlChart jika data hanya 1 buah
+                            maxX: chartData.length > 1 ? (chartData.length - 1).toDouble() : 1.0,
                             minY: 0,
                             maxY: 100, 
                             lineBarsData: [
                               LineChartBarData(
-                                spots: chartData,
+                                spots: chartData.length == 1 
+                                    ? [chartData[0], FlSpot(1.0, chartData[0].y)] // Buat garis lurus jika data cuma 1
+                                    : chartData,
                                 isCurved: true,
                                 color: spektaRed,
                                 barWidth: 3,

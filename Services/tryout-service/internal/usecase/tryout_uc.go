@@ -12,6 +12,9 @@ type TryoutUsecase interface {
 	GetTryouts(classID string, userID string) ([]map[string]interface{}, error)
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	CalculateScore(tryoutIDStr string, userAnswers map[string]string) (int, int, error) 
+	
+	// ✨ TAMBAHKAN INI
+	GetHistory(userID string) ([]models.HistoryResponse, error)
 }
 
 type tryoutUsecase struct {
@@ -62,4 +65,9 @@ func (u *tryoutUsecase) CalculateScore(tryoutIDStr string, userAnswers map[strin
 
 	score := (correctCount * 100) / totalQuestions
 	return score, correctCount, nil
+}
+
+// ✨ FUNGSI BARU
+func (u *tryoutUsecase) GetHistory(userID string) ([]models.HistoryResponse, error) {
+	return u.repo.GetHistory(userID)
 }

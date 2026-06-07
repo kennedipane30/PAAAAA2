@@ -70,11 +70,17 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     }
   }
 
-  // ✨ Logika ini masih dipakai untuk Simulasi Tryout (jangan dihapus)
   int _getCurrentUserId() {
     try {
       var data = currentLocalUserData;
       
+      if (data.containsKey('data') && data['data'] is Map) {
+        var innerData = data['data'];
+        if (innerData.containsKey('id')) return int.parse(innerData['id'].toString());
+        if (innerData.containsKey('usersID')) return int.parse(innerData['usersID'].toString());
+        if (innerData.containsKey('user_id')) return int.parse(innerData['user_id'].toString());
+      }
+
       if (data.containsKey('usersID') && data['usersID'] != null) {
         return int.parse(data['usersID'].toString());
       } else if (data.containsKey('user_id') && data['user_id'] != null) {
@@ -101,21 +107,9 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     try {
       int currentUserId = _getCurrentUserId(); 
 
-      // 1. Ambil Materi (Port 9001)
-      final matRes =
-          await AuthService.getClassContent(widget.classId, widget.token);
-
-      // 2. Ambil Simulasi Tryout (Port 9002) 
-      final tryoutRes =
-          await AuthService.getSimulasi(
-              widget.token, 
-              classId: widget.classId, 
-              userId: currentUserId 
-          );
-
-      // 3. Ambil Latihan Soal (Port 9003)
-      final pracRes =
-          await AuthService.getTryouts(widget.token, classId: widget.classId);
+      final matRes = await AuthService.getClassContent(widget.classId, widget.token);
+      final tryoutRes = await AuthService.getSimulasi(widget.token, classId: widget.classId, userId: currentUserId);
+      final pracRes = await AuthService.getTryouts(widget.token, classId: widget.classId);
 
       List fetchedMateri = [];
       List fetchedTryouts = [];
@@ -123,7 +117,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       String fetchedStatus = "none";
       String fetchedDesc = "";
 
-      // --- Parsing Port 9001 (Materi) ---
       if (matRes.statusCode == 200) {
         final d = jsonDecode(matRes.body);
         if (d is List) {
@@ -135,13 +128,11 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
         }
       }
 
-      // --- Parsing Port 9002 (Tryout) ---
       if (tryoutRes.statusCode == 200) {
         final d = jsonDecode(tryoutRes.body);
         fetchedTryouts = d is List ? d : (d['data'] ?? []);
       }
 
-      // --- Parsing Port 9003 (Latihan Soal) ---
       if (pracRes.statusCode == 200) {
         final d = jsonDecode(pracRes.body);
         fetchedPractice = d is List ? d : (d['data'] ?? []);
@@ -181,7 +172,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       return;
     }
     
-    // ✨ MODIFIKASI: Navigasi bersih tanpa mengirim userId karena Latihan Soal berjalan lokal
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -204,7 +194,12 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                   tryouts: tryouts, 
                   token: widget.token,
                   userId: currentUserId, 
-              )));
+              )
+          )
+      // ✨ FIX PENTING: .then() ini wajib ada untuk merefresh nilai!
+      ).then((_) {
+          _fetchDetail();
+      });
     }
   }
 

@@ -1,10 +1,12 @@
 package http
 
 import (
+	"encoding/json" 
 	"net/http"
-	"strconv" 
+	"strconv"
 	"tryout-service/internal/models"
 	"tryout-service/internal/usecase"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,10 +55,10 @@ func (h *TryoutHandler) SyncSubmissions(c *gin.Context) {
 
 func (h *TryoutHandler) GetTryouts(c *gin.Context) {
 	classID := c.Query("class_id")
-	userID := c.Query("user_id") 
-	
+	userID := c.Query("user_id")
+
 	if userID == "" {
-		userID = "0" 
+		userID = "0"
 	}
 
 	data, err := h.uc.GetTryouts(classID, userID)
@@ -90,7 +92,7 @@ func (h *TryoutHandler) GetQuestions(c *gin.Context) {
 func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 	var req struct {
 		TryoutID int               `json:"tryout_id"`
-		UserID   int               `json:"user_id"` 
+		UserID   int               `json:"user_id"`
 		Answers  map[string]string `json:"answers"`
 	}
 
@@ -106,17 +108,37 @@ func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 		return
 	}
 
+	answersJSONBytes, _ := json.Marshal(req.Answers)
+
 	submission := models.TryoutSubmission{
 		TryoutID: uint(req.TryoutID),
 		UserID:   uint(req.UserID),
-		Score:    float64(score), 
+		Score:    float64(score),
+		Answers:  string(answersJSONBytes), 
 	}
 	h.uc.SyncSubmissions(submission)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"score":   score,        
-		"correct": correctCount, 
+		"score":   score,
+		"correct": correctCount,
 		"message": "Nilai berhasil disimpan di database",
 	})
+}
+
+// ✨ FUNGSI BARU: Untuk mengambil riwayat Tryout bagi Report Page
+func (h *TryoutHandler) GetHistory(c *gin.Context) {
+	userID := c.Query("user_id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+		return
+	}
+
+	data, err := h.uc.GetHistory(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil riwayat"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": data})
 }
