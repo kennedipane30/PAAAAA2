@@ -11,7 +11,7 @@ import 'fitur/support_center_page.dart';
 import 'fitur/question_sharing_page.dart';
 import 'fitur/dedicated_tutor_page.dart';
 import 'fitur/consultation_page.dart';
-import 'fitur/tryout_page.dart';
+import 'tryout_page.dart';
 import 'notification_page.dart';
 
 import 'class_detail_page.dart';
@@ -54,7 +54,6 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingBanner = false;
   bool isLoadingSchedule = false;
   
-  // State untuk angka notifikasi
   int unreadNotifications = 0;
   bool isLoadingNotifications = false;
 
@@ -66,7 +65,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     currentData = widget.userData;
     _bannerController = PageController(viewportFraction: 0.88);
 
@@ -94,9 +92,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> refreshUserData() async {
     try {
       final newData = await AuthService.getUserProfile(widget.token);
-
       if (!mounted) return;
-
       if (newData != null) {
         setState(() {
           currentData = newData;
@@ -111,7 +107,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchBanners() async {
     try {
       setState(() => isLoadingBanner = true);
-
       final response = await http.get(
         Uri.parse('$baseUrl/api/banners'),
         headers: {
@@ -119,34 +114,25 @@ class _HomePageState extends State<HomePage> {
           'Authorization': 'Bearer ${widget.token}',
         },
       );
-
       if (!mounted) return;
-
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-
         setState(() {
           bannerData = decoded['data'] ?? decoded['banners'] ?? [];
           activeBannerIndex = 0;
         });
-
         _startBannerAutoSlide();
-      } else {
-        debugPrint('BANNER API ERROR: Status ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('BANNER ERROR: $e');
     } finally {
-      if (mounted) {
-        setState(() => isLoadingBanner = false);
-      }
+      if (mounted) setState(() => isLoadingBanner = false);
     }
   }
 
   Future<void> fetchTryouts() async {
     try {
       setState(() => isLoadingTryout = true);
-
       final response = await http.get(
         Uri.parse('$baseUrl/api/tryouts'),
         headers: {
@@ -154,30 +140,23 @@ class _HomePageState extends State<HomePage> {
           'Authorization': 'Bearer ${widget.token}',
         },
       );
-
       if (!mounted) return;
-
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         setState(() {
           tryoutData = decoded['data'] ?? decoded['tryouts'] ?? [];
         });
-      } else {
-        debugPrint('TRYOUT API ERROR: Status ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('TRYOUT ERROR: $e');
     } finally {
-      if (mounted) {
-        setState(() => isLoadingTryout = false);
-      }
+      if (mounted) setState(() => isLoadingTryout = false);
     }
   }
 
   Future<void> fetchSchedules() async {
     try {
       setState(() => isLoadingSchedule = true);
-
       final response = await http.get(
         Uri.parse('$baseUrl/api/schedules/today'),
         headers: {
@@ -185,30 +164,23 @@ class _HomePageState extends State<HomePage> {
           'Authorization': 'Bearer ${widget.token}',
         },
       );
-
       if (!mounted) return;
-
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         setState(() {
           scheduleData = decoded['data'] ?? decoded['schedules'] ?? [];
         });
-      } else {
-        debugPrint('SCHEDULE API ERROR: Status ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('SCHEDULE ERROR: $e');
     } finally {
-      if (mounted) {
-        setState(() => isLoadingSchedule = false);
-      }
+      if (mounted) setState(() => isLoadingSchedule = false);
     }
   }
 
   Future<void> fetchNotificationCount() async {
     try {
       setState(() => isLoadingNotifications = true);
-      
       final response = await http.get(
         Uri.parse('$baseUrl/api/notifications/unread-count'),
         headers: {
@@ -216,21 +188,16 @@ class _HomePageState extends State<HomePage> {
           'Authorization': 'Bearer ${widget.token}',
         },
       );
-
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         setState(() {
           unreadNotifications = decoded['unread_count'] ?? 0;
         });
-      } else {
-        debugPrint('NOTIFICATION API ERROR: Status ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('NOTIFICATION COUNT ERROR: $e');
     } finally {
-      if (mounted) {
-        setState(() => isLoadingNotifications = false);
-      }
+      if (mounted) setState(() => isLoadingNotifications = false);
     }
   }
 
@@ -249,18 +216,14 @@ class _HomePageState extends State<HomePage> {
 
   void _startBannerAutoSlide() {
     _bannerTimer?.cancel();
-
     if (bannerData.length <= 1) return;
-
     _bannerTimer = Timer.periodic(
       const Duration(seconds: 4),
       (_) {
         if (!mounted || !_bannerController.hasClients || bannerData.isEmpty) {
           return;
         }
-
         final nextIndex = (activeBannerIndex + 1) % bannerData.length;
-
         _bannerController.animateToPage(
           nextIndex,
           duration: const Duration(milliseconds: 450),
@@ -271,54 +234,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updateEnrollmentStatus() {
-    if (currentData != null && currentData!['student'] != null) {
-      isEnrolled = currentData!['student']['class_id'] != null;
+    // ✨ FIX: Cek juga dari widget.userData agar status tidak hilang saat refresh API
+    if (currentData?['student'] != null && currentData!['student']['class_id'] != null) {
+      isEnrolled = true;
+    } else if (widget.userData['student'] != null && widget.userData['student']['class_id'] != null) {
+      isEnrolled = true;
+    } else {
+      isEnrolled = false;
     }
   }
 
   String _safeText(dynamic value, {String fallback = '-'}) {
     if (value == null) return fallback;
-
     final text = value.toString().trim();
-
     if (text.isEmpty) return fallback;
-
     return text;
   }
 
   String _imageUrl(dynamic rawPath) {
     if (rawPath == null) return '';
-
     var path = rawPath.toString().trim();
-
     if (path.isEmpty) return '';
-
     path = path.replaceAll('\\', '/');
 
     if (path.startsWith('http://127.0.0.1:8000')) {
       return path.replaceFirst('http://127.0.0.1:8000', baseUrl);
     }
-
     if (path.startsWith('http://localhost:8000')) {
       return path.replaceFirst('http://localhost:8000', baseUrl);
     }
-
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-
     if (path.startsWith('/storage/')) {
       return '$baseUrl$path';
     }
-
     if (path.startsWith('storage/')) {
       return '$baseUrl/$path';
     }
-
     if (path.startsWith('/')) {
       return '$baseUrl$path';
     }
-
     return '$baseUrl/storage/$path';
   }
 
@@ -330,12 +286,12 @@ class _HomePageState extends State<HomePage> {
         return item[key];
       }
     }
-
     return null;
   }
 
   Future<void> _handleLearningMaterials() async {
-    final student = currentData?['student'];
+    // ✨ FIX: Ambil dari widget.userData (statis dari Login) jika currentData gagal format
+    final student = currentData?['student'] ?? widget.userData['student'];
 
     if (student == null || student['class_id'] == null) {
       _showWarning('Kamu belum terdaftar di kelas mana pun. Daftar kelas dulu ya!');
@@ -359,7 +315,6 @@ class _HomePageState extends State<HomePage> {
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        
         final int classPrice = int.tryParse(decoded['price']?.toString() ?? '0') ?? 0;
 
         Navigator.push(
@@ -370,7 +325,8 @@ class _HomePageState extends State<HomePage> {
               className: decoded['program_name'] ?? "Materi Saya",
               price: classPrice,
               token: widget.token,
-              userData: currentData!,
+              // ✨ PERBAIKAN UTAMA: Selalu gunakan widget.userData yang valid dari Login
+              userData: widget.userData, 
             ),
           ),
         );
@@ -387,7 +343,8 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (c) => TryoutPage(
           token: widget.token,
-          userData: currentData ?? widget.userData,
+          // ✨ PERBAIKAN: Gunakan widget.userData yang stabil
+          userData: widget.userData,
         ),
       ),
     );
@@ -407,9 +364,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-
               const SizedBox(height: 18),
-
               _buildBannerSection(),
 
               Padding(
@@ -418,31 +373,24 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-
                     _sectionTitle(
                       title: 'Jadwal Hari Ini',
                       action: 'Lihat Semua',
                       onTap: null,
                     ),
-
                     const SizedBox(height: 12),
-
                     _buildScheduleWidget(),
 
-                    const SizedBox(height: 28), // Jarak setelah Jadwal
-
+                    const SizedBox(height: 28), 
                     _sectionTitle(
                       title: 'Tryout Kamu',
                       action: 'Lihat Semua',
                       onTap: _handleTryout,
                     ),
-
                     const SizedBox(height: 14),
-
                     _buildTryoutSection(),
 
                     const SizedBox(height: 28),
-
                     const Text(
                       'Menu Utama',
                       style: TextStyle(
@@ -452,22 +400,16 @@ class _HomePageState extends State<HomePage> {
                         letterSpacing: -0.5,
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
                     _buildMainMenuGrid(),
 
                     const SizedBox(height: 28),
-
                     _sectionTitle(
                       title: 'Kelas Mendatang',
                       action: 'Lihat Semua',
                     ),
-
                     const SizedBox(height: 14),
-
                     _buildUpcomingClassCard(),
-
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -481,7 +423,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildHeader() {
     final name = _safeText(
-      currentData?['name'],
+      currentData?['name'] ?? widget.userData['name'],
       fallback: widget.userName,
     );
 
@@ -492,11 +434,7 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            accentRed,
-            primaryRed,
-            darkRed,
-          ],
+          colors: [accentRed, primaryRed, darkRed],
         ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(34),
@@ -507,9 +445,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildAvatar(),
-
           const SizedBox(width: 13),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,9 +459,7 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 Text(
                   name,
                   maxLines: 1,
@@ -597,7 +531,6 @@ class _HomePageState extends State<HomePage> {
                   ),
           ),
         ),
-
         Positioned(
           right: 0,
           bottom: 1,
@@ -607,33 +540,11 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: const Color(0xFF22C55E),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 3,
-              ),
+              border: Border.all(color: Colors.white, width: 3),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildGlassButton(IconData icon) {
-    return Container(
-      height: 44,
-      width: 44,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.13),
-        ),
-      ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 23,
-      ),
     );
   }
 
@@ -647,9 +558,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(26),
         ),
         child: const Center(
-          child: CircularProgressIndicator(
-            color: primaryRed,
-          ),
+          child: CircularProgressIndicator(color: primaryRed),
         ),
       );
     }
@@ -659,21 +568,13 @@ class _HomePageState extends State<HomePage> {
         height: 165,
         margin: const EdgeInsets.symmetric(horizontal: 22),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              primaryRed,
-              deepRed,
-            ],
-          ),
+          gradient: const LinearGradient(colors: [primaryRed, deepRed]),
           borderRadius: BorderRadius.circular(26),
         ),
         child: const Center(
           child: Text(
             'Banner belum tersedia',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
           ),
         ),
       );
@@ -693,25 +594,14 @@ class _HomePageState extends State<HomePage> {
             },
             itemBuilder: (context, index) {
               final item = bannerData[index] as Map;
-
               final imagePath = _firstExisting(
                 item,
-                [
-                  'image_url',
-                  'image',
-                  'banner',
-                  'photo',
-                  'thumbnail',
-                ],
+                ['image_url', 'image', 'banner', 'photo', 'thumbnail'],
               );
-
               final imageUrl = _imageUrl(imagePath);
 
               return Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 6,
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(26),
@@ -737,9 +627,6 @@ class _HomePageState extends State<HomePage> {
                       : Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
-                          headers: const {
-                            'User-Agent': 'Flutter',
-                          },
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(Icons.error);
                           },
@@ -749,16 +636,13 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-
         const SizedBox(height: 6),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             bannerData.length,
             (index) {
               final active = index == activeBannerIndex;
-
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -776,11 +660,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _sectionTitle({
-    required String title,
-    required String action,
-    VoidCallback? onTap,
-  }) {
+  Widget _sectionTitle({required String title, required String action, VoidCallback? onTap}) {
     return Row(
       children: [
         Expanded(
@@ -794,27 +674,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-
         GestureDetector(
           onTap: onTap,
           child: Row(
             children: [
               Text(
                 action,
-                style: const TextStyle(
-                  color: primaryRed,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: const TextStyle(color: primaryRed, fontSize: 12, fontWeight: FontWeight.w900),
               ),
-
               const SizedBox(width: 5),
-
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: primaryRed,
-                size: 13,
-              ),
+              const Icon(Icons.arrow_forward_ios_rounded, color: primaryRed, size: 13),
             ],
           ),
         ),
@@ -830,9 +699,7 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(23),
         ),
-        child: const Center(
-          child: CircularProgressIndicator(color: primaryRed),
-        ),
+        child: const Center(child: CircularProgressIndicator(color: primaryRed)),
       );
     }
 
@@ -872,20 +739,12 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const Text(
                   'Tidak ada jadwal hari ini',
-                  style: TextStyle(
-                    color: textDark,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Jadwal dari guru akan muncul di sini',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -915,57 +774,39 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.calendar_month_rounded,
-                  color: primaryRed, size: 15),
+              const Icon(Icons.calendar_month_rounded, color: primaryRed, size: 15),
               const SizedBox(width: 6),
               Text(
                 _getTodayLabel(),
-                style: const TextStyle(
-                  color: primaryRed,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: const TextStyle(color: primaryRed, fontSize: 11, fontWeight: FontWeight.w800),
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFEEEE),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   '${scheduleData.length} jadwal',
-                  style: const TextStyle(
-                    color: primaryRed,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: const TextStyle(color: primaryRed, fontSize: 10, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           ...displayList.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value as Map;
             final isLast = index == displayList.length - 1;
-
             return _buildScheduleItem(item, isLast: isLast);
           }),
-
           if (scheduleData.length > 3) ...[
             const SizedBox(height: 8),
             Center(
               child: Text(
                 '+ ${scheduleData.length - 3} jadwal lainnya',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -1017,22 +858,13 @@ class _HomePageState extends State<HomePage> {
                   height: 10,
                   width: 10,
                   margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
                 ),
                 if (!isLast)
-                  Container(
-                    width: 1.5,
-                    height: 38,
-                    color: const Color(0xFFFFCDD2),
-                  ),
+                  Container(width: 1.5, height: 38, color: const Color(0xFFFFCDD2)),
               ],
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1044,73 +876,46 @@ class _HomePageState extends State<HomePage> {
                           subject,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: textDark,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w800),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: badgeBg,
-                          borderRadius: BorderRadius.circular(99),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(99)),
                         child: Text(
                           badgeLabel,
-                          style: TextStyle(
-                            color: badgeText,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: TextStyle(color: badgeText, fontSize: 9, fontWeight: FontWeight.w800),
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 3),
-
                   Row(
                     children: [
                       if (startTime.isNotEmpty) ...[
-                        Icon(Icons.access_time_rounded,
-                            size: 11, color: Colors.grey.shade500),
+                        Icon(Icons.access_time_rounded, size: 11, color: Colors.grey.shade500),
                         const SizedBox(width: 3),
                         Text(
-                          endTime.isNotEmpty
-                              ? '$startTime – $endTime'
-                              : startTime,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          endTime.isNotEmpty ? '$startTime – $endTime' : startTime,
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (teacherName.isNotEmpty) ...[
-                        Icon(Icons.person_outline_rounded,
-                            size: 11, color: Colors.grey.shade500),
+                        Icon(Icons.person_outline_rounded, size: 11, color: Colors.grey.shade500),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             teacherName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
                     ],
                   ),
-
                   if (!isLast) const SizedBox(height: 8),
                 ],
               ),
@@ -1123,14 +928,8 @@ class _HomePageState extends State<HomePage> {
 
   String _getTodayLabel() {
     final now = DateTime.now();
-    final days = [
-      'Minggu', 'Senin', 'Selasa', 'Rabu',
-      'Kamis', 'Jumat', 'Sabtu'
-    ];
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
+    final days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     return '${days[now.weekday % 7]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
@@ -1138,13 +937,8 @@ class _HomePageState extends State<HomePage> {
     if (isLoadingTryout) {
       return Container(
         height: 76,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(color: primaryRed),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+        child: const Center(child: CircularProgressIndicator(color: primaryRed)),
       );
     }
 
@@ -1157,11 +951,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.grey.withOpacity(0.15)),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
@@ -1169,123 +959,41 @@ class _HomePageState extends State<HomePage> {
             Container(
               height: 44,
               width: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEEEE),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.assignment_rounded,
-                color: primaryRed,
-                size: 22,
-              ),
+              decoration: BoxDecoration(color: const Color(0xFFFFEEEE), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.assignment_rounded, color: primaryRed, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Tryout Kamu',
-                    style: TextStyle(
-                      color: textDark,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  const Text('Tryout Kamu', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 3),
                   Text(
                     tryoutData.isEmpty
                         ? 'Mulai pengerjaan simulasi ujian'
                         : 'Tersedia ${tryoutData.length} tryout siap dikerjakan',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: primaryRed,
-              size: 24,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: primaryRed, size: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTryoutEmptyCard() {
-    return Container();
-  }
-
   Widget _buildMainMenuGrid() {
     final menus = [
-      {
-        'title': 'Learning\nMaterials',
-        'subtitle': 'Materi lengkap',
-        'icon': Icons.menu_book_rounded,
-        'gradient': [
-          const Color(0xFFFF512F),
-          const Color(0xFFFF8A65),
-        ],
-      },
-      {
-        'title': 'Dedicated\nTutor',
-        'subtitle': 'Tutor pilihan',
-        'icon': Icons.person_rounded,
-        'gradient': [
-          const Color(0xFF5B45F1),
-          const Color(0xFF8B7CF6),
-        ],
-      },
-      {
-        'title': 'Tryout',
-        'subtitle': 'Simulasi ujian',
-        'icon': Icons.assignment_outlined,
-        'gradient': [
-          const Color(0xFFD32F2F),
-          const Color(0xFFEF9A9A),
-        ],
-      },
-      {
-        'title': 'Question\nBank',
-        'subtitle': 'Bank soal',
-        'icon': Icons.history_edu_rounded,
-        'gradient': [
-          const Color(0xFF00A873),
-          const Color(0xFF4ADE80),
-        ],
-      },
-      {
-        'title': 'About\nSpekta',
-        'subtitle': 'Tentang kami',
-        'icon': Icons.info_outline_rounded,
-        'gradient': [
-          const Color(0xFF1769E8),
-          const Color(0xFF60A5FA),
-        ],
-      },
-      {
-        'title': 'Consultation',
-        'subtitle': 'Konsultasi',
-        'icon': Icons.chat_rounded,
-        'gradient': [
-          const Color(0xFFE0003D),
-          const Color(0xFFFF4D6D),
-        ],
-      },
-      {
-        'title': 'Support\nCenter',
-        'subtitle': 'Pusat bantuan',
-        'icon': Icons.support_agent_rounded,
-        'gradient': [
-          const Color(0xFF475569),
-          const Color(0xFF94A3B8),
-        ],
-      },
+      {'title': 'Learning\nMaterials', 'subtitle': 'Materi lengkap', 'icon': Icons.menu_book_rounded, 'gradient': [const Color(0xFFFF512F), const Color(0xFFFF8A65)]},
+      {'title': 'Dedicated\nTutor', 'subtitle': 'Tutor pilihan', 'icon': Icons.person_rounded, 'gradient': [const Color(0xFF5B45F1), const Color(0xFF8B7CF6)]},
+      {'title': 'Tryout', 'subtitle': 'Simulasi ujian', 'icon': Icons.assignment_outlined, 'gradient': [const Color(0xFFD32F2F), const Color(0xFFEF9A9A)]},
+      {'title': 'Question\nBank', 'subtitle': 'Bank soal', 'icon': Icons.history_edu_rounded, 'gradient': [const Color(0xFF00A873), const Color(0xFF4ADE80)]},
+      {'title': 'About\nSpekta', 'subtitle': 'Tentang kami', 'icon': Icons.info_outline_rounded, 'gradient': [const Color(0xFF1769E8), const Color(0xFF60A5FA)]},
+      {'title': 'Consultation', 'subtitle': 'Konsultasi', 'icon': Icons.chat_rounded, 'gradient': [const Color(0xFFE0003D), const Color(0xFFFF4D6D)]},
+      {'title': 'Support\nCenter', 'subtitle': 'Pusat bantuan', 'icon': Icons.support_agent_rounded, 'gradient': [const Color(0xFF475569), const Color(0xFF94A3B8)]},
     ];
 
     return GridView.builder(
@@ -1294,10 +1002,7 @@ class _HomePageState extends State<HomePage> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: menus.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 13,
-        crossAxisSpacing: 13,
-        childAspectRatio: 2.35,
+        crossAxisCount: 2, mainAxisSpacing: 13, crossAxisSpacing: 13, childAspectRatio: 2.35,
       ),
       itemBuilder: (context, index) {
         final item = menus[index];
@@ -1306,9 +1011,7 @@ class _HomePageState extends State<HomePage> {
         return InkWell(
           borderRadius: BorderRadius.circular(21),
           onTap: () {
-            _handleMenuTap(
-              item['title'].toString().replaceAll('\n', ' '),
-            );
+            _handleMenuTap(item['title'].toString().replaceAll('\n', ' '));
           },
           child: Container(
             padding: const EdgeInsets.all(11),
@@ -1316,35 +1019,20 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(21),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.045),
-                  blurRadius: 14,
-                  offset: const Offset(0, 7),
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.045), blurRadius: 14, offset: const Offset(0, 7)),
               ],
             ),
             child: Row(
               children: [
                 Container(
-                  height: 48,
-                  width: 48,
+                  height: 48, width: 48,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradients,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: LinearGradient(colors: gradients, begin: Alignment.topLeft, end: Alignment.bottomRight),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    item['icon'] as IconData,
-                    color: Colors.white,
-                    size: 25,
-                  ),
+                  child: Icon(item['icon'] as IconData, color: Colors.white, size: 25),
                 ),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1352,27 +1040,14 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         item['title'].toString(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: textDark,
-                          fontSize: 12.5,
-                          height: 1.05,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: textDark, fontSize: 12.5, height: 1.05, fontWeight: FontWeight.w900),
                       ),
-
                       const SizedBox(height: 5),
-
                       Text(
                         item['subtitle'].toString(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -1392,123 +1067,50 @@ class _HomePageState extends State<HomePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(23),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.045),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.045), blurRadius: 16, offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 68,
-            height: 86,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFEEEE),
-              borderRadius: BorderRadius.circular(19),
-            ),
+            width: 68, height: 86,
+            decoration: BoxDecoration(color: const Color(0xFFFFEEEE), borderRadius: BorderRadius.circular(19)),
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'JUN',
-                  style: TextStyle(
-                    color: primaryRed,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                Text('JUN', style: TextStyle(color: primaryRed, fontSize: 11, fontWeight: FontWeight.w900)),
                 SizedBox(height: 4),
-                Text(
-                  '10',
-                  style: TextStyle(
-                    color: textDark,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  'Sabtu',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text('10', style: TextStyle(color: textDark, fontSize: 26, fontWeight: FontWeight.w900)),
+                Text('Sabtu', style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
-
           const SizedBox(width: 13),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEE7FF),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: const Text(
-                    'LIVE CLASS',
-                    style: TextStyle(
-                      color: Color(0xFF5B21B6),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFEEE7FF), borderRadius: BorderRadius.circular(99)),
+                  child: const Text('LIVE CLASS', style: TextStyle(color: Color(0xFF5B21B6), fontSize: 9, fontWeight: FontWeight.w900)),
                 ),
-
                 const SizedBox(height: 7),
-
                 const Text(
                   'Matematika Dasar',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: textDark,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.w900),
                 ),
-
                 const SizedBox(height: 5),
-
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      color: Colors.grey.shade600,
-                      size: 15,
-                    ),
+                    Icon(Icons.access_time_rounded, color: Colors.grey.shade600, size: 15),
                     const SizedBox(width: 5),
-                    Text(
-                      '19.00 - 20.30 WIB',
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text('19.00 - 20.30 WIB', style: TextStyle(color: Colors.grey.shade700, fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),
-
                 const SizedBox(height: 4),
-
-                Text(
-                  'Bersama Kak Alif',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text('Bersama Kak Alif', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -1522,59 +1124,23 @@ class _HomePageState extends State<HomePage> {
       case 'Learning Materials':
         _handleLearningMaterials();
         break;
-
       case 'Dedicated Tutor':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (c) => DedicatedTutorPage(
-              token: widget.token,
-              userData: currentData ?? widget.userData,
-            ),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (c) => DedicatedTutorPage(token: widget.token, userData: widget.userData)));
         break;
-
       case 'Tryout':
         _handleTryout();
         break;
-
       case 'Question Bank':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (c) => QuestionSharingPage(
-              token: widget.token,
-            ),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token)));
         break;
-
       case 'About Spekta':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (c) => const AboutAcademyPage(),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (c) => const AboutAcademyPage()));
         break;
-
       case 'Consultation':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (c) => const ConsultationPage(),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (c) => const ConsultationPage()));
         break;
-
       case 'Support Center':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (c) => const SupportCenterPage(),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (c) => const SupportCenterPage()));
         break;
     }
   }
@@ -1584,9 +1150,7 @@ class _HomePageState extends State<HomePage> {
       SnackBar(
         backgroundColor: primaryRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         content: Text(message),
       ),
     );

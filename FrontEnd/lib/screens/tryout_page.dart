@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../tryout_detail_page.dart';
-import '../explanation_page.dart'; 
+import 'tryout_detail_page.dart';
 
 class TryoutPage extends StatefulWidget {
   final String token;
@@ -36,8 +35,24 @@ class _TryoutPageState extends State<TryoutPage> {
   }
 
   int get _userId {
-    final id = widget.userData['id'] ?? widget.userData['user']?['id'] ?? 0;
-    return int.tryParse(id.toString()) ?? 0;
+    try {
+      var data = widget.userData;
+      if (data.containsKey('usersID') && data['usersID'] != null) {
+        return int.parse(data['usersID'].toString());
+      } else if (data.containsKey('user_id') && data['user_id'] != null) {
+        return int.parse(data['user_id'].toString());
+      } else if (data.containsKey('user') && data['user'] != null) {
+        if (data['user'].containsKey('id')) return int.parse(data['user']['id'].toString());
+        if (data['user'].containsKey('usersID')) return int.parse(data['user']['usersID'].toString());
+      } else if (data.containsKey('student') && data['student'] != null) {
+        if (data['student'].containsKey('user_id')) return int.parse(data['student']['user_id'].toString());
+      } else if (data.containsKey('id') && data['id'] != null) {
+        return int.parse(data['id'].toString());
+      }
+    } catch (e) {
+      debugPrint("❌ Gagal membaca User ID di TryoutPage: $e");
+    }
+    return 0; 
   }
 
   @override
@@ -80,35 +95,6 @@ class _TryoutPageState extends State<TryoutPage> {
     }
   }
 
-  void _showAlreadyDoneDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        title: const Row(
-          children: [
-            Icon(Icons.lock_clock_rounded, color: primaryRed),
-            SizedBox(width: 10),
-            Text("Akses Terkunci", style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text("Anda sudah menyelesaikan Tryout ini. Skor Anda sudah tersimpan dan tidak dapat diubah lagi."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("TUTUP", style: TextStyle(color: Colors.grey)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
-    );
-  }
-
   void _openDetail(Map tryout, bool isDone) {
     Navigator.push(
       context, 
@@ -136,7 +122,7 @@ class _TryoutPageState extends State<TryoutPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context), // ✨ Diubah dari onTap menjadi onPressed
+          onPressed: () => Navigator.pop(context), 
         ),
       ),
       body: !_hasClass
@@ -163,17 +149,14 @@ class _TryoutPageState extends State<TryoutPage> {
   Widget _buildTryoutCard(Map tryout, int index) {
     final title = tryout['title'] ?? 'Tryout UTBK';
     final isActive = tryout['is_active'] != 0; 
-    final isCompleted = tryout['is_done'] == true || tryout['is_done'] == 1 || tryout['is_done'] == "1";
+    final isCompleted = tryout['is_done'] == true || tryout['is_done'] == 1 || tryout['is_done'] == "1" || tryout['is_done'] == "true";
     final score = tryout['score'] != null ? tryout['score'].toString() : '-';
 
     return GestureDetector(
       onTap: () {
         if (!isActive) return;
-        if (isCompleted) {
-          _showAlreadyDoneDialog();
-        } else {
-          _openDetail(tryout, isCompleted);
-        }
+        // ✨ PERBAIKAN: Apapun statusnya, biarkan masuk ke Detail Page
+        _openDetail(tryout, isCompleted);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -236,7 +219,7 @@ class _TryoutPageState extends State<TryoutPage> {
                   score,
                   style: TextStyle(
                     color: isCompleted ? primaryRed : textDark,
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),

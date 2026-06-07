@@ -7,7 +7,6 @@ class QuizPage extends StatefulWidget {
   final List questions;
   final int tryoutId;
   final String token;
-  // ✨ PERBAIKAN 1: Tambahkan variabel userId di sini
   final int userId; 
 
   const QuizPage({
@@ -15,7 +14,6 @@ class QuizPage extends StatefulWidget {
     required this.questions, 
     required this.tryoutId, 
     required this.token,
-    // ✨ PERBAIKAN 2: Jadikan userId sebagai parameter wajib (required)
     required this.userId, 
   });
 
@@ -25,7 +23,6 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   int _currentIndex = 0;
-  // Map untuk menyimpan jawaban user: {question_id: "A"}
   Map<int, String> _myAnswers = {}; 
   final Color spektaRed = const Color(0xFF990000);
 
@@ -39,13 +36,13 @@ class _QuizPageState extends State<QuizPage> {
     try {
       var resp = await AuthService.submitTryout(
         tryoutId: widget.tryoutId, 
-        userId: widget.userId, // ✨ SEKARANG INI SUDAH VALID KARENA VARIABELNYA ADA
+        userId: widget.userId, 
         answers: _myAnswers, 
         token: widget.token
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // Tutup loading
+      Navigator.pop(context); 
 
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
@@ -84,7 +81,6 @@ class _QuizPageState extends State<QuizPage> {
             onPressed: () {
               for (var i = 0; i < widget.questions.length; i++) {
                 var qData = widget.questions[i];
-                // Ekstrak ID yang kuat terhadap casing dari Go
                 int qId = int.parse((qData['question_id'] ?? qData['QuestionID'] ?? qData['id'] ?? qData['ID'] ?? 0).toString());
                 
                 String userChoice = _myAnswers[qId] ?? "-";
@@ -92,7 +88,7 @@ class _QuizPageState extends State<QuizPage> {
               }
 
               Navigator.pop(context); 
-              Navigator.push(context, MaterialPageRoute(
+              Navigator.pushReplacement(context, MaterialPageRoute(
                 builder: (context) => ExplanationPage(questions: widget.questions)
               ));
             }, 
@@ -115,7 +111,6 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     var q = widget.questions[_currentIndex];
     
-    // AMBIL ID SECARA DINAMIS
     int currentQId = int.parse((q['question_id'] ?? q['QuestionID'] ?? q['id'] ?? q['ID'] ?? 0).toString());
 
     return Scaffold(
@@ -146,11 +141,14 @@ class _QuizPageState extends State<QuizPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Pastikan mengambil option_a atau OptionA
+                  // Opsi Jawaban Murni Teks
                   _buildOption("A", q['option_a'] ?? q['OptionA'] ?? "", currentQId),
                   _buildOption("B", q['option_b'] ?? q['OptionB'] ?? "", currentQId),
                   _buildOption("C", q['option_c'] ?? q['OptionC'] ?? "", currentQId),
                   _buildOption("D", q['option_d'] ?? q['OptionD'] ?? "", currentQId),
+                  // Jika ada opsi E, tampilkan
+                  if ((q['option_e'] ?? q['OptionE']) != null && (q['option_e'] ?? q['OptionE']).toString().trim().isNotEmpty)
+                     _buildOption("E", q['option_e'] ?? q['OptionE'] ?? "", currentQId),
                 ]
               )
             )

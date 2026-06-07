@@ -53,10 +53,7 @@ func main() {
 		api.POST("/tryouts/submissions/sync", handler.SyncSubmissions)
 		api.GET("/tryouts", handler.GetTryouts)
 		api.GET("/tryouts/:id/questions", handler.GetQuestions)
-		
-		// ✨ TAMBAHKAN BARIS INI: Rute untuk simpan nilai (Submit)
 		api.POST("/tryouts/:id/submit", handler.SubmitTryout) 
-
 		api.GET("/questions", handler.GetQuestions)
 	}
 

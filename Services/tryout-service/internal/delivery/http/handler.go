@@ -2,7 +2,7 @@ package http
 
 import (
 	"net/http"
-	"strconv" // ✨ Tambahkan import strconv
+	"strconv" 
 	"tryout-service/internal/models"
 	"tryout-service/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,6 @@ func NewTryoutHandler(uc usecase.TryoutUsecase) *TryoutHandler {
 	return &TryoutHandler{uc}
 }
 
-// Struct untuk bungkusan data dari Laravel
 type SyncRequest struct {
 	Tryout    models.Tryout     `json:"tryout"`
 	Questions []models.Question `json:"questions"`
@@ -88,9 +87,6 @@ func (h *TryoutHandler) GetQuestions(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-/**
- * 5. SIMPAN HASIL UJIAN (SUBMIT) & HITUNG NILAI ASLI
- */
 func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 	var req struct {
 		TryoutID int               `json:"tryout_id"`
@@ -103,7 +99,6 @@ func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 		return
 	}
 
-	// ✨ MODIFIKASI: Panggil fungsi perhitungan dari Usecase
 	tryoutIDStr := strconv.Itoa(req.TryoutID)
 	score, correctCount, err := h.uc.CalculateScore(tryoutIDStr, req.Answers)
 	if err != nil {
@@ -111,19 +106,17 @@ func (h *TryoutHandler) SubmitTryout(c *gin.Context) {
 		return
 	}
 
-	// Simpan status ujian ke Database dengan skor yang asli!
 	submission := models.TryoutSubmission{
 		TryoutID: uint(req.TryoutID),
 		UserID:   uint(req.UserID),
-		Score:    float64(score), // ✨ Gunakan Skor Dinamis
+		Score:    float64(score), 
 	}
 	h.uc.SyncSubmissions(submission)
 
-	// Kirim response dinamis ke Flutter
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"score":   score,        // ✨ SKOR DINAMIS
-		"correct": correctCount, // ✨ JUMLAH BENAR DINAMIS
+		"score":   score,        
+		"correct": correctCount, 
 		"message": "Nilai berhasil disimpan di database",
 	})
 }

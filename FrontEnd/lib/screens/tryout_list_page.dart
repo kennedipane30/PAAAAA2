@@ -4,14 +4,13 @@ import 'tryout_detail_page.dart';
 class TryoutListPage extends StatelessWidget {
   final List tryouts;
   final String token;
-  // ✨ MODIFIKASI 1: Tambahkan variabel userId
   final int userId; 
 
   const TryoutListPage({
     super.key, 
     required this.tryouts, 
     required this.token,
-    required this.userId, // ✨ MODIFIKASI 2: Jadikan parameter wajib
+    required this.userId, 
   });
 
   @override
@@ -49,8 +48,10 @@ class TryoutListPage extends StatelessWidget {
             final String title = tData['title'] ?? tData['name'] ?? 'Tryout';
             final String duration = tData['duration']?.toString() ?? '120';
             
-            // Cek status pengerjaan dari data JSON yang dikirim Backend Go
             final bool isDone = tData['is_done'] == true || tData['is_done'] == 1 || tData['is_done'] == "1";
+            
+            // ✨ MODIFIKASI: Ambil skor dari backend
+            final String score = tData['score']?.toString() ?? '-';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 15),
@@ -79,7 +80,28 @@ class TryoutListPage extends StatelessWidget {
                 subtitle: Text("$duration Menit • ${isDone ? 'Sudah Dikerjakan' : 'Belum Dikerjakan'}", 
                   style: TextStyle(color: isDone ? Colors.green : Colors.grey)
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                
+                // ✨ MODIFIKASI: Ubah Trailing menjadi angka Nilai
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Nilai',
+                      style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      score,
+                      style: TextStyle(
+                        color: isDone ? spektaRed : Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                
                 onTap: () {
                   Navigator.push(
                     context, 
@@ -88,7 +110,7 @@ class TryoutListPage extends StatelessWidget {
                         tryoutData: tData,
                         token: token,
                         isDone: isDone, 
-                        userId: userId, // ✨ MODIFIKASI 3: Teruskan userId ke halaman Detail
+                        userId: userId, 
                       )
                     )
                   );
