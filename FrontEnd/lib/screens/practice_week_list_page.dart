@@ -5,14 +5,13 @@ class PracticeWeekListPage extends StatelessWidget {
   final String subjectName;
   final List allExercises;
   final String token;
-  final int userId; // ✨ MODIFIKASI: Tambahkan variabel userId
+  // userId dihapus dari sini
 
   const PracticeWeekListPage({
     super.key, 
     required this.subjectName, 
     required this.allExercises, 
     required this.token,
-    required this.userId, // ✨ MODIFIKASI: Wajibkan userId di constructor
   });
 
   @override
@@ -67,8 +66,7 @@ class PracticeWeekListPage extends StatelessWidget {
               onTap: isAvailable 
                 ? () => Navigator.push(context, MaterialPageRoute(builder: (c) => PracticeQuizPage(
                     questions: weekSoals,
-                    token: token,    // ✨ MODIFIKASI: Kirim token ke PracticeQuizPage
-                    userId: userId,  // ✨ MODIFIKASI: Kirim userId ke PracticeQuizPage
+                    token: token,   
                   )))
                 : null,
             ),

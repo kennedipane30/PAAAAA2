@@ -70,15 +70,11 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     }
   }
 
-  // ✨ MODIFIKASI: Pencarian ID User yang Profesional & Dinamis
+  // ✨ Logika ini masih dipakai untuk Simulasi Tryout (jangan dihapus)
   int _getCurrentUserId() {
     try {
       var data = currentLocalUserData;
       
-      // [DEBUG] Mencetak struktur data ke console agar mudah ditelusuri jika terjadi error
-      print("🔍 STRUKTUR DATA LOGIN: $data");
-
-      // Cek berbagai kemungkinan struktur JSON dari backend Laravel Anda
       if (data.containsKey('usersID') && data['usersID'] != null) {
         return int.parse(data['usersID'].toString());
       } else if (data.containsKey('user_id') && data['user_id'] != null) {
@@ -95,7 +91,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       print("❌ Gagal membaca User ID dari Map: $e");
     }
 
-    print("⚠️ PERINGATAN: ID User tidak ditemukan di Map userData!");
     return 0; 
   }
 
@@ -180,22 +175,19 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 )));
   }
   
-
   void _navigateToPractice() {
     if (practiceQuestions.isEmpty) {
       _showWarningSnack("Latihan soal belum tersedia.");
       return;
     }
     
-    int currentUserId = _getCurrentUserId(); 
-
+    // ✨ MODIFIKASI: Navigasi bersih tanpa mengirim userId karena Latihan Soal berjalan lokal
     Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => PracticeSubjectListPage(
                 allExercises: practiceQuestions, 
                 token: widget.token,
-                userId: currentUserId, 
             )));
   }
 

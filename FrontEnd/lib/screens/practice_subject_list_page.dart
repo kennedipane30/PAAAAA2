@@ -4,13 +4,12 @@ import 'practice_week_list_page.dart';
 class PracticeSubjectListPage extends StatelessWidget {
   final List allExercises;
   final String token;
-  final int userId; // ✨ MODIFIKASI: Tambahkan variabel userId
+  // userId dihapus dari sini
 
   const PracticeSubjectListPage({
     super.key, 
     required this.allExercises, 
     required this.token,
-    required this.userId, // ✨ MODIFIKASI: Wajibkan userId
   });
 
   @override
@@ -87,7 +86,6 @@ class PracticeSubjectListPage extends StatelessWidget {
                         subjectName: sName,
                         allExercises: allExercises,
                         token: token,
-                        userId: userId, // ✨ MODIFIKASI: Teruskan userId ke halaman List Minggu
                       )
                     )
                   );

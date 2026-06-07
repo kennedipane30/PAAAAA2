@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 class PracticeQuizPage extends StatefulWidget {
   final List questions;
   final String token;
-  final int userId;
+  // userId dihapus karena sudah tidak dipakai untuk API
 
-  const PracticeQuizPage({super.key, required this.questions, required this.token, required this.userId});
+  const PracticeQuizPage({super.key, required this.questions, required this.token});
 
   @override
   State<PracticeQuizPage> createState() => _PracticeQuizPageState();
@@ -44,7 +44,7 @@ class _PracticeQuizPageState extends State<PracticeQuizPage> {
     }
   }
 
-  // ✨ MODIFIKASI: Fungsi Cek Jawaban Lokal (Sangat Cepat, Tanpa Loading/API)
+  // Fungsi Cek Jawaban Lokal (Sangat Cepat, Tanpa Loading/API)
   void _checkAnswer() {
     if (selectedAnswer == null) return;
     

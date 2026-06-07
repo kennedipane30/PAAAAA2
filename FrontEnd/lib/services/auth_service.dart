@@ -155,18 +155,7 @@ class AuthService {
     ).timeout(const Duration(seconds: 10), onTimeout: () => http.Response('[]', 408));
   }
 
-  // ✨ MODIFIKASI: 2b. Fungsi Baru untuk Mengirim Jawaban Latihan Soal ke Golang (Port 9003)
-  static Future<http.Response> submitPracticeAnswer(String token, int userId, int questionId, String answer) async {
-    return await http.post(
-      Uri.parse('$practiceUrl/practice/submit'),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "user_id": userId,
-        "question_id": questionId,
-        "answer": answer
-      }),
-    ).timeout(const Duration(seconds: 10));
-  }
+  // (Fungsi submitPracticeAnswer dihapus dari sini karena dikerjakan secara lokal)
 
   // 3. Mengambil Simulasi Tryout (Port 9002)
   static Future<http.Response> getSimulasi(String token, {int? classId, int? userId}) async {
