@@ -14,7 +14,7 @@ class Schedule extends Model
 
     protected $fillable = [
         'class_id',
-        'subject_id',
+        'subject_id',  // atau 'subject_name' jika pakai opsi 2
         'teacher_id',
         'title',
         'date',
@@ -24,26 +24,14 @@ class Schedule extends Model
         'status'
     ];
 
-    /**
-     * Relasi ke Mata Pelajaran (Model Subject)
-     */
-    public function subject()
-    {
-        /**
-         * MODIFIKASI PENTING:
-         * Parameter ke-2: 'subject_id' adalah kolom Foreign Key di tabel schedules.
-         * Parameter ke-3: 'material_id' adalah kolom Primary Key di tabel materials (milik Model Subject).
-         */
-        return $this->belongsTo(Subject::class, 'subject_id', 'material_id');
-    }
+    // ✅ HAPUS relasi subject() karena tidak ada foreign key lagi
+    // atau jika pakai subject_name, tidak perlu relasi
 
-    // Relasi ke Pengajar
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id', 'usersID');
     }
 
-    // Relasi ke Kelas
     public function class()
     {
         return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');

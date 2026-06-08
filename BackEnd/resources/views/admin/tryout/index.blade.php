@@ -35,17 +35,17 @@
                 <p class="tm-sub-title">Kurasi setoran soal dari pengajar dan publikasikan menjadi paket Tryout resmi untuk aplikasi mobile siswa.</p>
             </div>
         </div>
-        
+
         <div class="tm-hero-summary">
             <div class="summary-card highlight">
-                <strong>{{ $activePackages->count() }}</strong>
+                <strong>{{ count($activePackages) }}</strong>
                 <span>Paket Live</span>
             </div>
         </div>
     </section>
 
     <div class="tm-grid-layout">
-        
+
         {{-- 3. PANEL KIRI: MONITORING DRAF GURU --}}
         <section class="cp-main-card">
             <div class="card-header-flex">
@@ -69,7 +69,7 @@
                     </thead>
                     <tbody>
                         @foreach($classes as $c)
-                            @php 
+                            @php
                                 $totalSoal = $draftStatus[$c->class_id]->total ?? 0;
                             @endphp
                             <tr>
@@ -178,12 +178,12 @@
     /* Grid & Cards */
     .tm-grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
     .cp-main-card { background: white; border-radius: 30px; padding: 30px; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-    
+
     .title-with-icon { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
     .icon-box { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; }
     .icon-box.red { background: #fee2e2; color: #d90429; }
     .icon-box.blue { background: #e0f2fe; color: #0369a1; }
-    
+
     .card-header-flex h2 { font-size: 18px; font-weight: 900; color: #111827; margin: 0; }
     .card-header-flex p { font-size: 13px; color: #94a3b8; margin: 4px 0 0; font-weight: 500; }
 
@@ -205,8 +205,8 @@
     .btn-icon-sm.green-soft { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
     .btn-icon-sm:hover { transform: translateY(-2px); filter: brightness(0.95); }
 
-    .btn-review-main { 
-        background: #111827; color: white; padding: 8px 18px; border-radius: 12px; 
+    .btn-review-main {
+        background: #111827; color: white; padding: 8px 18px; border-radius: 12px;
         font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none;
     }
     .btn-review-main:hover { background: #d90429; box-shadow: 0 8px 15px rgba(217, 4, 41, 0.2); }

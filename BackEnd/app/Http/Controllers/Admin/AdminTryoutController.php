@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassModel;
-use App\Models\Question;
-use App\Models\Tryout;
-use App\Models\TryoutResult;
 use App\Models\TryoutDraft;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -24,7 +21,14 @@ class AdminTryoutController extends Controller
                         ->get()
                         ->keyBy('class_id');
 
-        $activePackages = Tryout::with('classModel')->withCount('questions')->latest()->get();
+        // ✅ Ambil paket aktif dari Microservice Go
+        $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
+        $response = Http::get("$goUrl/api/tryouts");
+
+        $activePackages = [];
+        if ($response->successful()) {
+            $activePackages = collect($response->json()['data'] ?? []);
+        }
 
         return view('admin.tryout.index', compact('classes', 'draftStatus', 'activePackages'));
     }
@@ -59,6 +63,9 @@ class AdminTryoutController extends Controller
         }, 200, $headers);
     }
 
+    /**
+     * ✅ PUBLISH KE MICROSERVICE GO (bukan ke database utama)
+     */
     public function publishToMobile(Request $request)
     {
         $request->validate([
@@ -76,37 +83,18 @@ class AdminTryoutController extends Controller
 
         DB::beginTransaction();
         try {
-            $tryout = Tryout::create([
-                'class_id'         => $classId,
-                'title'            => trim($request->title),
-                'duration_minutes' => (int)$request->duration,
-                'status'           => 'published',
-                'is_active'        => true
-            ]);
+            $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
+
+            // Generate tryout_id (bisa pakai timestamp)
+            $tryoutId = time();
 
             $questionsForGo = [];
-
             foreach ($drafts as $d) {
                 $cleanKey = substr(trim(strtoupper($d->correct_answer)), 0, 1);
                 if (empty($cleanKey)) $cleanKey = 'A';
 
-                Question::create([
-                    'tryout_id'      => $tryout->tryout_id,
-                    'class_id'       => $classId,
-                    'subject'        => $d->subject_name,
-                    'question'       => $d->question,
-                    'option_a'       => $d->option_a,
-                    'option_b'       => $d->option_b,
-                    'option_c'       => $d->option_c,
-                    'option_d'       => $d->option_d,
-                    'option_e'       => $d->option_e,
-                    'correct_answer' => $cleanKey,
-                    'explanation'    => $d->explanation,
-                ]);
-
-                // 🔥 Pastikan tidak ada data image yang dikirim ke Golang
                 $questionsForGo[] = [
-                    'tryout_id'      => (int)$tryout->tryout_id,
+                    'tryout_id'      => (int)$tryoutId,
                     'class_id'       => (int)$classId,
                     'subject_name'   => $d->subject_name,
                     'question'       => $d->question,
@@ -120,23 +108,27 @@ class AdminTryoutController extends Controller
                 ];
             }
 
-            // Arahkan URL ke GO Tryout Service
-            $goUrl = env('GO_TRYOUT_URL', 'http://127.0.0.1:9002');
-            Http::timeout(20)->post($goUrl . '/api/tryouts/sync', [
+            // Kirim ke Microservice Go
+            $response = Http::timeout(20)->post($goUrl . '/api/tryouts/sync', [
                 'tryout' => [
-                    'tryout_id' => (int)$tryout->tryout_id,
+                    'tryout_id' => (int)$tryoutId,
                     'class_id'  => (int)$classId,
-                    'title'     => $tryout->title,
+                    'title'     => trim($request->title),
                     'duration'  => (int)$request->duration,
                     'is_active' => true
                 ],
                 'questions' => $questionsForGo
             ]);
 
+            if (!$response->successful()) {
+                throw new \Exception('Gagal sync ke microservice: ' . $response->body());
+            }
+
+            // Hapus draf setelah sukses
             TryoutDraft::where('class_id', $classId)->delete();
 
             DB::commit();
-            return redirect()->route('admin.tryout.index')->with('success', 'Berhasil mempublish paket ('.count($questionsForGo).' soal) ke aplikasi mobile!');
+            return redirect()->route('admin.tryout.index')->with('success', 'Berhasil mempublish paket (' . count($questionsForGo) . ' soal) ke aplikasi mobile!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -152,22 +144,31 @@ class AdminTryoutController extends Controller
 
     public function pilihTryout($class_id) {
         $class = ClassModel::findOrFail($class_id);
-        $tryouts = Tryout::where('class_id', $class_id)->get();
+
+        // ✅ Ambil tryouts dari Microservice Go
+        $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
+        $response = Http::get("$goUrl/api/tryouts", ['class_id' => $class_id]);
+
+        $tryouts = [];
+        if ($response->successful()) {
+            $tryouts = $response->json()['data'] ?? [];
+        }
+
         return view('admin.tryout.pilih_paket', compact('class', 'tryouts'));
     }
 
-    public function lihatNilai($tryout_id) {
-        $tryout = Tryout::where('tryout_id', $tryout_id)->first();
-        if (!$tryout) {
-            return redirect()->route('admin.scores.index')->with('error', 'Paket Tryout tidak ditemukan.');
+    public function lihatNilai($tryout_id)
+    {
+        // ✅ Ambil nilai dari Microservice Go
+        $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
+        $response = Http::get("$goUrl/api/tryouts/history", ['tryout_id' => $tryout_id]);
+
+        $results = [];
+        if ($response->successful()) {
+            $results = $response->json()['data'] ?? [];
         }
 
-        $results = TryoutResult::where('tryout_id', $tryout_id)->latest()->get();
-        foreach ($results as $res) {
-            $res->user_data = User::where('usersID', $res->user_id)->first();
-        }
-
-        return view('admin.tryout.scores', compact('tryout', 'results'));
+        return view('admin.tryout.scores', compact('tryout_id', 'results'));
     }
 
     public function deleteDraft($id) {
@@ -176,15 +177,14 @@ class AdminTryoutController extends Controller
     }
 
     public function destroyPackage($tryout_id) {
-        DB::beginTransaction();
-        try {
-            Tryout::where('tryout_id', $tryout_id)->delete();
-            Question::where('tryout_id', $tryout_id)->delete();
-            DB::commit();
+        // ✅ Hapus dari Microservice Go
+        $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
+        $response = Http::delete("$goUrl/api/tryouts/$tryout_id");
+
+        if ($response->successful()) {
             return back()->with('success', 'Paket telah dihapus dari sistem.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal menghapus paket.');
         }
+
+        return back()->with('error', 'Gagal menghapus paket.');
     }
 }
