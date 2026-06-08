@@ -52,7 +52,7 @@
                 <h2>Buat Jadwal Baru</h2>
             </div>
 
-            <form action="{{ route('admin.jadwal.store') }}" method="POST" class="sc-form">
+            <form action="{{ route('admin.jadwal.store') }}" method="POST" class="sc-form" id="scheduleForm">
                 @csrf
 
                 {{-- Input tersembunyi untuk Teacher ID dan Judul (Title) --}}
@@ -90,15 +90,18 @@
                 <div class="sc-input-row three-col">
                     <div class="sc-input-group">
                         <label>Hari / Tanggal</label>
-                        <input type="date" name="date" required>
+                        <input type="date" name="date" id="scheduleDate" required min="{{ date('Y-m-d') }}">
+                        <small class="error-msg" id="dateError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Tanggal tidak boleh kurang dari hari ini</small>
                     </div>
                     <div class="sc-input-group">
                         <label>Jam Mulai</label>
-                        <input type="time" name="start_time" required>
+                        <input type="time" name="start_time" id="startTime" required>
+                        <small class="error-msg" id="startTimeError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Jam mulai tidak valid</small>
                     </div>
                     <div class="sc-input-group">
                         <label>Jam Selesai</label>
-                        <input type="time" name="end_time" required>
+                        <input type="time" name="end_time" id="endTime" required>
+                        <small class="error-msg" id="endTimeError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Jam selesai harus setelah jam mulai</small>
                     </div>
                 </div>
 
@@ -197,7 +200,6 @@
     .sc-alert { display: flex; gap: 10px; align-items: center; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; font-size: 14px;}
     .sc-alert.success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;}
 
-    /* Form Section dipindah menjadi block agar Full-width */
     .sc-top-grid { display: block; margin-bottom: 30px; }
     .sc-panel { background: #fff; border-radius: 22px; padding: 25px; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
 
@@ -237,8 +239,9 @@
     .sc-status-badge.finished { background: #f1f5f9; color: #64748b; }
     .btn-delete { color: #d90429; border: none; background: #fff1f2; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.3s; display: grid; place-items: center;}
     .btn-delete:hover { transform: scale(1.05); background: #fecdd3;}
+    .text-center { text-align: center; }
+    .error-msg { display: block; }
 
-    /* Responsiveness */
     @media (max-width: 768px) {
         .sc-input-row, .sc-input-row.three-col { grid-template-columns: 1fr; }
         .sc-stats { grid-template-columns: 1fr; }
@@ -255,6 +258,118 @@
         const teacherNameDisplay = document.getElementById('teacherNameDisplay');
         const autoTitle = document.getElementById('autoTitle');
 
+        // Elemen validasi waktu
+        const dateInput = document.getElementById('scheduleDate');
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+        const dateError = document.getElementById('dateError');
+        const startTimeError = document.getElementById('startTimeError');
+        const endTimeError = document.getElementById('endTimeError');
+        const form = document.getElementById('scheduleForm');
+
+        // Set min date untuk input date (tanggal tidak boleh kurang dari hari ini)
+        const today = new Date().toISOString().split('T')[0];
+        if (dateInput) {
+            dateInput.setAttribute('min', today);
+        }
+
+        // Fungsi validasi tanggal
+        function validateDate() {
+            const selectedDate = dateInput.value;
+            if (!selectedDate) return true;
+
+            const selected = new Date(selectedDate);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0);
+
+            if (selected < todayDate) {
+                dateError.style.display = 'block';
+                return false;
+            } else {
+                dateError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi jam mulai (tidak boleh kurang dari jam sekarang jika tanggal = hari ini)
+        function validateStartTime() {
+            const selectedDate = dateInput.value;
+            const startTime = startTimeInput.value;
+
+            if (!selectedDate || !startTime) return true;
+
+            const selectedDateTime = new Date(`${selectedDate}T${startTime}`);
+            const now = new Date();
+
+            const isToday = selectedDate === today;
+
+            if (isToday && selectedDateTime < now) {
+                startTimeError.textContent = 'Jam mulai tidak boleh kurang dari jam sekarang';
+                startTimeError.style.display = 'block';
+                return false;
+            } else {
+                startTimeError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi jam selesai (harus lebih besar dari jam mulai)
+        function validateEndTime() {
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+
+            if (!startTime || !endTime) return true;
+
+            if (endTime <= startTime) {
+                endTimeError.textContent = 'Jam selesai harus setelah jam mulai';
+                endTimeError.style.display = 'block';
+                return false;
+            } else {
+                endTimeError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Event listener validasi
+        if (dateInput) {
+            dateInput.addEventListener('change', function() {
+                validateDate();
+                if (dateInput.value === today) {
+                    // Jika tanggal berubah menjadi hari ini, validasi ulang start time
+                    validateStartTime();
+                } else {
+                    startTimeError.style.display = 'none';
+                }
+            });
+        }
+
+        if (startTimeInput) {
+            startTimeInput.addEventListener('change', validateStartTime);
+        }
+
+        if (endTimeInput) {
+            endTimeInput.addEventListener('change', validateEndTime);
+        }
+
+        // Validasi sebelum submit
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const isDateValid = validateDate();
+                const isStartTimeValid = validateStartTime();
+                const isEndTimeValid = validateEndTime();
+
+                if (!isDateValid || !isStartTimeValid || !isEndTimeValid) {
+                    e.preventDefault();
+                    let errorMsg = 'Jadwal tidak valid:\n';
+                    if (!isDateValid) errorMsg += '- Tanggal tidak boleh kurang dari hari ini\n';
+                    if (!isStartTimeValid) errorMsg += '- Jam mulai tidak valid (jika hari ini, tidak boleh kurang dari jam sekarang)\n';
+                    if (!isEndTimeValid) errorMsg += '- Jam selesai harus setelah jam mulai\n';
+                    alert(errorMsg);
+                }
+            });
+        }
+
+        // ========== AJAX untuk getSubjects dan getTeacher (tidak berubah) ==========
         if (classSelect) {
             classSelect.addEventListener('change', function() {
                 const classId = this.value;
@@ -266,7 +381,6 @@
                 autoTitle.value = '';
 
                 if (classId) {
-                    // Panggil AJAX ke route getSubjects
                     fetch(`${BASE_URL}/admin/jadwal/get-subjects/${classId}`)
                         .then(res => res.json())
                         .then(data => {
@@ -275,7 +389,6 @@
 
                             if (data.length > 0) {
                                 data.forEach(sub => {
-                                    // sub.name berasal dari alias 'materials.material_name as name' di controller
                                     subjectSelect.innerHTML += `<option value="${sub.subject_id}">${sub.name}</option>`;
                                 });
                             } else {

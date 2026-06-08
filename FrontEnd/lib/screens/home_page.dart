@@ -3,6 +3,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+// ✨ MODIFIKASI: Tambahan Import package
+import 'package:url_launcher/url_launcher.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../services/auth_service.dart';
 
@@ -11,6 +14,8 @@ import 'fitur/support_center_page.dart';
 import 'fitur/question_sharing_page.dart';
 import 'fitur/dedicated_tutor_page.dart';
 import 'fitur/consultation_page.dart';
+// ✨ MODIFIKASI: Import halaman detail banner
+import 'banner_detail_page.dart'; 
 import 'tryout_page.dart';
 import 'notification_page.dart';
 
@@ -47,8 +52,8 @@ class _HomePageState extends State<HomePage> {
 
   List bannerData = [];
   List tryoutData = [];
-  List scheduleData = []; // Untuk Hari Ini
-  List upcomingData = []; // ✨ TAMBAHAN: Untuk Kelas Mendatang
+  List scheduleData = []; 
+  List upcomingData = []; 
 
   bool isLoadingTryout = false;
   bool isEnrolled = false;
@@ -168,7 +173,6 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        // ✨ PERBAIKAN: Pisahkan data 'today' dan 'upcoming'
         setState(() {
           if (decoded['data'] != null && decoded['data'] is Map) {
              scheduleData = decoded['data']['today'] ?? [];
@@ -228,6 +232,32 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  // ✨ MODIFIKASI: FUNGSI BARU UNTUK KLIK BANNER
+  Future<void> _handleBannerClick(Map bannerItem, String imageUrl) async {
+    final String? link = bannerItem['link']?.toString().trim();
+
+    // Jika ada link, buka browser
+    if (link != null && link.isNotEmpty) {
+      final Uri url = Uri.parse(link);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        _showWarning("Tidak dapat membuka link promo ini.");
+      }
+    } else {
+      // Jika kosong, arahkan ke detail
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BannerDetailPage(
+            bannerData: bannerItem,
+            imageUrl: imageUrl,
+          ),
+        ),
+      );
+    }
   }
 
   void _updateEnrollmentStatus() {
@@ -346,7 +376,6 @@ class _HomePageState extends State<HomePage> {
                     _buildMainMenuGrid(),
 
                     const SizedBox(height: 28),
-                    // ✨ HANYA MUNCUL JIKA ADA KELAS MENDATANG
                     if (upcomingData.isNotEmpty) ...[
                       _sectionTitle(title: 'Kelas Mendatang', action: 'Lihat Semua'),
                       const SizedBox(height: 14),
@@ -392,10 +421,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ✅ MODIFIKASI: Memperbaiki Avatar untuk menampilkan foto profil dari currentData
   Widget _buildAvatar() {
-    final rawAvatar = currentData?['photo'] ?? currentData?['avatar'] ?? currentData?['profile_photo'];
-    final avatarUrl = _imageUrl(rawAvatar);
-
+    // Ambil photo_url dari currentData (hasil dari getProfile)
+    final photoUrl = currentData?['photo_url'] ?? '';
+    
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -403,9 +433,23 @@ class _HomePageState extends State<HomePage> {
           height: 58, width: 58, padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 14, offset: const Offset(0, 6))]),
           child: ClipOval(
-            child: avatarUrl.isEmpty
-                ? Container(color: const Color(0xFFFFF1F1), child: const Icon(Icons.person_rounded, color: primaryRed, size: 31))
-                : Image.network(avatarUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFFFFF1F1), child: const Icon(Icons.person_rounded, color: primaryRed, size: 31))),
+            child: photoUrl.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: photoUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: const Color(0xFFFFF1F1),
+                      child: const Icon(Icons.person_rounded, color: primaryRed, size: 31),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: const Color(0xFFFFF1F1),
+                      child: const Icon(Icons.person_rounded, color: primaryRed, size: 31),
+                    ),
+                  )
+                : Container(
+                    color: const Color(0xFFFFF1F1),
+                    child: const Icon(Icons.person_rounded, color: primaryRed, size: 31),
+                  ),
           ),
         ),
         Positioned(
@@ -436,14 +480,18 @@ class _HomePageState extends State<HomePage> {
               final imagePath = _firstExisting(item, ['image_url', 'image', 'banner', 'photo', 'thumbnail']);
               final imageUrl = _imageUrl(imagePath);
 
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), boxShadow: [BoxShadow(color: primaryRed.withOpacity(0.13), blurRadius: 18, offset: const Offset(0, 8))]),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(26),
-                  child: imageUrl.isEmpty
-                      ? Container(color: const Color(0xFFE5E7EB), child: const Icon(Icons.image_rounded, color: Colors.grey, size: 38))
-                      : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.error))
+              // ✨ MODIFIKASI: Bungkus Container Banner dengan GestureDetector
+              return GestureDetector(
+                onTap: () => _handleBannerClick(item, imageUrl),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), boxShadow: [BoxShadow(color: primaryRed.withOpacity(0.13), blurRadius: 18, offset: const Offset(0, 8))]),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(26),
+                    child: imageUrl.isEmpty
+                        ? Container(color: const Color(0xFFE5E7EB), child: const Icon(Icons.image_rounded, color: Colors.grey, size: 38))
+                        : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.error))
+                  ),
                 ),
               );
             },
@@ -603,13 +651,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ✨ FUNGSI BARU: Widget Daftar Kelas Mendatang
   Widget _buildUpcomingClassesList() {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      itemCount: upcomingData.length > 3 ? 3 : upcomingData.length, // Maksimal tampilkan 3
+      itemCount: upcomingData.length > 3 ? 3 : upcomingData.length, 
       itemBuilder: (context, index) {
         final item = upcomingData[index];
         final monthName = item['month_name'] ?? 'MTH';

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
+
 class AuthService {
   // ============================================================
   // 🌐 CONFIGURATION
@@ -123,9 +124,21 @@ class AuthService {
     return await http.post(Uri.parse('$baseUrl/reset-password'), body: data.map((key, value) => MapEntry(key, value.toString())));
   }
 
+  // ✅ MODIFIKASI: Memanggil endpoint /profile dan mengambil nested user object
   static Future<Map<String, dynamic>?> getUserProfile(String token) async {
-    final response = await http.get(Uri.parse('$baseUrl/user'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
-    if (response.statusCode == 200) return jsonDecode(response.body);
+    final response = await http.get(
+      Uri.parse('$baseUrl/profile'), // ← Ubah dari /user menjadi /profile
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json'
+      }
+    );
+    
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      // Response dari getProfile: { "status": "success", "user": {...} }
+      return data['user'] ?? data;
+    }
     return null;
   }
 
@@ -206,4 +219,28 @@ class AuthService {
 
   static Future<http.Response> getAnnouncements(String token) async =>
       await http.get(Uri.parse('$baseUrl/announcements'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+
+  static Future<Map<String, dynamic>?> uploadProfilePhoto(File imageFile, String token) async {
+  var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/profile/photo'));
+  
+  request.headers.addAll({
+    'Authorization': 'Bearer $token',
+    'Accept': 'application/json',
+  });
+
+  request.files.add(await http.MultipartFile.fromPath('photo', imageFile.path));
+
+  try {
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+  } catch (e) {
+    debugPrint("Upload Error: $e");
+  }
+  return null;
+}
+
 }

@@ -83,22 +83,23 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.promo.store') }}" method="POST" class="pm-form">
+        <form action="{{ route('admin.promo.store') }}" method="POST" class="pm-form" id="promoFormElement">
             @csrf
 
             <div class="pm-input-group">
                 <label>Kode Promo</label>
                 <div class="pm-input-wrap">
                     <i class="fa-solid fa-ticket"></i>
-                    <input type="text" name="code" value="{{ old('code') }}" placeholder="CONTOH: SPEKTA50" required style="text-transform: uppercase;">
+                    <input type="text" name="code" id="promoCode" value="{{ old('code') }}" placeholder="CONTOH: SPEKTA50" required style="text-transform: uppercase;">
                 </div>
+                <small class="error-msg" id="codeError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Kode promo harus diisi</small>
             </div>
 
             <div class="pm-input-group">
                 <label>Target Kelas</label>
                 <div class="pm-input-wrap">
                     <i class="fa-solid fa-layer-group"></i>
-                    <select name="class_id" required>
+                    <select name="class_id" id="classId" required>
                         <option value="">Pilih Kelas</option>
                         @foreach($classes as $c)
                             <option value="{{ $c->class_id }}" {{ old('class_id') == $c->class_id ? 'selected' : '' }}>
@@ -107,42 +108,47 @@
                         @endforeach
                     </select>
                 </div>
+                <small class="error-msg" id="classError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Pilih target kelas</small>
             </div>
 
             <div class="pm-input-group">
                 <label>Besar Diskon</label>
                 <div class="pm-discount-wrap">
                     <i class="fa-solid fa-percent"></i>
-                    <input type="number" name="discount_value" value="{{ old('discount_value') }}" placeholder="Nilai diskon" required>
+                    <input type="number" name="discount_value" id="discountValue" value="{{ old('discount_value') }}" placeholder="Nilai diskon" required min="1">
                     <button type="button" id="btn-toggle-type" onclick="toggleDiscountType()">
                         <span id="display-type">%</span>
                     </button>
                 </div>
-                <input type="hidden" name="discount_type" id="input_discount_type" value="{{ old('discount_type', 'percent') }}">
+                <small class="error-msg" id="discountError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Diskon harus diisi dengan angka positif</small>
             </div>
+            <input type="hidden" name="discount_type" id="input_discount_type" value="{{ old('discount_type', 'percent') }}">
 
             <div class="pm-input-group">
                 <label>Kuota Penggunaan</label>
                 <div class="pm-input-wrap">
                     <i class="fa-solid fa-users"></i>
-                    <input type="number" name="quota" value="{{ old('quota', 100) }}" placeholder="Contoh: 100" min="1" required>
+                    <input type="number" name="quota" id="quota" value="{{ old('quota', 100) }}" placeholder="Contoh: 100" min="1" required>
                 </div>
+                <small class="error-msg" id="quotaError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Kuota minimal 1</small>
             </div>
 
             <div class="pm-input-group">
                 <label>Tanggal Mulai</label>
                 <div class="pm-input-wrap">
                     <i class="fa-regular fa-calendar"></i>
-                    <input type="date" name="start_date" value="{{ old('start_date') }}" required>
+                    <input type="date" name="start_date" id="startDate" value="{{ old('start_date') }}" required min="{{ date('Y-m-d') }}">
                 </div>
+                <small class="error-msg" id="startDateError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Tanggal mulai tidak boleh kurang dari hari ini</small>
             </div>
 
             <div class="pm-input-group">
                 <label>Tanggal Berakhir</label>
                 <div class="pm-input-wrap">
                     <i class="fa-regular fa-calendar-check"></i>
-                    <input type="date" name="end_date" value="{{ old('end_date') }}" required>
+                    <input type="date" name="end_date" id="endDate" value="{{ old('end_date') }}" required>
                 </div>
+                <small class="error-msg" id="endDateError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Tanggal berakhir harus minimal 1 hari setelah tanggal mulai</small>
             </div>
 
             <div class="pm-form-action">
@@ -242,6 +248,7 @@
 </div>
 
 <script>
+    // Fungsi toggle tipe diskon
     function toggleDiscountType() {
         const inputType = document.getElementById('input_discount_type');
         const displayType = document.getElementById('display-type');
@@ -257,12 +264,185 @@
         }
     }
 
+    // Validasi sebelum submit
     document.addEventListener('DOMContentLoaded', function () {
+        // Set initial display for discount type
         const inputType = document.getElementById('input_discount_type');
         const displayType = document.getElementById('display-type');
-
         if (inputType && displayType) {
             displayType.innerText = inputType.value === 'fixed' ? 'Rp' : '%';
+        }
+
+        // Ambil elemen-elemen yang diperlukan
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const promoCodeInput = document.getElementById('promoCode');
+        const classSelect = document.getElementById('classId');
+        const discountValueInput = document.getElementById('discountValue');
+        const quotaInput = document.getElementById('quota');
+        const form = document.getElementById('promoFormElement');
+
+        const startDateError = document.getElementById('startDateError');
+        const endDateError = document.getElementById('endDateError');
+        const codeError = document.getElementById('codeError');
+        const classError = document.getElementById('classError');
+        const discountError = document.getElementById('discountError');
+        const quotaError = document.getElementById('quotaError');
+
+        // Set min date untuk start_date (tidak boleh kurang dari hari ini)
+        const today = new Date().toISOString().split('T')[0];
+        if (startDateInput) {
+            startDateInput.setAttribute('min', today);
+        }
+
+        // Fungsi validasi tanggal mulai (tidak boleh kurang dari hari ini)
+        function validateStartDate() {
+            const startDate = startDateInput.value;
+            if (!startDate) return true;
+
+            if (startDate < today) {
+                startDateError.style.display = 'block';
+                return false;
+            } else {
+                startDateError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi tanggal berakhir (harus minimal 1 hari setelah tanggal mulai)
+        function validateEndDate() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (!startDate || !endDate) return true;
+
+            // Hitung tanggal minimal berakhir (start_date + 1 hari)
+            const startDateObj = new Date(startDate);
+            const minEndDate = new Date(startDateObj);
+            minEndDate.setDate(startDateObj.getDate() + 1);
+
+            const endDateObj = new Date(endDate);
+
+            // Reset jam untuk perbandingan yang akurat
+            minEndDate.setHours(0, 0, 0, 0);
+            endDateObj.setHours(0, 0, 0, 0);
+
+            if (endDateObj < minEndDate) {
+                endDateError.style.display = 'block';
+                return false;
+            } else {
+                endDateError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi kode promo
+        function validatePromoCode() {
+            const code = promoCodeInput.value.trim();
+            if (!code) {
+                codeError.style.display = 'block';
+                return false;
+            } else {
+                codeError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi kelas
+        function validateClass() {
+            const classId = classSelect.value;
+            if (!classId) {
+                classError.style.display = 'block';
+                return false;
+            } else {
+                classError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi diskon
+        function validateDiscount() {
+            const discount = discountValueInput.value;
+            if (!discount || discount <= 0) {
+                discountError.style.display = 'block';
+                return false;
+            } else {
+                discountError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Fungsi validasi kuota
+        function validateQuota() {
+            const quota = quotaInput.value;
+            if (!quota || quota < 1) {
+                quotaError.style.display = 'block';
+                return false;
+            } else {
+                quotaError.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Event listener untuk validasi real-time
+        if (startDateInput) {
+            startDateInput.addEventListener('change', function() {
+                validateStartDate();
+                validateEndDate(); // re-validasi end date jika start date berubah
+
+                // Set min attribute untuk end date agar tidak bisa memilih tanggal yang sama atau sebelum start_date
+                const startDate = startDateInput.value;
+                if (startDate && endDateInput) {
+                    const startDateObj = new Date(startDate);
+                    const minEndDateObj = new Date(startDateObj);
+                    minEndDateObj.setDate(startDateObj.getDate() + 1);
+                    const minEndDateStr = minEndDateObj.toISOString().split('T')[0];
+                    endDateInput.setAttribute('min', minEndDateStr);
+                }
+            });
+        }
+
+        if (endDateInput) {
+            endDateInput.addEventListener('change', validateEndDate);
+        }
+
+        if (promoCodeInput) promoCodeInput.addEventListener('input', validatePromoCode);
+        if (classSelect) classSelect.addEventListener('change', validateClass);
+        if (discountValueInput) discountValueInput.addEventListener('input', validateDiscount);
+        if (quotaInput) quotaInput.addEventListener('input', validateQuota);
+
+        // Set initial min end date jika start date sudah terisi (misal dari old value)
+        if (startDateInput && startDateInput.value && endDateInput) {
+            const startDate = startDateInput.value;
+            const startDateObj = new Date(startDate);
+            const minEndDateObj = new Date(startDateObj);
+            minEndDateObj.setDate(startDateObj.getDate() + 1);
+            const minEndDateStr = minEndDateObj.toISOString().split('T')[0];
+            endDateInput.setAttribute('min', minEndDateStr);
+        }
+
+        // Validasi sebelum submit
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const isStartDateValid = validateStartDate();
+                const isEndDateValid = validateEndDate();
+                const isCodeValid = validatePromoCode();
+                const isClassValid = validateClass();
+                const isDiscountValid = validateDiscount();
+                const isQuotaValid = validateQuota();
+
+                if (!isStartDateValid || !isEndDateValid || !isCodeValid || !isClassValid || !isDiscountValid || !isQuotaValid) {
+                    e.preventDefault();
+                    let errorMsg = 'Harap periksa kembali data yang Anda masukkan:\n';
+                    if (!isCodeValid) errorMsg += '- Kode promo tidak boleh kosong\n';
+                    if (!isClassValid) errorMsg += '- Pilih target kelas\n';
+                    if (!isDiscountValid) errorMsg += '- Diskon harus diisi dengan angka positif\n';
+                    if (!isQuotaValid) errorMsg += '- Kuota minimal 1\n';
+                    if (!isStartDateValid) errorMsg += '- Tanggal mulai tidak boleh kurang dari hari ini\n';
+                    if (!isEndDateValid) errorMsg += '- Tanggal berakhir harus minimal 1 hari setelah tanggal mulai\n';
+                    alert(errorMsg);
+                }
+            });
         }
     });
 </script>
@@ -341,7 +521,7 @@
     /* STATS */
     .pm-stats {
         display: grid;
-        grid-template-columns: repeat(2, 1fr); /* Diubah menjadi 2 kolom penuh */
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         margin-bottom: 24px;
     }
@@ -611,6 +791,10 @@
     }
     .pm-empty strong { display: block; font-size: 16px; color: #1e293b; margin-bottom: 4px;}
     .pm-empty p { margin: 0; font-size: 14px; color: #64748b; }
+
+    .error-msg {
+        display: block;
+    }
 
     /* RESPONSIVE */
     @media (max-width: 1200px) {

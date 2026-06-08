@@ -33,7 +33,7 @@ dependencies:
   pdfrx: ^1.0.67 # PDF Viewer yang ringan dan stabil
   
   # --- Media & Camera ---
-  image_picker: ^1.0.4
+  image_picker: ^1.2.1
 
   # --- Data Visualization (✨ Untuk Grafik Laporan Belajar) ---
   fl_chart: 0.68.0 
