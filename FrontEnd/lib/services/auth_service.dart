@@ -125,22 +125,28 @@ class AuthService {
   }
 
   // ✅ MODIFIKASI: Memanggil endpoint /profile dan mengambil nested user object
-  static Future<Map<String, dynamic>?> getUserProfile(String token) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/profile'), // ← Ubah dari /user menjadi /profile
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json'
-      }
-    );
-    
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      // Response dari getProfile: { "status": "success", "user": {...} }
-      return data['user'] ?? data;
+static Future<Map<String, dynamic>?> getUserProfile(String token) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/profile'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json'
     }
-    return null;
+  );
+  
+  print("📡 PROFILE RESPONSE STATUS: ${response.statusCode}");
+  print("📡 PROFILE RESPONSE BODY: ${response.body}");
+  
+  if (response.statusCode == 200) {
+    var data = jsonDecode(response.body);
+    // ✅ LANGSUNG KEMBALIKAN DATA USER
+    if (data['status'] == 'success' && data['user'] != null) {
+      return data['user'];
+    }
+    return data;
   }
+  return null;
+}
 
   static Future<http.Response> updateProfile(Map<String, dynamic> data, String token) async {
     return await http.post(Uri.parse('$baseUrl/update-profile'), headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'}, body: data.map((key, value) => MapEntry(key, value.toString())));

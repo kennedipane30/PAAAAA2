@@ -267,7 +267,10 @@ public function getClassContent(Request $request): JsonResponse {
     /**
      * GET PROFILE (Dinamis untuk Halaman Akun)
      */
-   public function getProfile(Request $request): JsonResponse {
+public function getProfile(Request $request): JsonResponse {
+    // ✅ TAMBAHKAN INI
+    Log::info('=== getProfile() DIPANGGIL ===');
+
     $user = Auth::user();
 
     // Ambil data student
@@ -276,32 +279,32 @@ public function getClassContent(Request $request): JsonResponse {
     $enrolledClasses = [];
     $joinedDate = '-';
 
-    if ($student) {
-        // Format tanggal bergabung
-        if ($student->created_at) {
-            $joinedDate = Carbon::parse($student->created_at)->translatedFormat('d F Y');
-        }
+    // ✅ AMBIL DARI ENROLLMENTS (BUKAN DARI STUDENTS)
+    $enrollments = DB::table('enrollments')
+        ->where('user_id', $user->usersID)
+        ->where('status', 'active')
+        ->get();
 
-        // Ambil kelas dari tabel 'classes'
-        if ($student->class_id) {
-            $classData = DB::table('classes')->where('class_id', $student->class_id)->first();
-
-            // Debug log
-            Log::info('Student class_id: ' . $student->class_id);
-            if ($classData) {
-                Log::info('Class found: ' . $classData->program_name);
-                $enrolledClasses[] = [
-                    'id' => $classData->class_id,
-                    'program_name' => $classData->program_name
-                ];
-            } else {
-                Log::warning('No class found for class_id: ' . $student->class_id);
-            }
-        } else {
-            Log::warning('Student has no class_id for user: ' . $user->usersID);
+    foreach ($enrollments as $enrollment) {
+        $classData = DB::table('classes')->where('class_id', $enrollment->class_id)->first();
+        if ($classData) {
+            $enrolledClasses[] = [
+                'id'           => $classData->class_id,
+                'program_name' => $classData->program_name,
+                'enrolled_at'  => $enrollment->created_at,
+                'expires_at'   => $enrollment->expires_at,
+            ];
         }
-    } else {
-        Log::warning('No student record found for user: ' . $user->usersID);
+    }
+
+    // Format tanggal bergabung
+    if ($enrollments->isNotEmpty()) {
+        $firstEnrollment = $enrollments->first();
+        if ($firstEnrollment && $firstEnrollment->created_at) {
+            $joinedDate = Carbon::parse($firstEnrollment->created_at)->translatedFormat('d F Y');
+        }
+    } else if ($student && $student->created_at) {
+        $joinedDate = Carbon::parse($student->created_at)->translatedFormat('d F Y');
     }
 
     // Ambil role name
@@ -310,17 +313,16 @@ public function getClassContent(Request $request): JsonResponse {
     return response()->json([
         'status' => 'success',
         'user' => [
-            'id' => $user->usersID,
-            'name' => $user->name,
-            'email' => $user->email,
-            'photo_url' => $user->photo_url,
-            'role' => strtoupper($roleName),
-            'joined_date' => $joinedDate,
-            'enrolled_classes' => $enrolledClasses
+            'id'               => $user->usersID,
+            'name'             => $user->name,
+            'email'            => $user->email,
+            'photo_url'        => $user->photo_url,
+            'role'             => strtoupper($roleName),
+            'joined_date'      => $joinedDate,
+            'enrolled_classes' => $enrolledClasses  // ✅ INI YANG PENTING
         ]
     ]);
 }
-
     /**
      * UPLOAD FOTO PROFIL
      */
