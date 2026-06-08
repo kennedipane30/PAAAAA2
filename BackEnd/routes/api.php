@@ -147,4 +147,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payment/snap-token', [PaymentController::class, 'getSnapToken']);
     Route::post('/promo/check', [PromoController::class, 'checkPromo']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/payment/manual-success', [PaymentController::class, 'manualPaymentSuccess']);
+    
 });

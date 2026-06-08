@@ -242,5 +242,75 @@ class AuthService {
   }
   return null;
 }
+// ============================================================
+// 💳 PAYMENT METHODS
+// ============================================================
+
+/// Mendapatkan Snap Token dari Midtrans
+static Future<Map<String, dynamic>?> getSnapToken({
+  required int classId,
+  required String token,
+  String? promoCode,
+}) async {
+  try {
+    final body = {
+      'class_id': classId.toString(),
+    };
+    if (promoCode != null && promoCode.isNotEmpty) {
+      body['promo_code'] = promoCode;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/payment/snap-token'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    debugPrint("📡 getSnapToken response: ${response.statusCode}");
+    debugPrint("📡 Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  } catch (e) {
+    debugPrint("❌ getSnapToken error: $e");
+    return null;
+  }
+}
+
+/// Manual update payment success (dipanggil setelah sukses bayar di WebView)
+static Future<bool> manualPaymentSuccess({
+  required String orderId,
+  required String token,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/payment/manual-success'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'order_id': orderId}),
+    );
+
+    debugPrint("📡 manualPaymentSuccess response: ${response.statusCode}");
+    debugPrint("📡 Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['success'] == true;
+    }
+    return false;
+  } catch (e) {
+    debugPrint("❌ manualPaymentSuccess error: $e");
+    return false;
+  }
+}
 
 }
