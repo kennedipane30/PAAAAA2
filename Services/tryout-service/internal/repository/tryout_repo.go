@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"strconv" 
+	"strconv"
 	"tryout-service/internal/models"
 	"gorm.io/gorm"
 )
@@ -9,9 +9,11 @@ import (
 type TryoutRepository interface {
 	SyncFullPackage(t *models.Tryout, qs []models.Question) error
 	SyncSubmissions(s *models.TryoutSubmission) error
-	GetByClass(classID string, userID string) ([]map[string]interface{}, error) 
+	GetByClass(classID string, userID string) ([]map[string]interface{}, error)
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	GetHistory(userID string) ([]models.HistoryResponse, error)
+	// ✅ TAMBAH interface untuk submissions
+	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
 }
 
 type tryoutRepository struct {
@@ -22,19 +24,41 @@ func NewTryoutRepository(db *gorm.DB) TryoutRepository {
 	return &tryoutRepository{db: db}
 }
 
+// ✅ UBAH: SyncFullPackage dengan ID management yang benar
 func (r *tryoutRepository) SyncFullPackage(t *models.Tryout, qs []models.Question) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Save(t).Error; err != nil { return err }
-		tx.Where("tryout_id = ?", t.TryoutID).Delete(&models.Question{})
+		// Create tryout baru (ID auto increment)
+		if err := tx.Create(t).Error; err != nil {
+			return err
+		}
+
+		// Set TryoutID dan ClassID untuk semua questions
 		if len(qs) > 0 {
-			for i := range qs { qs[i].TryoutID = t.TryoutID }
-			if err := tx.Create(&qs).Error; err != nil { return err }
+			for i := range qs {
+				qs[i].TryoutID = t.TryoutID
+				qs[i].ClassID = t.ClassID
+			}
+			if err := tx.Create(&qs).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
 }
 
+// ✅ UBAH: SyncSubmissions dengan update jika sudah ada
 func (r *tryoutRepository) SyncSubmissions(s *models.TryoutSubmission) error {
+	var existing models.TryoutSubmission
+	err := r.db.Where("user_id = ? AND tryout_id = ?", s.UserID, s.TryoutID).First(&existing).Error
+	
+	if err == nil {
+		// Update existing submission
+		existing.Answers = s.Answers
+		existing.Score = s.Score
+		return r.db.Save(&existing).Error
+	}
+	
+	// Create new submission
 	return r.db.Create(s).Error
 }
 
@@ -50,11 +74,11 @@ func (r *tryoutRepository) GetByClass(classID string, userID string) ([]map[stri
 		err := r.db.Where("tryout_id = ? AND user_id = ?", t.TryoutID, userID).First(&submission).Error
 
 		isDone := false
-		score := "-" 
+		score := "-"
 
 		if err == nil {
 			isDone = true
-			score = strconv.FormatFloat(submission.Score, 'f', 0, 64) 
+			score = strconv.FormatFloat(submission.Score, 'f', 0, 64)
 		}
 
 		item := map[string]interface{}{
@@ -63,8 +87,8 @@ func (r *tryoutRepository) GetByClass(classID string, userID string) ([]map[stri
 			"title":           t.Title,
 			"duration":        t.Duration,
 			"total_questions": t.TotalQuestions,
-			"is_done":         isDone, 
-			"score":           score, 
+			"is_done":         isDone,
+			"score":           score,
 		}
 		results = append(results, item)
 	}
@@ -77,10 +101,9 @@ func (r *tryoutRepository) GetQuestions(tryoutID string) ([]models.Question, err
 	return data, err
 }
 
-// ✅ FUNGSI: Ambil 7 Riwayat Terakhir dengan join ke tabel Tryouts
 func (r *tryoutRepository) GetHistory(userID string) ([]models.HistoryResponse, error) {
 	var results []models.HistoryResponse
-	
+
 	err := r.db.Table("tryout_submissions").
 		Select("tryout_submissions.tryout_id, tryouts.title as tryout_title, tryout_submissions.score, tryout_submissions.submitted_at").
 		Joins("left join tryouts on tryouts.tryout_id = tryout_submissions.tryout_id").
@@ -90,4 +113,11 @@ func (r *tryoutRepository) GetHistory(userID string) ([]models.HistoryResponse, 
 		Scan(&results).Error
 
 	return results, err
+}
+
+// ✅ TAMBAH: GetSubmissionsByTryout
+func (r *tryoutRepository) GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error) {
+	var submissions []models.TryoutSubmission
+	err := r.db.Where("tryout_id = ?", tryoutID).Order("submitted_at DESC").Find(&submissions).Error
+	return submissions, err
 }

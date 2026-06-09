@@ -98,16 +98,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/all', [ScheduleController::class, 'index']);
     });
 
-    // ✅ TRYOUT SYSTEM
-    Route::prefix('tryouts')->group(function () {
-        Route::get('/', [TryoutController::class, 'index']);
-        Route::get('/history', [TryoutController::class, 'history']);
-        Route::get('/my', [TryoutController::class, 'history']);
-        Route::get('/questions', [TryoutController::class, 'questions']);
-        Route::get('/{id}/questions', [TryoutController::class, 'questions']);
-        Route::post('/{id}/submit', [TryoutController::class, 'submit']);
-        Route::get('/results/{id}', [TryoutController::class, 'results']);
-    });
+    // // ✅ TRYOUT SYSTEM
+    // Route::prefix('tryouts')->group(function () {
+    //     Route::get('/', [TryoutController::class, 'index']);
+    //     Route::get('/history', [TryoutController::class, 'history']);
+    //     Route::get('/my', [TryoutController::class, 'history']);
+    //     Route::get('/questions', [TryoutController::class, 'questions']);
+    //     Route::get('/{id}/questions', [TryoutController::class, 'questions']);
+    //     Route::post('/{id}/submit', [TryoutController::class, 'submit']);
+    //     Route::get('/results/{id}', [TryoutController::class, 'results']);
+    // });
 
     // ✅ KHUSUS ROLE SISWA
     Route::middleware('role:siswa')->group(function () {

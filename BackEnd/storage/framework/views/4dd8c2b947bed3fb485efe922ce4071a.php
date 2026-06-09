@@ -1,76 +1,74 @@
-@extends('layouts.spekta')
-
-@section('head')
+<?php $__env->startSection('head'); ?>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('title', 'Kelola Latihan ' . $subject_name)
-@section('subtitle', 'Import dan kelola latihan soal mingguan')
+<?php $__env->startSection('title', 'Kelola Latihan ' . $subject_name); ?>
+<?php $__env->startSection('subtitle', 'Import dan kelola latihan soal mingguan'); ?>
 
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $practiceCollection = collect($practices);
     $practiceByWeek = $practiceCollection->keyBy('week');
     $filledWeeks = $practiceCollection->pluck('week')->unique()->count();
     $progress = round(($filledWeeks / 20) * 100);
     $totalQuestions = $practiceCollection->sum('total_soal');
-@endphp
+?>
 
 <div class="pq-page">
 
-    {{-- HEADER --}}
+    
     <section class="pq-detail-header">
         <div>
-            <a href="{{ route('pengajar.latihan.index') }}" class="pq-back">
+            <a href="<?php echo e(route('pengajar.latihan.index')); ?>" class="pq-back">
                 <i class="fa-solid fa-arrow-left"></i>
                 Kembali
             </a>
 
             <span>Practice Weekly Manager</span>
-            <h1>{{ $subject_name }}</h1>
-            <p>{{ $class->program_name }} • Kelola latihan soal untuk 20 minggu.</p>
+            <h1><?php echo e($subject_name); ?></h1>
+            <p><?php echo e($class->program_name); ?> • Kelola latihan soal untuk 20 minggu.</p>
         </div>
 
         <div class="pq-progress-box">
-            <strong>{{ $filledWeeks }}/20</strong>
+            <strong><?php echo e($filledWeeks); ?>/20</strong>
             <span>Minggu terisi</span>
             <div>
-                <em style="width: {{ $progress }}%"></em>
+                <em style="width: <?php echo e($progress); ?>%"></em>
             </div>
         </div>
     </section>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="pq-alert success">
             <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
+            <span><?php echo e(session('success')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if(session('error'))
+    <?php if(session('error')): ?>
         <div class="pq-alert error">
             <i class="fa-solid fa-circle-exclamation"></i>
-            <span>{{ session('error') }}</span>
+            <span><?php echo e(session('error')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if($errors->any())
+    <?php if($errors->any()): ?>
         <div class="pq-alert error">
             <i class="fa-solid fa-circle-exclamation"></i>
             <div>
                 <strong>Data belum valid.</strong>
                 <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- UPLOAD PANEL --}}
+    
     <section class="pq-upload-panel">
         <div class="pq-upload-head">
             <div>
@@ -80,26 +78,27 @@
             </div>
 
             <div class="pq-total-box">
-                <strong>{{ number_format($totalQuestions) }}</strong>
+                <strong><?php echo e(number_format($totalQuestions)); ?></strong>
                 <span>Total Soal</span>
             </div>
         </div>
 
-        <form action="{{ route('pengajar.latihan.store', $class->class_id) }}" method="POST" enctype="multipart/form-data" class="pq-upload-form">
-            @csrf
+        <form action="<?php echo e(route('pengajar.latihan.store', $class->class_id)); ?>" method="POST" enctype="multipart/form-data" class="pq-upload-form">
+            <?php echo csrf_field(); ?>
 
-            <input type="hidden" name="subject" value="{{ $subject_name }}">
+            <input type="hidden" name="subject" value="<?php echo e($subject_name); ?>">
 
             <div class="pq-field">
                 <label>Pilih Minggu</label>
                 <div>
                     <i class="fa-solid fa-calendar-week"></i>
                     <select name="week" required>
-                        @for($i = 1; $i <= 20; $i++)
-                            <option value="{{ $i }}" {{ old('week') == $i ? 'selected' : '' }}>
-                                Minggu Ke-{{ $i }}
+                        <?php for($i = 1; $i <= 20; $i++): ?>
+                            <option value="<?php echo e($i); ?>" <?php echo e(old('week') == $i ? 'selected' : ''); ?>>
+                                Minggu Ke-<?php echo e($i); ?>
+
                             </option>
-                        @endfor
+                        <?php endfor; ?>
                     </select>
                 </div>
             </div>
@@ -124,7 +123,7 @@
         </div>
     </section>
 
-    {{-- WEEK OVERVIEW --}}
+    
     <section class="pq-week-panel">
         <div class="pq-panel-head">
             <div>
@@ -135,13 +134,13 @@
         </div>
 
         <div class="pq-week-strip">
-            @for($i = 1; $i <= 20; $i++)
-                @php $hasPractice = $practiceByWeek->has($i); @endphp
+            <?php for($i = 1; $i <= 20; $i++): ?>
+                <?php $hasPractice = $practiceByWeek->has($i); ?>
 
-                <div class="pq-week-dot {{ $hasPractice ? 'filled' : '' }}">
-                    <span>{{ $i }}</span>
+                <div class="pq-week-dot <?php echo e($hasPractice ? 'filled' : ''); ?>">
+                    <span><?php echo e($i); ?></span>
                 </div>
-            @endfor
+            <?php endfor; ?>
         </div>
 
         <div class="pq-table-wrap">
@@ -157,11 +156,12 @@
                 </thead>
 
                 <tbody>
-                    @forelse($practices as $p)
+                    <?php $__empty_1 = true; $__currentLoopData = $practices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
                             <td>
                                 <span class="pq-week-badge">
-                                    Minggu {{ $p->week }}
+                                    Minggu <?php echo e($p->week); ?>
+
                                 </span>
                             </td>
 
@@ -174,30 +174,30 @@
 
                             <td>
                                 <div class="pq-question-count">
-                                    <strong>{{ number_format($p->total_soal) }}</strong>
+                                    <strong><?php echo e(number_format($p->total_soal)); ?></strong>
                                     <span>soal</span>
                                 </div>
                             </td>
 
                             <td>
                                 <span class="pq-note-text">
-                                    Latihan minggu ke-{{ $p->week }} sudah dapat digunakan siswa.
+                                    Latihan minggu ke-<?php echo e($p->week); ?> sudah dapat digunakan siswa.
                                 </span>
                             </td>
 
-                            {{-- ============================================================ --}}
-                            {{-- 🔥 MODIFIKASI: Form Delete dengan parameter yang benar --}}
-                            {{-- ============================================================ --}}
+                            
+                            
+                            
                             <td>
-                                <form action="{{ route('pengajar.latihan.destroy_week', [
+                                <form action="<?php echo e(route('pengajar.latihan.destroy_week', [
                                     'class_id' => $class->class_id,
                                     'subject_name' => $subject_name,
                                     'week' => $p->week
-                                ]) }}"
+                                ])); ?>"
                                       method="POST"
-                                      onsubmit="return confirm('Hapus semua soal di Minggu ke-{{ $p->week }}?')">
-                                    @csrf
-                                    @method('DELETE')
+                                      onsubmit="return confirm('Hapus semua soal di Minggu ke-<?php echo e($p->week); ?>?')">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
 
                                     <button type="submit" class="pq-delete">
                                         <i class="fa-solid fa-trash"></i>
@@ -206,7 +206,7 @@
                                 </form>
                             </td>
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="5">
                                 <div class="pq-empty">
@@ -216,7 +216,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -707,4 +707,6 @@
         }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/pengajar/Latihan/pilih.blade.php ENDPATH**/ ?>

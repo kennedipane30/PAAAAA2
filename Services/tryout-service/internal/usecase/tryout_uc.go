@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"strconv" 
+	"strconv"
 	"tryout-service/internal/models"
 	"tryout-service/internal/repository"
 )
@@ -12,9 +12,9 @@ type TryoutUsecase interface {
 	GetTryouts(classID string, userID string) ([]map[string]interface{}, error)
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	CalculateScore(tryoutIDStr string, userAnswers map[string]string) (int, int, error) 
-	
-	// ✨ TAMBAHKAN INI
 	GetHistory(userID string) ([]models.HistoryResponse, error)
+	// ✅ TAMBAH interface
+	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
 }
 
 type tryoutUsecase struct {
@@ -67,7 +67,11 @@ func (u *tryoutUsecase) CalculateScore(tryoutIDStr string, userAnswers map[strin
 	return score, correctCount, nil
 }
 
-// ✨ FUNGSI BARU
 func (u *tryoutUsecase) GetHistory(userID string) ([]models.HistoryResponse, error) {
 	return u.repo.GetHistory(userID)
+}
+
+// ✅ TAMBAH: GetSubmissionsByTryout
+func (u *tryoutUsecase) GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error) {
+	return u.repo.GetSubmissionsByTryout(tryoutID)
 }

@@ -1,9 +1,7 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Dashboard Program - Spekta Academy'); ?>
 
-@section('title', 'Dashboard Program - Spekta Academy')
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     // Hitung statistik global
     $totalClasses = \App\Models\ClassModel::count();
     $totalStudents = \App\Models\User::where('role_id', 3)->count();
@@ -17,11 +15,11 @@
         'SMA & SMP REGULER' => 'regular.png',
         'SMA FAVORIT' => 'favort.png',
     ];
-@endphp
+?>
 
 <div class="cp-page">
 
-    {{-- HEADER --}}
+    
     <section class="cp-header">
         <div>
             <span class="cp-tagline">SPEKTA DASHBOARD</span>
@@ -30,39 +28,39 @@
         </div>
     </section>
 
-    {{-- STATISTIK GLOBAL --}}
+    
     <section class="cp-stats">
         <div class="cp-stat-card border-red">
             <div class="cp-stat-content">
                 <p>Total Program</p>
-                <h2>{{ number_format($totalClasses) }}</h2>
+                <h2><?php echo e(number_format($totalClasses)); ?></h2>
             </div>
             <div class="cp-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
         </div>
         <div class="cp-stat-card border-green">
             <div class="cp-stat-content">
                 <p>Total Siswa</p>
-                <h2>{{ number_format($totalStudents) }}</h2>
+                <h2><?php echo e(number_format($totalStudents)); ?></h2>
             </div>
             <div class="cp-stat-icon"><i class="fa-solid fa-users"></i></div>
         </div>
         <div class="cp-stat-card border-blue">
             <div class="cp-stat-content">
                 <p>Total Pengajar</p>
-                <h2>{{ number_format($totalTeachers) }}</h2>
+                <h2><?php echo e(number_format($totalTeachers)); ?></h2>
             </div>
             <div class="cp-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
         </div>
         <div class="cp-stat-card border-purple">
             <div class="cp-stat-content">
                 <p>Pendaftaran Aktif</p>
-                <h2>{{ number_format($totalEnrollments) }}</h2>
+                <h2><?php echo e(number_format($totalEnrollments)); ?></h2>
             </div>
             <div class="cp-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
         </div>
     </section>
 
-    {{-- DAFTAR PROGRAM (STATISTIK PER KELAS) --}}
+    
     <section class="cp-main-panel">
         <div class="cp-panel-heading">
             <h2>Statistik Program Kelas</h2>
@@ -70,8 +68,8 @@
         </div>
 
         <div class="cp-program-list">
-            @forelse($classes as $class)
-                @php
+            <?php $__empty_1 = true; $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
                     // Hitung statistik per kelas
                     $studentCount = \App\Models\Enrollment::where('class_id', $class->class_id)
                         ->where('status', 'active')
@@ -84,54 +82,55 @@
                     // ✅ Ambil gambar dari folder public berdasarkan nama program
                     $imageFile = $programImages[$class->program_name] ?? 'default.png';
                     $imageUrl = asset($imageFile);
-                @endphp
+                ?>
 
                 <div class="cp-card">
                     <div class="cp-card-img">
-                        <img src="{{ $imageUrl }}" alt="{{ $class->program_name }}">
-                        <div class="cp-badge-price">Rp {{ number_format($class->price, 0, ',', '.') }}</div>
+                        <img src="<?php echo e($imageUrl); ?>" alt="<?php echo e($class->program_name); ?>">
+                        <div class="cp-badge-price">Rp <?php echo e(number_format($class->price, 0, ',', '.')); ?></div>
                     </div>
 
                     <div class="cp-card-content">
                         <div class="cp-card-header">
-                            <span class="cp-id">ID: #{{ $class->class_id }}</span>
-                            <h3 class="cp-class-name">{{ $class->program_name }}</h3>
-                            <p class="cp-class-desc">{{ \Illuminate\Support\Str::limit($class->description, 100) }}</p>
+                            <span class="cp-id">ID: #<?php echo e($class->class_id); ?></span>
+                            <h3 class="cp-class-name"><?php echo e($class->program_name); ?></h3>
+                            <p class="cp-class-desc"><?php echo e(\Illuminate\Support\Str::limit($class->description, 100)); ?></p>
                         </div>
 
-                        {{-- STATISTIK PER KELAS --}}
+                        
                         <div class="cp-stats-mini">
                             <div class="stat-item">
                                 <i class="fa-solid fa-user-graduate"></i>
                                 <div>
-                                    <strong>{{ number_format($studentCount) }}</strong>
+                                    <strong><?php echo e(number_format($studentCount)); ?></strong>
                                     <span>Siswa Aktif</span>
                                 </div>
                             </div>
                             <div class="stat-item">
                                 <i class="fa-solid fa-chalkboard-user"></i>
                                 <div>
-                                    <strong>{{ number_format($teacherCount) }}</strong>
+                                    <strong><?php echo e(number_format($teacherCount)); ?></strong>
                                     <span>Pengajar</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="cp-empty-state">
                     <i class="fa-solid fa-folder-open"></i>
                     <p>Belum ada program kelas yang dibuat.</p>
                 </div>
-            @endforelse
+            <?php endif; ?>
         </div>
 
-        {{-- PAGINATION --}}
-        @if(method_exists($classes, 'links'))
+        
+        <?php if(method_exists($classes, 'links')): ?>
         <div class="cp-pagination">
-            {{ $classes->links() }}
+            <?php echo e($classes->links()); ?>
+
         </div>
-        @endif
+        <?php endif; ?>
     </section>
 </div>
 
@@ -187,4 +186,6 @@
         .cp-stats { grid-template-columns: 1fr; }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/classes/index.blade.php ENDPATH**/ ?>
