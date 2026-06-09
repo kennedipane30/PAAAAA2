@@ -159,3 +159,24 @@ func (h *TryoutHandler) GetSubmissions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": data})
 }
+
+// Tambahkan method ini di akhir file handler.go
+
+// DeleteTryout - Menghapus paket tryout beserta questions dan submissions
+func (h *TryoutHandler) DeleteTryout(c *gin.Context) {
+	tryoutID := c.Param("id")
+	if tryoutID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tryout_id is required"})
+		return
+	}
+
+	if err := h.uc.DeleteTryout(tryoutID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus paket: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Paket tryout berhasil dihapus",
+	})
+}

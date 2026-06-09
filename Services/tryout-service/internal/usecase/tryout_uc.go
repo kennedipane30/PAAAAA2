@@ -14,6 +14,7 @@ type TryoutUsecase interface {
 	CalculateScore(tryoutIDStr string, userAnswers map[string]string) (int, int, error) 
 	GetHistory(userID string) ([]models.HistoryResponse, error)
 	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
+	DeleteTryout(tryoutID string) error  // ✅ TAMBAH INI
 }
 
 type tryoutUsecase struct {
@@ -72,4 +73,9 @@ func (u *tryoutUsecase) GetHistory(userID string) ([]models.HistoryResponse, err
 
 func (u *tryoutUsecase) GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error) {
 	return u.repo.GetSubmissionsByTryout(tryoutID)
+}
+
+// ✅ TAMBAH: DeleteTryout
+func (u *tryoutUsecase) DeleteTryout(tryoutID string) error {
+	return u.repo.DeleteTryout(tryoutID)
 }

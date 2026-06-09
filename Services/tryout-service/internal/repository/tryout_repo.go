@@ -13,6 +13,7 @@ type TryoutRepository interface {
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	GetHistory(userID string) ([]models.HistoryResponse, error)
 	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
+	DeleteTryout(tryoutID string) error  // ✅ TAMBAH INI
 }
 
 type tryoutRepository struct {
@@ -55,11 +56,9 @@ func (r *tryoutRepository) SyncSubmissions(s *models.TryoutSubmission) error {
 	return r.db.Create(s).Error
 }
 
-// ✅ PERBAIKAN: Handle classID kosong
 func (r *tryoutRepository) GetByClass(classID string, userID string) ([]map[string]interface{}, error) {
 	var tryouts []models.Tryout
 	
-	// Jika classID kosong atau "0", ambil semua data
 	if classID == "" || classID == "0" {
 		if err := r.db.Find(&tryouts).Error; err != nil {
 			return nil, err
@@ -121,4 +120,23 @@ func (r *tryoutRepository) GetSubmissionsByTryout(tryoutID string) ([]models.Try
 	var submissions []models.TryoutSubmission
 	err := r.db.Where("tryout_id = ?", tryoutID).Order("submitted_at DESC").Find(&submissions).Error
 	return submissions, err
+}
+
+// ✅ TAMBAH: DeleteTryout - Menghapus paket tryout beserta semua relasinya
+func (r *tryoutRepository) DeleteTryout(tryoutID string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Hapus submissions terkait
+		if err := tx.Where("tryout_id = ?", tryoutID).Delete(&models.TryoutSubmission{}).Error; err != nil {
+			return err
+		}
+		// Hapus questions terkait
+		if err := tx.Where("tryout_id = ?", tryoutID).Delete(&models.Question{}).Error; err != nil {
+			return err
+		}
+		// Hapus tryout
+		if err := tx.Where("tryout_id = ?", tryoutID).Delete(&models.Tryout{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
