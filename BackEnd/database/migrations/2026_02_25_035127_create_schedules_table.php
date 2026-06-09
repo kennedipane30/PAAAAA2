@@ -25,17 +25,16 @@ return new class extends Migration
                   ->on('users')
                   ->onDelete('cascade');
 
-            // ✅ HAPUS FOREIGN KEY - hanya kolom biasa
+            // Kolom mata pelajaran (tanpa foreign key)
             $table->unsignedBigInteger('subject_id')->nullable();
 
             // Detail Jadwal
             $table->string('title');
-            $table->string('meeting_link')->nullable();
             $table->date('date');
             $table->time('start_time');
             $table->time('end_time');
 
-            // Status
+            // Status Jadwal
             $table->enum('status', ['scheduled', 'ongoing', 'finished', 'canceled'])->default('scheduled');
 
             $table->timestamps();

@@ -14,26 +14,41 @@ class Schedule extends Model
 
     protected $fillable = [
         'class_id',
-        'subject_id',  // atau 'subject_name' jika pakai opsi 2
+        'subject_id',
         'teacher_id',
         'title',
         'date',
         'start_time',
         'end_time',
-        'meeting_link',
         'status'
     ];
 
-    // ✅ HAPUS relasi subject() karena tidak ada foreign key lagi
-    // atau jika pakai subject_name, tidak perlu relasi
-
+    /**
+     * Relasi ke Pengajar (User)
+     */
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id', 'usersID');
     }
 
+    /**
+     * Relasi ke Kelas
+     */
     public function class()
     {
         return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
+    }
+
+    /**
+     * Accessor untuk mendapatkan nama mata pelajaran dari teacher_assignments
+     * (Karena tidak ada foreign key, ambil dari relasi tidak langsung)
+     */
+    public function getSubjectNameAttribute()
+    {
+        $assignment = TeacherAssignment::where('class_id', $this->class_id)
+            ->where('subject_id', $this->subject_id)
+            ->first();
+
+        return $assignment ? $assignment->subject_name : $this->title;
     }
 }

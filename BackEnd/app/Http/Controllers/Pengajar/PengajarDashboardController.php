@@ -15,9 +15,6 @@ use Illuminate\View\View;
 
 class PengajarDashboardController extends Controller
 {
-    /**
-     * Ambil data materi dari Microservice Materi (Port 9001)
-     */
     private function getMaterialsFromMicroservice(?int $classId = null): array
     {
         try {
@@ -41,9 +38,6 @@ class PengajarDashboardController extends Controller
         return [];
     }
 
-    /**
-     * Ambil data tryout dari Microservice Tryout (Port 9002)
-     */
     private function getTryoutsFromMicroservice(?int $classId = null): array
     {
         try {
@@ -67,9 +61,6 @@ class PengajarDashboardController extends Controller
         return [];
     }
 
-    /**
-     * Ambil data practice dari Microservice Practice (Port 9003)
-     */
     private function getPracticeFromMicroservice(?int $classId = null): array
     {
         try {
@@ -92,9 +83,6 @@ class PengajarDashboardController extends Controller
         return [];
     }
 
-    /**
-     * Hitung total materi dari microservice berdasarkan assignments
-     */
     private function getTotalMateriFromMicroservice($assignments): int
     {
         $total = 0;
@@ -108,41 +96,31 @@ class PengajarDashboardController extends Controller
         return $total;
     }
 
-    /**
-     * Hitung total mapel unik dari assignments (tanpa query ke database)
-     */
     private function getTotalMapelFromAssignments($assignments): int
     {
         return $assignments->pluck('subject_id')->unique()->count();
     }
 
-    /**
-     * Dashboard utama pengajar
-     */
     public function index(): View
     {
         $teacherId = Auth::user()->usersID;
         $today = Carbon::today();
 
-        // Ambil data assignments (penugasan guru ke kelas dan mata pelajaran)
         $assignments = TeacherAssignment::with(['classModel'])
             ->where('user_id', $teacherId)
             ->latest()
             ->get();
 
-        // Statistik dasar
         $totalKelas = $assignments->pluck('class_id')->unique()->count();
         $totalMapel = $this->getTotalMapelFromAssignments($assignments);
         $totalMateri = $this->getTotalMateriFromMicroservice($assignments);
 
-        // Data dari microservice
         $tryouts = $this->getTryoutsFromMicroservice();
         $totalTryout = count($tryouts);
 
         $practices = $this->getPracticeFromMicroservice();
         $totalLatihan = count($practices);
 
-        // Kumpulkan semua materi untuk ditampilkan di dashboard
         $allMaterials = [];
         $classIds = $assignments->pluck('class_id')->unique();
 
@@ -154,7 +132,6 @@ class PengajarDashboardController extends Controller
             }
         }
 
-        // Urutkan berdasarkan created_at terbaru
         usort($allMaterials, function($a, $b) {
             $timeA = $a['created_at'] ?? $a['updated_at'] ?? '1970-01-01';
             $timeB = $b['created_at'] ?? $b['updated_at'] ?? '1970-01-01';
@@ -163,7 +140,6 @@ class PengajarDashboardController extends Controller
 
         $materiTerbaru = array_slice($allMaterials, 0, 5);
 
-        // Jadwal mengajar mendatang
         $jadwalMendatang = Schedule::where('teacher_id', $teacherId)
             ->whereDate('date', '>=', $today->toDateString())
             ->with('class')
@@ -176,7 +152,6 @@ class PengajarDashboardController extends Controller
             ->whereDate('date', $today->toDateString())
             ->count();
 
-        // Jadwal dedicated tutor
         $jadwalTutor = DedicatedTutor::where('teacher_id', $teacherId)
             ->where('status', 'confirmed')
             ->whereDate('date', '>=', $today->toDateString())
@@ -191,10 +166,8 @@ class PengajarDashboardController extends Controller
             ->whereDate('date', $today->toDateString())
             ->count();
 
-        // Aktivitas terbaru
         $aktivitasTerbaru = collect();
 
-        // Aktivitas dari materi
         foreach (array_slice($allMaterials, 0, 3) as $materi) {
             $class = ClassModel::find($materi['class_id'] ?? 0);
             $className = $class ? $class->program_name : 'Kelas ' . ($materi['class_id'] ?? '');
@@ -209,7 +182,6 @@ class PengajarDashboardController extends Controller
             ]);
         }
 
-        // Aktivitas dari jadwal
         foreach ($jadwalMendatang->take(3) as $jadwal) {
             $aktivitasTerbaru->push([
                 'type' => 'Jadwal',
@@ -221,19 +193,42 @@ class PengajarDashboardController extends Controller
             ]);
         }
 
+        // ✅ PERBAIKAN: Parsing tanggal dan waktu untuk dedicated tutor
         // Aktivitas dari tutor
-        foreach ($jadwalTutor->take(3) as $tutor) {
-            $aktivitasTerbaru->push([
-                'type' => 'Tutor',
-                'icon' => 'fa-headset',
-                'title' => $tutor->student->user->name ?? 'Siswa',
-                'subtitle' => 'Sesi dedicated tutor terkonfirmasi',
-                'time' => $tutor->created_at,
-                'sort_time' => Carbon::parse($tutor->date . ' ' . $tutor->time)->timestamp,
-            ]);
+foreach ($jadwalTutor->take(3) as $tutor) {
+    // ✅ Perbaiki parsing waktu
+    try {
+        // Coba parse dengan berbagai format
+        $datePart = $tutor->date;
+        $timePart = $tutor->time;
+
+        // Jika timePart sudah berisi tanggal juga, ambil hanya jam
+        if (strpos($timePart, '-') !== false) {
+            $timePart = date('H:i:s', strtotime($timePart));
         }
 
-        // Urutkan aktivitas berdasarkan waktu terbaru
+        // Jika timePart dalam format H:i:s, ambil H:i
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timePart)) {
+            $timePart = substr($timePart, 0, 5);
+        }
+
+        $sortTime = Carbon::parse($datePart . ' ' . $timePart)->timestamp;
+    } catch (\Exception $e) {
+        // Fallback: gunakan timestamp dari created_at
+        $sortTime = $tutor->created_at->timestamp;
+        Log::warning("Gagal parse waktu tutor ID {$tutor->dedicated_tutor_id}: " . $e->getMessage());
+    }
+
+    $aktivitasTerbaru->push([
+        'type' => 'Tutor',
+        'icon' => 'fa-headset',
+        'title' => $tutor->student->user->name ?? 'Siswa',
+        'subtitle' => 'Sesi dedicated tutor terkonfirmasi',
+        'time' => $tutor->created_at,
+        'sort_time' => $sortTime,
+    ]);
+}
+
         $aktivitasTerbaru = $aktivitasTerbaru
             ->sortByDesc('sort_time')
             ->take(6)

@@ -1,19 +1,17 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Schedule Management'); ?>
+<?php $__env->startSection('subtitle', 'Sistem Manajemen Terpadu Spekta Academy'); ?>
 
-@section('title', 'Schedule Management')
-@section('subtitle', 'Sistem Manajemen Terpadu Spekta Academy')
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $userRole = auth()->user()->role->name ?? 'admin';
     $isAdmin = $userRole === 'admin';
     $isTeacher = $userRole === 'teacher';
     $isStudent = $userRole === 'student';
-@endphp
+?>
 
 <div class="sc-page">
 
-    {{-- HEADER --}}
+    
     <section class="sc-header">
         <div class="sc-header-title">
             <nav class="sc-breadcrumb">
@@ -23,10 +21,10 @@
             </nav>
             <div class="sc-title-wrapper">
                 <h1>
-                    @if($isAdmin) Atur Waktu Pembelajaran
-                    @elseif($isTeacher) Jadwal Mengajar Saya
-                    @else Jadwal Kelas Saya
-                    @endif
+                    <?php if($isAdmin): ?> Atur Waktu Pembelajaran
+                    <?php elseif($isTeacher): ?> Jadwal Mengajar Saya
+                    <?php else: ?> Jadwal Kelas Saya
+                    <?php endif; ?>
                 </h1>
                 <span class="sc-badge-live">
                     <span class="dot-pulse"></span> Terkoneksi Matrix
@@ -36,15 +34,15 @@
         </div>
     </section>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="sc-alert success">
             <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
+            <span><?php echo e(session('success')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- FORM BUAT JADWAL (HANYA UNTUK ADMIN) --}}
-    @if($isAdmin)
+    
+    <?php if($isAdmin): ?>
     <section class="sc-top-grid">
         <div class="sc-panel sc-form-panel">
             <div class="sc-panel-heading">
@@ -52,26 +50,26 @@
                 <h2>Buat Jadwal Baru</h2>
             </div>
 
-            <form action="{{ route('admin.jadwal.store') }}" method="POST" class="sc-form" id="scheduleForm">
-                @csrf
+            <form action="<?php echo e(route('admin.jadwal.store')); ?>" method="POST" class="sc-form" id="scheduleForm">
+                <?php echo csrf_field(); ?>
 
-                {{-- Input tersembunyi untuk Teacher ID dan Judul (Title) --}}
+                
                 <input type="hidden" name="teacher_id" id="teacherIdHidden">
                 <input type="hidden" name="title" id="autoTitle">
 
                 <div class="sc-input-row">
-                    {{-- 1. PILIH PROGRAM --}}
+                    
                     <div class="sc-input-group">
                         <label>Program</label>
                         <select name="class_id" id="classSelect" required>
                             <option value="">Pilih Program</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->class_id }}">{{ $class->program_name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($class->class_id); ?>"><?php echo e($class->program_name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
 
-                    {{-- 2. PILIH MATA PELAJARAN (FILTERED BY MATRIX) --}}
+                    
                     <div class="sc-input-group">
                         <label>Mata Pelajaran</label>
                         <select name="subject_id" id="subjectSelect" required disabled>
@@ -80,17 +78,17 @@
                     </div>
                 </div>
 
-                {{-- 3. PENGAJAR (READONLY - OTOMATIS) --}}
+                
                 <div class="sc-input-group">
                     <label>Pengajar Terdaftar</label>
                     <input type="text" id="teacherNameDisplay" class="sc-input-readonly" readonly placeholder="Akan terisi otomatis berdasarkan mata pelajaran...">
                 </div>
 
-                {{-- 4. ATUR WAKTU --}}
+                
                 <div class="sc-input-row three-col">
                     <div class="sc-input-group">
                         <label>Hari / Tanggal</label>
-                        <input type="date" name="date" id="scheduleDate" required min="{{ date('Y-m-d') }}">
+                        <input type="date" name="date" id="scheduleDate" required min="<?php echo e(date('Y-m-d')); ?>">
                         <small class="error-msg" id="dateError" style="color: #b91c1c; font-size: 10px; display: none; margin-top: 4px;">Tanggal tidak boleh kurang dari hari ini</small>
                     </div>
                     <div class="sc-input-group">
@@ -111,34 +109,34 @@
             </form>
         </div>
     </section>
-    @endif
+    <?php endif; ?>
 
-    {{-- STATS CARDS --}}
+    
     <section class="sc-stats">
         <div class="sc-stat-card">
             <div class="sc-icon-box red"><i class="fa-regular fa-calendar-days"></i></div>
             <div class="sc-stat-info">
                 <p>Total Jadwal</p>
-                <strong>{{ number_format($totalJadwalBulanIni ?? 0) }}</strong>
+                <strong><?php echo e(number_format($totalJadwalBulanIni ?? 0)); ?></strong>
             </div>
         </div>
         <div class="sc-stat-card">
             <div class="sc-icon-box blue"><i class="fa-regular fa-clock"></i></div>
             <div class="sc-stat-info">
                 <p>Hari Ini</p>
-                <strong>{{ number_format($jadwalHariIni ?? 0) }}</strong>
+                <strong><?php echo e(number_format($jadwalHariIni ?? 0)); ?></strong>
             </div>
         </div>
         <div class="sc-stat-card">
             <div class="sc-icon-box purple"><i class="fa-solid fa-check-double"></i></div>
             <div class="sc-stat-info">
                 <p>Selesai</p>
-                <strong>{{ number_format($jadwalSelesaiTotal ?? 0) }}</strong>
+                <strong><?php echo e(number_format($jadwalSelesaiTotal ?? 0)); ?></strong>
             </div>
         </div>
     </section>
 
-    {{-- TABLE --}}
+    
     <section class="sc-table-panel">
         <div class="sc-table-wrap">
             <table class="sc-table">
@@ -153,35 +151,35 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($jadwal as $row)
-                        @php
+                    <?php $__empty_1 = true; $__currentLoopData = $jadwal; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
                             $start = \Carbon\Carbon::parse($row->date . ' ' . $row->start_time);
                             $end = \Carbon\Carbon::parse($row->date . ' ' . $row->end_time);
                             $now = now();
                             $status = $now->between($start, $end) ? 'ongoing' : ($now->greaterThan($end) ? 'finished' : 'scheduled');
-                        @endphp
+                        ?>
                         <tr>
                             <td>
-                                <strong>{{ $start->translatedFormat('d M Y') }}</strong><br>
-                                <small>{{ $start->format('H:i') }} - {{ $end->format('H:i') }}</small>
+                                <strong><?php echo e($start->translatedFormat('d M Y')); ?></strong><br>
+                                <small><?php echo e($start->format('H:i')); ?> - <?php echo e($end->format('H:i')); ?></small>
                             </td>
-                            <td>{{ $row->class->program_name ?? '-' }}</td
-                            {{-- ✅ PERUBAHAN: Gunakan subject_name dari controller --}}
-                            <td>{{ $row->subject_name ?? $row->title }}</td
-                            <td>{{ $row->teacher->name ?? '-' }}</td
-                            <td><span class="sc-status-badge {{ $status }}">{{ ucfirst($status) }}</span></td
+                            <td><?php echo e($row->class->program_name ?? '-'); ?></td
+                            
+                            <td><?php echo e($row->subject_name ?? $row->title); ?></td
+                            <td><?php echo e($row->teacher->name ?? '-'); ?></td
+                            <td><span class="sc-status-badge <?php echo e($status); ?>"><?php echo e(ucfirst($status)); ?></span></td
                             <td>
-                                <form action="{{ route('admin.jadwal.destroy', $row->schedule_id) }}" method="POST">
-                                    @csrf @method('DELETE')
+                                <form action="<?php echo e(route('admin.jadwal.destroy', $row->schedule_id)); ?>" method="POST">
+                                    <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="btn-delete" onclick="return confirm('Hapus jadwal ini?')">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </form>
                             </td
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr><td colspan="6" class="text-center">Belum ada jadwal yang diatur.</td</td
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -252,7 +250,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const BASE_URL = "{{ url('/') }}";
+        const BASE_URL = "<?php echo e(url('/')); ?>";
         const classSelect = document.getElementById('classSelect');
         const subjectSelect = document.getElementById('subjectSelect');
         const teacherIdHidden = document.getElementById('teacherIdHidden');
@@ -427,4 +425,6 @@
         }
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/jadwal/index.blade.php ENDPATH**/ ?>

@@ -148,5 +148,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/promo/check', [PromoController::class, 'checkPromo']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/payment/manual-success', [PaymentController::class, 'manualPaymentSuccess']);
-    
+
 });
