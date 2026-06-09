@@ -56,8 +56,10 @@ func main() {
 		api.POST("/tryouts/:id/submit", handler.SubmitTryout)
 		api.GET("/questions", handler.GetQuestions)
 		
-		// ✨ MODIFIKASI: Menambahkan rute Endpoint untuk mengambil riwayat Tryout
 		api.GET("/tryouts/history", handler.GetHistory)
+		
+		// ✅ TAMBAH: Route untuk submissions
+		api.GET("/tryouts/submissions", handler.GetSubmissions)
 	}
 
 	port := os.Getenv("PORT")

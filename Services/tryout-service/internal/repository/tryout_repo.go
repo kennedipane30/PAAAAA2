@@ -12,7 +12,6 @@ type TryoutRepository interface {
 	GetByClass(classID string, userID string) ([]map[string]interface{}, error)
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	GetHistory(userID string) ([]models.HistoryResponse, error)
-	// ✅ TAMBAH interface untuk submissions
 	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
 }
 
@@ -24,15 +23,12 @@ func NewTryoutRepository(db *gorm.DB) TryoutRepository {
 	return &tryoutRepository{db: db}
 }
 
-// ✅ UBAH: SyncFullPackage dengan ID management yang benar
 func (r *tryoutRepository) SyncFullPackage(t *models.Tryout, qs []models.Question) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Create tryout baru (ID auto increment)
 		if err := tx.Create(t).Error; err != nil {
 			return err
 		}
 
-		// Set TryoutID dan ClassID untuk semua questions
 		if len(qs) > 0 {
 			for i := range qs {
 				qs[i].TryoutID = t.TryoutID
@@ -46,26 +42,32 @@ func (r *tryoutRepository) SyncFullPackage(t *models.Tryout, qs []models.Questio
 	})
 }
 
-// ✅ UBAH: SyncSubmissions dengan update jika sudah ada
 func (r *tryoutRepository) SyncSubmissions(s *models.TryoutSubmission) error {
 	var existing models.TryoutSubmission
 	err := r.db.Where("user_id = ? AND tryout_id = ?", s.UserID, s.TryoutID).First(&existing).Error
 	
 	if err == nil {
-		// Update existing submission
 		existing.Answers = s.Answers
 		existing.Score = s.Score
 		return r.db.Save(&existing).Error
 	}
 	
-	// Create new submission
 	return r.db.Create(s).Error
 }
 
+// ✅ PERBAIKAN: Handle classID kosong
 func (r *tryoutRepository) GetByClass(classID string, userID string) ([]map[string]interface{}, error) {
 	var tryouts []models.Tryout
-	if err := r.db.Where("class_id = ?", classID).Find(&tryouts).Error; err != nil {
-		return nil, err
+	
+	// Jika classID kosong atau "0", ambil semua data
+	if classID == "" || classID == "0" {
+		if err := r.db.Find(&tryouts).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := r.db.Where("class_id = ?", classID).Find(&tryouts).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	var results []map[string]interface{}
@@ -115,7 +117,6 @@ func (r *tryoutRepository) GetHistory(userID string) ([]models.HistoryResponse, 
 	return results, err
 }
 
-// ✅ TAMBAH: GetSubmissionsByTryout
 func (r *tryoutRepository) GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error) {
 	var submissions []models.TryoutSubmission
 	err := r.db.Where("tryout_id = ?", tryoutID).Order("submitted_at DESC").Find(&submissions).Error

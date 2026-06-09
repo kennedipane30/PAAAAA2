@@ -13,7 +13,6 @@ type TryoutUsecase interface {
 	GetQuestions(tryoutID string) ([]models.Question, error)
 	CalculateScore(tryoutIDStr string, userAnswers map[string]string) (int, int, error) 
 	GetHistory(userID string) ([]models.HistoryResponse, error)
-	// ✅ TAMBAH interface
 	GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error)
 }
 
@@ -71,7 +70,6 @@ func (u *tryoutUsecase) GetHistory(userID string) ([]models.HistoryResponse, err
 	return u.repo.GetHistory(userID)
 }
 
-// ✅ TAMBAH: GetSubmissionsByTryout
 func (u *tryoutUsecase) GetSubmissionsByTryout(tryoutID string) ([]models.TryoutSubmission, error) {
 	return u.repo.GetSubmissionsByTryout(tryoutID)
 }

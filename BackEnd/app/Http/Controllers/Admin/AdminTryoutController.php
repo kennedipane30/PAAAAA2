@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClassModel;
 use App\Models\TryoutDraft;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -27,7 +26,27 @@ class AdminTryoutController extends Controller
 
         $activePackages = [];
         if ($response->successful()) {
-            $activePackages = collect($response->json()['data'] ?? []);
+            $data = $response->json();
+            // Response format: {"status":"success", "data": [...]}
+            $tryoutsData = $data['data'] ?? $data ?? [];
+
+            // Transformasi data agar mudah digunakan di view
+            foreach ($tryoutsData as $item) {
+                // Cari class name berdasarkan class_id
+                $class = $classes->firstWhere('class_id', $item['class_id'] ?? 0);
+
+                $activePackages[] = (object) [
+                    'tryout_id' => $item['tryout_id'] ?? 0,
+                    'class_id' => $item['class_id'] ?? 0,
+                    'title' => $item['title'] ?? 'Untitled',
+                    'duration' => $item['duration'] ?? $item['duration_minutes'] ?? 0,
+                    'total_questions' => $item['total_questions'] ?? 0,
+                    'status' => $item['status'] ?? 'draft',
+                    'is_active' => $item['is_active'] ?? false,
+                    'class_name' => $class ? $class->program_name : 'Kelas #' . ($item['class_id'] ?? '?'),
+                    'created_at' => $item['created_at'] ?? null,
+                ];
+            }
         }
 
         return view('admin.tryout.index', compact('classes', 'draftStatus', 'activePackages'));
@@ -64,15 +83,14 @@ class AdminTryoutController extends Controller
     }
 
     /**
-     * ✅ PUBLISH KE MICROSERVICE GO (DIPERBAIKI - TIDAK KIRIM ID MANUAL)
-     * Biarkan Go service yang meng-generate ID auto-increment
+     * ✅ PUBLISH KE MICROSERVICE GO
      */
     public function publishToMobile(Request $request)
     {
         $request->validate([
-            'class_id' => 'required',
+            'class_id' => 'required|integer',
             'title'    => 'required|string|max:255',
-            'duration' => 'required|integer'
+            'duration' => 'required|integer|min:1'
         ]);
 
         $classId = $request->class_id;
@@ -86,15 +104,12 @@ class AdminTryoutController extends Controller
         try {
             $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
 
-            // ✅ PERBAIKAN: Jangan kirim tryout_id! Biarkan Go yang generate
-            // Hanya kirim data tryout tanpa ID
             $questionsForGo = [];
             foreach ($drafts as $d) {
                 $cleanKey = substr(trim(strtoupper($d->correct_answer)), 0, 1);
                 if (empty($cleanKey)) $cleanKey = 'A';
 
                 $questionsForGo[] = [
-                    // ✅ JANGAN KIRIM tryout_id di sini! Nanti di Go akan di-set setelah tryout dibuat
                     'class_id'       => (int)$classId,
                     'subject_name'   => $d->subject_name,
                     'question'       => $d->question,
@@ -108,10 +123,8 @@ class AdminTryoutController extends Controller
                 ];
             }
 
-            // ✅ PERBAIKAN: Kirim tryout TANPA tryout_id (atau kirim 0/null)
             $payload = [
                 'tryout' => [
-                    // JANGAN KIRIM tryout_id! Biarkan auto-increment
                     'class_id'  => (int)$classId,
                     'title'     => trim($request->title),
                     'duration_minutes' => (int)$request->duration,
@@ -124,8 +137,7 @@ class AdminTryoutController extends Controller
 
             Log::info('Publishing tryout to Go service', ['payload' => $payload]);
 
-            // Kirim ke Microservice Go
-            $response = Http::timeout(20)->post($goUrl . '/api/tryouts/sync', $payload);
+            $response = Http::timeout(30)->post($goUrl . '/api/tryouts/sync', $payload);
 
             if (!$response->successful()) {
                 throw new \Exception('Gagal sync ke microservice: ' . $response->body());
@@ -133,7 +145,6 @@ class AdminTryoutController extends Controller
 
             Log::info('Tryout published successfully', ['response' => $response->json()]);
 
-            // Hapus draf setelah sukses
             TryoutDraft::where('class_id', $classId)->delete();
 
             DB::commit();
@@ -154,14 +165,13 @@ class AdminTryoutController extends Controller
     public function pilihTryout($class_id) {
         $class = ClassModel::findOrFail($class_id);
 
-        // ✅ Ambil tryouts dari Microservice Go
         $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
         $response = Http::get("$goUrl/api/tryouts", ['class_id' => $class_id]);
 
         $tryouts = [];
         if ($response->successful()) {
             $data = $response->json();
-            $tryouts = $data['data'] ?? [];
+            $tryouts = $data['data'] ?? $data ?? [];
         }
 
         return view('admin.tryout.pilih_paket', compact('class', 'tryouts'));
@@ -169,22 +179,22 @@ class AdminTryoutController extends Controller
 
     public function lihatNilai($tryout_id)
     {
-        // ✅ Ambil nilai dari Microservice Go
         $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
         $response = Http::get("$goUrl/api/tryouts/history", ['tryout_id' => $tryout_id]);
 
         $results = [];
         if ($response->successful()) {
-            $results = $response->json()['data'] ?? [];
+            $data = $response->json();
+            $results = $data['data'] ?? $data ?? [];
         }
 
-        // Ambil informasi tryout
-        $tryoutResponse = Http::get("$goUrl/api/tryouts");
         $tryoutTitle = 'Tryout';
+        $tryoutResponse = Http::get("$goUrl/api/tryouts");
         if ($tryoutResponse->successful()) {
-            $tryouts = $tryoutResponse->json()['data'] ?? [];
+            $tryoutsData = $tryoutResponse->json();
+            $tryouts = $tryoutsData['data'] ?? $tryoutsData ?? [];
             foreach ($tryouts as $t) {
-                if ($t['tryout_id'] == $tryout_id) {
+                if (($t['tryout_id'] ?? 0) == $tryout_id) {
                     $tryoutTitle = $t['title'] ?? 'Tryout';
                     break;
                 }
@@ -200,12 +210,11 @@ class AdminTryoutController extends Controller
     }
 
     public function destroyPackage($tryout_id) {
-        // ✅ Hapus dari Microservice Go
         $goUrl = env('GO_TRYOUT_URL', 'http://localhost:9002');
         $response = Http::delete("$goUrl/api/tryouts/$tryout_id");
 
         if ($response->successful()) {
-            return back()->with('success', 'Paket telah dihapus dari sistem.');
+            return redirect()->route('admin.tryout.index')->with('success', 'Paket telah dihapus dari sistem.');
         }
 
         return back()->with('error', 'Gagal menghapus paket.');
