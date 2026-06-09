@@ -11,8 +11,6 @@ type TryoutRepository interface {
 	SyncSubmissions(s *models.TryoutSubmission) error
 	GetByClass(classID string, userID string) ([]map[string]interface{}, error) 
 	GetQuestions(tryoutID string) ([]models.Question, error)
-	
-	// ✨ TAMBAHKAN INI
 	GetHistory(userID string) ([]models.HistoryResponse, error)
 }
 
@@ -79,7 +77,7 @@ func (r *tryoutRepository) GetQuestions(tryoutID string) ([]models.Question, err
 	return data, err
 }
 
-// ✨ FUNGSI BARU: Ambil 7 Riwayat Terakhir dengan join ke tabel Tryouts untuk ambil judulnya
+// ✅ FUNGSI: Ambil 7 Riwayat Terakhir dengan join ke tabel Tryouts
 func (r *tryoutRepository) GetHistory(userID string) ([]models.HistoryResponse, error) {
 	var results []models.HistoryResponse
 	
@@ -88,7 +86,7 @@ func (r *tryoutRepository) GetHistory(userID string) ([]models.HistoryResponse, 
 		Joins("left join tryouts on tryouts.tryout_id = tryout_submissions.tryout_id").
 		Where("tryout_submissions.user_id = ?", userID).
 		Order("tryout_submissions.submitted_at DESC").
-		Limit(7). // Hanya ambil 7 data terbaru
+		Limit(7).
 		Scan(&results).Error
 
 	return results, err

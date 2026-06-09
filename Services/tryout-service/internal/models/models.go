@@ -4,7 +4,7 @@ import "time"
 
 type Tryout struct {
 	TryoutID       uint      `gorm:"primaryKey;column:tryout_id" json:"tryout_id"`
-	ClassID        uint      `gorm:"column:class_id" json:"class_id"`
+	ClassID        uint      `gorm:"column:class_id;index" json:"class_id"`
 	Title          string    `gorm:"column:title" json:"title"`
 	Duration       int       `gorm:"column:duration_minutes" json:"duration"` 
 	TotalQuestions int       `gorm:"column:total_questions" json:"total_questions"`
@@ -12,11 +12,17 @@ type Tryout struct {
 	IsActive       bool      `gorm:"column:is_active;default:true" json:"is_active"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+
+	// ✅ TAMBAH RELASI: 1 tryout memiliki banyak questions
+	Questions []Question `gorm:"foreignKey:TryoutID" json:"questions,omitempty"`
+	
+	// ✅ TAMBAH RELASI: 1 tryout memiliki banyak submissions
+	Submissions []TryoutSubmission `gorm:"foreignKey:TryoutID" json:"submissions,omitempty"`
 }
 
 type Question struct {
 	QuestionID    uint      `gorm:"primaryKey;column:question_id" json:"question_id"`
-	TryoutID      uint      `gorm:"column:tryout_id" json:"tryout_id"`
+	TryoutID      uint      `gorm:"column:tryout_id;index" json:"tryout_id"`
 	ClassID       uint      `gorm:"column:class_id" json:"class_id"`
 	SubjectName   string    `gorm:"column:subject_name" json:"subject_name"`
 	Question      string    `gorm:"column:question" json:"question"`
@@ -29,15 +35,21 @@ type Question struct {
 	Explanation   string    `gorm:"column:explanation" json:"explanation"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+
+	// ✅ TAMBAH RELASI: Many to One ke Tryout
+	Tryout Tryout `gorm:"foreignKey:TryoutID" json:"-"`
 }
 
 type TryoutSubmission struct {
 	ID          uint      `gorm:"primaryKey;column:id" json:"id"`
-	UserID      uint      `gorm:"column:user_id" json:"user_id"`
-	TryoutID    uint      `gorm:"column:tryout_id" json:"tryout_id"`
+	UserID      uint      `gorm:"column:user_id;index" json:"user_id"`
+	TryoutID    uint      `gorm:"column:tryout_id;index" json:"tryout_id"`
 	Answers     string    `gorm:"type:text;column:answers" json:"answers"`
 	Score       float64   `gorm:"column:score" json:"score"`
 	SubmittedAt time.Time `gorm:"column:submitted_at" json:"submitted_at"`
+
+	// ✅ TAMBAH RELASI: Many to One ke Tryout
+	Tryout Tryout `gorm:"foreignKey:TryoutID" json:"-"`
 }
 
 // ✨ STRUCT BARU: Untuk format balasan riwayat nilai ke Flutter
