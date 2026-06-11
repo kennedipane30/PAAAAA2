@@ -1,12 +1,10 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Teacher Management'); ?>
+<?php $__env->startSection('subtitle', 'Sistem Manajemen Data Pengajar Spekta Academy'); ?>
 
-@section('title', 'Teacher Management')
-@section('subtitle', 'Sistem Manajemen Data Pengajar Spekta Academy')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="tp-page">
 
-    {{-- ── 1. HEADER (STYLISH CAPSULE & ASIMETRIS) ── --}}
+    
     <section class="tp-header">
         <div class="tp-header-left">
             <span class="tp-breadcrumb-capsule">Manajemen Akademik</span>
@@ -14,30 +12,30 @@
             <p>Kelola data pengajar Spekta Academy secara efisien.</p>
         </div>
         <div class="tp-header-actions">
-            <a href="{{ route('admin.manajemen-pengajar.create') }}" class="tp-btn-primary">
+            <a href="<?php echo e(route('admin.manajemen-pengajar.create')); ?>" class="tp-btn-primary">
                 <i class="fa-solid fa-plus"></i>
                 <span>Tambah Pengajar</span>
             </a>
         </div>
     </section>
 
-    {{-- Alert Success --}}
-    @if(session('success'))
+    
+    <?php if(session('success')): ?>
         <div class="tp-alert success">
             <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
+            <span><?php echo e(session('success')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- ── 2. MAIN PANEL (TABEL & KONTROL BARIS GABUNGAN) ── --}}
+    
     <section class="tp-main-grid">
 
         <div class="tp-table-panel">
 
-            {{-- Top Control Bar (Total & Search Sebaris - Desain Sangat Sleek & Rapi) --}}
+            
             <div class="tp-table-top-bar">
 
-                {{-- Total Pengajar Info (Dengan Aksen Teal Segar) --}}
+                
                 <div class="tp-total-stat">
                     <div class="tp-total-icon">
                         <i class="fa-solid fa-user-group"></i>
@@ -45,20 +43,20 @@
                     <div class="tp-total-info">
                         <span class="tp-total-label">Total Pengajar</span>
                         <div class="tp-total-val-wrap">
-                            <span class="tp-total-val">{{ number_format($totalPengajar ?? 0) }}</span>
+                            <span class="tp-total-val"><?php echo e(number_format($totalPengajar ?? 0)); ?></span>
                             <span class="tp-total-sub">terdaftar</span>
                         </div>
                     </div>
                 </div>
 
-                {{-- Toolbar / Search (Desain Glowing Focus) --}}
-                <form method="GET" action="{{ route('admin.manajemen-pengajar.index') }}" class="tp-toolbar">
+                
+                <form method="GET" action="<?php echo e(route('admin.manajemen-pengajar.index')); ?>" class="tp-toolbar">
                     <div class="tp-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input
                             type="text"
                             name="search"
-                            value="{{ request('search') }}"
+                            value="<?php echo e(request('search')); ?>"
                             placeholder="Cari nama pengajar, NIP, atau email..."
                         >
                     </div>
@@ -70,7 +68,7 @@
 
             </div>
 
-            {{-- Table (Perbaikan Presisi Perataan Elemen Sejajar Tengah) --}}
+            
             <div class="tp-table-wrap">
                 <table class="tp-table">
                     <thead>
@@ -84,8 +82,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($teachers as $teacher)
-                            @php
+                        <?php $__empty_1 = true; $__currentLoopData = $teachers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $teacher): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
                                 $teacherAssignments = ($assignmentMap ?? collect())->get($teacher->usersID, collect());
                                 $subjectList = $teacherAssignments->pluck('subject_name')->filter()->unique()->values();
                                 $classCount = $teacherAssignments->pluck('class_id')->filter()->unique()->count();
@@ -97,41 +95,42 @@
                                 $initial = strtoupper(substr($teacher->name, 0, 1));
                                 $avatarColors = ['#e53935','#2ea8ab','#c5352c','#9e9e9e','#1f2937'];
                                 $avatarBg = $avatarColors[crc32($teacher->name) % count($avatarColors)];
-                            @endphp
+                            ?>
                             <tr>
-                                {{-- Nama Pengajar --}}
+                                
                                 <td>
                                     <div class="tp-teacher">
-                                        <div class="tp-avatar" style="background:{{ $avatarBg }}">
-                                            {{ $initial }}
+                                        <div class="tp-avatar" style="background:<?php echo e($avatarBg); ?>">
+                                            <?php echo e($initial); ?>
+
                                         </div>
                                         <div class="tp-teacher-info">
-                                            <strong>{{ $teacher->name }}</strong>
-                                            <span>NIP: {{ str_pad($teacher->usersID, 6, '0', STR_PAD_LEFT) }}</span>
-                                            <small>{{ $teacher->email }}</small>
+                                            <strong><?php echo e($teacher->name); ?></strong>
+                                            <span>NIP: <?php echo e(str_pad($teacher->usersID, 6, '0', STR_PAD_LEFT)); ?></span>
+                                            <small><?php echo e($teacher->email); ?></small>
                                         </div>
                                     </div>
                                 </td>
 
-                                {{-- Bidang Ajar --}}
+                                
                                 <td>
-                                    @if($subjectList->count() > 0)
+                                    <?php if($subjectList->count() > 0): ?>
                                         <div class="tp-subject-list">
-                                            @foreach($subjectList->take(3) as $subject)
-                                                <span class="tp-subject-badge">{{ $subject }}</span>
-                                            @endforeach
-                                            @if($subjectList->count() > 3)
-                                                <span class="tp-subject-badge more">+{{ $subjectList->count() - 3 }}</span>
-                                            @endif
+                                            <?php $__currentLoopData = $subjectList->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <span class="tp-subject-badge"><?php echo e($subject); ?></span>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            <?php if($subjectList->count() > 3): ?>
+                                                <span class="tp-subject-badge more">+<?php echo e($subjectList->count() - 3); ?></span>
+                                            <?php endif; ?>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <span class="tp-muted">Belum ditugaskan</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
 
-                                {{-- Status (Desain Dot Pulsing Rata Tengah Sempurna) --}}
+                                
                                 <td>
-                                    @if($teacher->is_verified)
+                                    <?php if($teacher->is_verified): ?>
                                         <span class="tp-status active">
                                             <span class="tp-dot-wrapper">
                                                 <i class="tp-dot"></i>
@@ -139,40 +138,41 @@
                                             </span>
                                             AKTIF
                                         </span>
-                                    @else
+                                    <?php else: ?>
                                         <span class="tp-status inactive">
                                             <span class="tp-dot-wrapper">
                                                 <i class="tp-dot"></i>
                                             </span>
                                             NONAKTIF
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
 
-                                {{-- Kelas Aktif --}}
+                                
                                 <td class="tp-class-count">
-                                    @if($classCount > 0)
-                                        <span class="tp-class-badge">{{ $classCount }} kelas</span>
-                                    @else
+                                    <?php if($classCount > 0): ?>
+                                        <span class="tp-class-badge"><?php echo e($classCount); ?> kelas</span>
+                                    <?php else: ?>
                                         <span class="tp-muted">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
 
-                                {{-- Tanggal --}}
+                                
                                 <td class="tp-date">
-                                    <i class="fa-regular fa-clock"></i> {{ $teacher->created_at?->translatedFormat('d M Y') ?? '-' }}
+                                    <i class="fa-regular fa-clock"></i> <?php echo e($teacher->created_at?->translatedFormat('d M Y') ?? '-'); ?>
+
                                 </td>
 
-                                {{-- Aksi (RATA TENGAH PRESISI) --}}
+                                
                                 <td>
                                     <div class="tp-actions">
-                                        <a href="{{ route('admin.manajemen-pengajar.edit', $teacher->usersID) }}" class="tp-act edit" title="Edit">
+                                        <a href="<?php echo e(route('admin.manajemen-pengajar.edit', $teacher->usersID)); ?>" class="tp-act edit" title="Edit">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
 
-                                        <form action="{{ route('admin.manajemen-pengajar.destroy', $teacher->usersID) }}" method="POST" onsubmit="return confirm('Hapus akun pengajar ini?')" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
+                                        <form action="<?php echo e(route('admin.manajemen-pengajar.destroy', $teacher->usersID)); ?>" method="POST" onsubmit="return confirm('Hapus akun pengajar ini?')" style="display: inline;">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="tp-act delete" title="Hapus">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -180,7 +180,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6">
                                     <div class="tp-empty">
@@ -192,49 +192,50 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Pagination --}}
+            
             <div class="tp-pagination">
                 <p>
                     Menampilkan
-                    <strong>{{ $teachers->firstItem() ?? 0 }}</strong>–<strong>{{ $teachers->lastItem() ?? 0 }}</strong>
-                    dari <strong>{{ number_format($teachers->total() ?? 0) }}</strong> pengajar
+                    <strong><?php echo e($teachers->firstItem() ?? 0); ?></strong>–<strong><?php echo e($teachers->lastItem() ?? 0); ?></strong>
+                    dari <strong><?php echo e(number_format($teachers->total() ?? 0)); ?></strong> pengajar
                 </p>
 
-                @if(method_exists($teachers, 'hasPages') && $teachers->hasPages())
+                <?php if(method_exists($teachers, 'hasPages') && $teachers->hasPages()): ?>
                     <div class="tp-pages">
-                        @if($teachers->onFirstPage())
+                        <?php if($teachers->onFirstPage()): ?>
                             <span class="tp-page-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
-                        @else
-                            <a href="{{ $teachers->previousPageUrl() }}" class="tp-page-btn">
+                        <?php else: ?>
+                            <a href="<?php echo e($teachers->previousPageUrl()); ?>" class="tp-page-btn">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        @foreach(range(1, $teachers->lastPage()) as $page)
-                            @if($page == 1 || $page == $teachers->lastPage() || abs($page - $teachers->currentPage()) <= 1)
-                                <a href="{{ $teachers->url($page) }}"
-                                   class="tp-page-btn {{ $page == $teachers->currentPage() ? 'active' : '' }}">
-                                    {{ $page }}
+                        <?php $__currentLoopData = range(1, $teachers->lastPage()); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($page == 1 || $page == $teachers->lastPage() || abs($page - $teachers->currentPage()) <= 1): ?>
+                                <a href="<?php echo e($teachers->url($page)); ?>"
+                                   class="tp-page-btn <?php echo e($page == $teachers->currentPage() ? 'active' : ''); ?>">
+                                    <?php echo e($page); ?>
+
                                 </a>
-                            @elseif(abs($page - $teachers->currentPage()) == 2)
+                            <?php elseif(abs($page - $teachers->currentPage()) == 2): ?>
                                 <span class="tp-page-dots">…</span>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @if($teachers->hasMorePages())
-                            <a href="{{ $teachers->nextPageUrl() }}" class="tp-page-btn">
+                        <?php if($teachers->hasMorePages()): ?>
+                            <a href="<?php echo e($teachers->nextPageUrl()); ?>" class="tp-page-btn">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @else
+                        <?php else: ?>
                             <span class="tp-page-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
@@ -758,4 +759,5 @@
     .tp-pagination { flex-direction: column; align-items: flex-start; }
 }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\perkuliahan\PA 2 - code\PAAAAA2\BackEnd\resources\views/admin/pengajar/index.blade.php ENDPATH**/ ?>

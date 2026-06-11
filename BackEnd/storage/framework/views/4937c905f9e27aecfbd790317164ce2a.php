@@ -1,10 +1,8 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Dashboard Administrator'); ?>
+<?php $__env->startSection('subtitle', 'Sistem Manajemen Terpadu Spekta Academy'); ?>
 
-@section('title', 'Dashboard Administrator')
-@section('subtitle', 'Sistem Manajemen Terpadu Spekta Academy')
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     // 1. FILTER KARTU STATISTIK UTAMA (Menghapus Kelas Aktif / Live Class)
     $filteredStats = collect($stat_cards)->filter(function($card) {
         $title = strtolower($card['title']);
@@ -63,14 +61,14 @@
     if ($firstTotalSiswa > 0) {
         $totalSiswaTrend = round((($latestTotalSiswa - $firstTotalSiswa) / $firstTotalSiswa) * 100);
     }
-@endphp
+?>
 
 <div class="spekta-dashboard">
 
     <!-- 1. BANNER SELAMAT DATANG -->
     <section class="welcome-card">
         <div class="welcome-text">
-            <h1>Selamat datang kembali, <span>{{ Auth::user()->name }}!</span> 👋</h1>
+            <h1>Selamat datang kembali, <span><?php echo e(Auth::user()->name); ?>!</span> 👋</h1>
             <p>Kelola akademi dengan mudah dan pantau aktivitas secara real-time.</p>
         </div>
 
@@ -79,41 +77,42 @@
                 <i class="fa-regular fa-calendar"></i>
             </div>
             <div>
-                <strong>{{ now()->translatedFormat('l, d F Y') }}</strong>
-                <span>{{ now()->format('H:i') }} WIB</span>
+                <strong><?php echo e(now()->translatedFormat('l, d F Y')); ?></strong>
+                <span><?php echo e(now()->format('H:i')); ?> WIB</span>
             </div>
         </div>
     </section>
 
     <!-- 2. KARTU STATISTIK UTAMA (5 KOLOM) -->
     <section class="stats-grid">
-        @foreach($filteredStats as $index => $card)
-            @php
+        <?php $__currentLoopData = $filteredStats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php
                 $colorClass = $index % 2 === 0 ? 'color-teal' : 'color-red';
-            @endphp
-            <a href="{{ $card['route'] }}" class="stat-card {{ $colorClass }}">
+            ?>
+            <a href="<?php echo e($card['route']); ?>" class="stat-card <?php echo e($colorClass); ?>">
                 <div class="stat-icon-wrap">
                     <div class="stat-icon">
-                        <i class="fa-solid {{ $card['icon'] }}"></i>
+                        <i class="fa-solid <?php echo e($card['icon']); ?>"></i>
                     </div>
                 </div>
 
                 <div class="stat-info">
-                    <p>{{ $card['title'] }}</p>
-                    <h2>{{ number_format($card['value']) }}</h2>
+                    <p><?php echo e($card['title']); ?></p>
+                    <h2><?php echo e(number_format($card['value'])); ?></h2>
                 </div>
 
                 <div class="stat-meta">
-                    <span class="badge badge-{{ $card['badge_type'] }}">
-                        {{ $card['badge'] }}
+                    <span class="badge badge-<?php echo e($card['badge_type']); ?>">
+                        <?php echo e($card['badge']); ?>
+
                     </span>
 
-                    @if(!empty($card['badge_text']))
-                        <small>{{ $card['badge_text'] }}</small>
-                    @endif
+                    <?php if(!empty($card['badge_text'])): ?>
+                        <small><?php echo e($card['badge_text']); ?></small>
+                    <?php endif; ?>
                 </div>
             </a>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </section>
 
     <!-- 3. GRAFIK PERTUMBUHAN SISWA (DATA KINI 100% DINAMIS DARI CONTROLLER) -->
@@ -142,14 +141,15 @@
                         <span class="indicator-title">Keaktifan Harian (Rata-Rata)</span>
                     </div>
                     <div class="indicator-value">
-                        {{ number_format($avgAktifHarian) }}
-                        @if($aktifHarianTrend > 0)
-                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +{{ $aktifHarianTrend }}%</span>
-                        @elseif($aktifHarianTrend < 0)
-                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> {{ $aktifHarianTrend }}%</span>
-                        @else
+                        <?php echo e(number_format($avgAktifHarian)); ?>
+
+                        <?php if($aktifHarianTrend > 0): ?>
+                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +<?php echo e($aktifHarianTrend); ?>%</span>
+                        <?php elseif($aktifHarianTrend < 0): ?>
+                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> <?php echo e($aktifHarianTrend); ?>%</span>
+                        <?php else: ?>
                             <span class="indicator-trend neutral"><i class="fa-solid fa-minus"></i> 0%</span>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -160,14 +160,15 @@
                         <span class="indicator-title">Siswa Baru Terdaftar (Total)</span>
                     </div>
                     <div class="indicator-value">
-                        +{{ number_format($totalSiswaBaru) }}
-                        @if($siswaBaruTrend > 0)
-                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +{{ $siswaBaruTrend }}%</span>
-                        @elseif($siswaBaruTrend < 0)
-                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> {{ $siswaBaruTrend }}%</span>
-                        @else
+                        +<?php echo e(number_format($totalSiswaBaru)); ?>
+
+                        <?php if($siswaBaruTrend > 0): ?>
+                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +<?php echo e($siswaBaruTrend); ?>%</span>
+                        <?php elseif($siswaBaruTrend < 0): ?>
+                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> <?php echo e($siswaBaruTrend); ?>%</span>
+                        <?php else: ?>
                             <span class="indicator-trend neutral"><i class="fa-solid fa-minus"></i> 0%</span>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -178,14 +179,15 @@
                         <span class="indicator-title">Total Akumulasi Siswa</span>
                     </div>
                     <div class="indicator-value">
-                        {{ number_format($latestTotalSiswa) }}
-                        @if($totalSiswaTrend > 0)
-                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +{{ $totalSiswaTrend }}%</span>
-                        @elseif($totalSiswaTrend < 0)
-                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> {{ $totalSiswaTrend }}%</span>
-                        @else
+                        <?php echo e(number_format($latestTotalSiswa)); ?>
+
+                        <?php if($totalSiswaTrend > 0): ?>
+                            <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i> +<?php echo e($totalSiswaTrend); ?>%</span>
+                        <?php elseif($totalSiswaTrend < 0): ?>
+                            <span class="indicator-trend down"><i class="fa-solid fa-arrow-down"></i> <?php echo e($totalSiswaTrend); ?>%</span>
+                        <?php else: ?>
                             <span class="indicator-trend neutral">Stabil</span>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -211,26 +213,27 @@
 
                     <div class="donut-center">
                         <span>Total Aktivitas</span>
-                        <strong>{{ number_format($totalDistribusiFiltered) }}</strong>
+                        <strong><?php echo e(number_format($totalDistribusiFiltered)); ?></strong>
                     </div>
                 </div>
 
                 <div class="distribution-list">
-                    @foreach($filteredDistribusi as $index => $item)
-                        @php
+                    <?php $__currentLoopData = $filteredDistribusi; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
                             $percentage = $totalDistribusiFiltered > 0
                                 ? round(($item['value'] / $totalDistribusiFiltered) * 100)
                                 : 0;
-                        @endphp
+                        ?>
 
                         <div class="distribution-item">
                             <span>
-                                <i class="dot dot-{{ $index }}"></i>
-                                {{ $item['label'] }}
+                                <i class="dot dot-<?php echo e($index); ?>"></i>
+                                <?php echo e($item['label']); ?>
+
                             </span>
-                            <strong>{{ $percentage }}%</strong>
+                            <strong><?php echo e($percentage); ?>%</strong>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
         </div>
@@ -240,30 +243,30 @@
             <div class="panel-header">
                 <h3>
                     Tugas Menunggu
-                    <span class="count-pill">{{ $total_tugas_menunggu }}</span>
+                    <span class="count-pill"><?php echo e($total_tugas_menunggu); ?></span>
                 </h3>
 
-                <a href="{{ route('admin.siswa.pendaftaran') }}" class="view-all-link">Lihat semua <i class="fa-solid fa-arrow-right-long"></i></a>
+                <a href="<?php echo e(route('admin.siswa.pendaftaran')); ?>" class="view-all-link">Lihat semua <i class="fa-solid fa-arrow-right-long"></i></a>
             </div>
 
             <div class="task-list">
-                @foreach($tugas_menunggu as $task)
-                    <a href="{{ $task['route'] }}" class="task-item">
+                <?php $__currentLoopData = $tugas_menunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e($task['route']); ?>" class="task-item">
                         <div class="task-icon">
-                            <i class="fa-solid {{ $task['icon'] }}"></i>
+                            <i class="fa-solid <?php echo e($task['icon']); ?>"></i>
                         </div>
 
                         <div class="task-text">
-                            <strong>{{ $task['title'] }}</strong>
-                            <span>{{ $task['subtitle'] }}</span>
+                            <strong><?php echo e($task['title']); ?></strong>
+                            <span><?php echo e($task['subtitle']); ?></span>
                         </div>
 
                         <div class="task-right">
-                            <div class="task-count">{{ $task['count'] }}</div>
+                            <div class="task-count"><?php echo e($task['count']); ?></div>
                             <i class="fa-solid fa-chevron-right task-arrow"></i>
                         </div>
                     </a>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
     </section>
@@ -278,29 +281,31 @@
             </div>
 
             <div class="activity-list">
-                @forelse($log_aktivitas as $log)
+                <?php $__empty_1 = true; $__currentLoopData = $log_aktivitas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="activity-item">
-                        <div class="activity-avatar avatar-{{ $log['type'] }}">
-                            {{ $log['initial'] }}
+                        <div class="activity-avatar avatar-<?php echo e($log['type']); ?>">
+                            <?php echo e($log['initial']); ?>
+
                         </div>
 
                         <div class="activity-text">
-                            <strong>{{ $log['title'] }}</strong>
-                            <span>{{ $log['description'] }}</span>
+                            <strong><?php echo e($log['title']); ?></strong>
+                            <span><?php echo e($log['description']); ?></span>
                         </div>
 
                         <div class="activity-right">
-                            <span class="status status-{{ $log['type'] }}">
-                                {{ $log['status'] }}
+                            <span class="status status-<?php echo e($log['type']); ?>">
+                                <?php echo e($log['status']); ?>
+
                             </span>
-                            <small>{{ $log['time']->diffForHumans() }}</small>
+                            <small><?php echo e($log['time']->diffForHumans()); ?></small>
                         </div>
                     </div>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <div class="empty-state">
                         Belum ada aktivitas terbaru.
                     </div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
 
@@ -311,28 +316,28 @@
             </div>
 
             <div class="quick-grid">
-                <a href="{{ route('admin.siswa.index') }}" class="quick-action q-teal">
+                <a href="<?php echo e(route('admin.siswa.index')); ?>" class="quick-action q-teal">
                     <div class="quick-icon">
                         <i class="fa-solid fa-plus"></i>
                     </div>
                     <span>Tambah Siswa</span>
                 </a>
 
-                <a href="{{ route('admin.assignments.index') }}" class="quick-action q-red">
+                <a href="<?php echo e(route('admin.assignments.index')); ?>" class="quick-action q-red">
                     <div class="quick-icon">
                         <i class="fa-solid fa-upload"></i>
                     </div>
                     <span>Upload Materi</span>
                 </a>
 
-                <a href="{{ route('admin.tryout.index') }}" class="quick-action q-red-dark">
+                <a href="<?php echo e(route('admin.tryout.index')); ?>" class="quick-action q-red-dark">
                     <div class="quick-icon">
                         <i class="fa-solid fa-clipboard-list"></i>
                     </div>
                     <span>Buat Tryout</span>
                 </a>
 
-                <a href="{{ route('admin.announcement.create') }}" class="quick-action q-gray">
+                <a href="<?php echo e(route('admin.announcement.create')); ?>" class="quick-action q-gray">
                     <div class="quick-icon">
                         <i class="fa-solid fa-bullhorn"></i>
                     </div>
@@ -345,15 +350,15 @@
         <div class="panel promo-panel">
             <div class="panel-header">
                 <h3>Informasi & Promosi</h3>
-                <a href="{{ route('admin.promo.index') }}" class="view-all-link">Lihat semua <i class="fa-solid fa-arrow-right-long"></i></a>
+                <a href="<?php echo e(route('admin.promo.index')); ?>" class="view-all-link">Lihat semua <i class="fa-solid fa-arrow-right-long"></i></a>
             </div>
 
             <div class="promo-list">
-                @forelse($informasi_promosi as $info)
+                <?php $__empty_1 = true; $__currentLoopData = $informasi_promosi; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="promo-item">
                         <div class="promo-thumb">
-                            @if(!empty($info['image']))
-                                @php
+                            <?php if(!empty($info['image'])): ?>
+                                <?php
                                     $image = $info['image'];
 
                                     if (\Illuminate\Support\Str::startsWith($image, ['http://', 'https://'])) {
@@ -363,29 +368,29 @@
                                     } else {
                                         $imageUrl = asset('storage/' . ltrim($image, '/'));
                                     }
-                                @endphp
+                                ?>
 
-                                <img src="{{ $imageUrl }}" alt="{{ $info['title'] }}">
-                            @else
+                                <img src="<?php echo e($imageUrl); ?>" alt="<?php echo e($info['title']); ?>">
+                            <?php else: ?>
                                 <i class="fa-solid fa-bullhorn"></i>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
                         <div class="promo-text">
-                            <strong>{{ $info['title'] }}</strong>
-                            <span>{{ \Illuminate\Support\Str::limit($info['description'], 48) }}</span>
+                            <strong><?php echo e($info['title']); ?></strong>
+                            <span><?php echo e(\Illuminate\Support\Str::limit($info['description'], 48)); ?></span>
 
                             <div class="promo-meta-row">
-                                <em>{{ $info['status'] }}</em>
-                                <small><i class="fa-regular fa-clock"></i> {{ $info['date'] }}</small>
+                                <em><?php echo e($info['status']); ?></em>
+                                <small><i class="fa-regular fa-clock"></i> <?php echo e($info['date']); ?></small>
                             </div>
                         </div>
                     </div>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <div class="empty-state">
                         Belum ada promo, banner, atau pengumuman aktif.
                     </div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -394,13 +399,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    const chartLabels = @json($chart_labels);
-    const siswaBaruData = @json($chart_siswa_baru);
-    const aktivitasHarianData = @json($chart_aktivitas_harian);
-    const totalSiswaData = @json($chart_total_siswa);
+    const chartLabels = <?php echo json_encode($chart_labels, 15, 512) ?>;
+    const siswaBaruData = <?php echo json_encode($chart_siswa_baru, 15, 512) ?>;
+    const aktivitasHarianData = <?php echo json_encode($chart_aktivitas_harian, 15, 512) ?>;
+    const totalSiswaData = <?php echo json_encode($chart_total_siswa, 15, 512) ?>;
 
-    const distribusiLabels = @json($filteredDistribusi->pluck('label'));
-    const distribusiValues = @json($filteredDistribusi->pluck('value'));
+    const distribusiLabels = <?php echo json_encode($filteredDistribusi->pluck('label'), 15, 512) ?>;
+    const distribusiValues = <?php echo json_encode($filteredDistribusi->pluck('value'), 15, 512) ?>;
 
     // FILTER CONTROL DINAMIS (SEGMENTED CONTROL STYLE)
     document.addEventListener("DOMContentLoaded", function () {
@@ -417,7 +422,7 @@
 
             button.addEventListener("click", function () {
                 const days = this.getAttribute("data-days");
-                window.location.href = "{{ route('admin.dashboard') }}?days=" + days;
+                window.location.href = "<?php echo e(route('admin.dashboard')); ?>?days=" + days;
             });
         });
     });
@@ -1114,4 +1119,5 @@
         .activity-right { grid-column: 2 / 3; text-align: left; margin-top: 4px; }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\perkuliahan\PA 2 - code\PAAAAA2\BackEnd\resources\views/admin/dashboard.blade.php ENDPATH**/ ?>

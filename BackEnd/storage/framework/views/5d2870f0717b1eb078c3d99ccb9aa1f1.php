@@ -1,12 +1,10 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Student Management'); ?>
+<?php $__env->startSection('subtitle', 'Sistem Manajemen Data Siswa Spekta Academy'); ?>
 
-@section('title', 'Student Management')
-@section('subtitle', 'Sistem Manajemen Data Siswa Spekta Academy')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="ss-page">
 
-    {{-- ── 1. HEADER (ASIMETRIS & CLEAN) ── --}}
+    
     <section class="ss-header">
         <div class="ss-header-left">
             <span class="ss-breadcrumb-capsule">Manajemen Akademik</span>
@@ -14,17 +12,17 @@
             <p>Kelola data siswa Spekta Academy secara efisien berdasarkan data pendaftaran dari aplikasi.</p>
         </div>
         <div class="ss-header-actions">
-            <a href="{{ route('admin.siswa.pendaftaran') }}" class="ss-btn-primary">
+            <a href="<?php echo e(route('admin.siswa.pendaftaran')); ?>" class="ss-btn-primary">
                 <i class="fa-solid fa-circle-check"></i>
                 <span>Konfirmasi Kelas</span>
-                @if(($pendingEnrollment ?? 0) > 0)
-                    <em class="bounce-pulse">{{ $pendingEnrollment }}</em>
-                @endif
+                <?php if(($pendingEnrollment ?? 0) > 0): ?>
+                    <em class="bounce-pulse"><?php echo e($pendingEnrollment); ?></em>
+                <?php endif; ?>
             </a>
         </div>
     </section>
 
-    {{-- ── 2. STAT CARDS (TACO & GLOWING ACCENT) ── --}}
+    
     <section class="ss-stats">
 
         <!-- Card: Total Siswa -->
@@ -37,7 +35,7 @@
             </div>
             <div class="ss-stat-info">
                 <p class="ss-stat-label">Total Siswa</p>
-                <h2 class="ss-stat-val">{{ number_format($totalSiswa ?? 0) }}</h2>
+                <h2 class="ss-stat-val"><?php echo e(number_format($totalSiswa ?? 0)); ?></h2>
             </div>
             <div class="ss-stat-bar">
                 <div class="ss-stat-bar-fill teal" style="width:100%"></div>
@@ -55,7 +53,7 @@
             </div>
             <div class="ss-stat-info">
                 <p class="ss-stat-label">Siswa Aktif</p>
-                <h2 class="ss-stat-val">{{ number_format($siswaAktif ?? 0) }}</h2>
+                <h2 class="ss-stat-val"><?php echo e(number_format($siswaAktif ?? 0)); ?></h2>
             </div>
             <div class="ss-stat-bar">
                 <div class="ss-stat-bar-fill green" style="width:100%"></div>
@@ -69,13 +67,13 @@
                 <div class="ss-stat-icon red">
                     <i class="fa-solid fa-user-plus"></i>
                 </div>
-                <span class="ss-stat-badge {{ ($growthSiswa ?? 0) >= 0 ? 'red' : 'red-dark' }}">
-                    {{ ($growthSiswa ?? 0) >= 0 ? '+' : '' }}{{ $growthSiswa ?? 0 }}%
+                <span class="ss-stat-badge <?php echo e(($growthSiswa ?? 0) >= 0 ? 'red' : 'red-dark'); ?>">
+                    <?php echo e(($growthSiswa ?? 0) >= 0 ? '+' : ''); ?><?php echo e($growthSiswa ?? 0); ?>%
                 </span>
             </div>
             <div class="ss-stat-info">
                 <p class="ss-stat-label">Siswa Baru Bulan Ini</p>
-                <h2 class="ss-stat-val">{{ number_format($siswaBaruBulanIni ?? 0) }}</h2>
+                <h2 class="ss-stat-val"><?php echo e(number_format($siswaBaruBulanIni ?? 0)); ?></h2>
             </div>
             <div class="ss-stat-bar">
                 <div class="ss-stat-bar-fill red" style="width:100%"></div>
@@ -85,19 +83,19 @@
 
     </section>
 
-    {{-- ── 3. MAIN GRID (TOOLBAR & SLEEK TABLE) ── --}}
+    
     <section class="ss-main-grid">
 
         <div class="ss-table-panel">
 
-            {{-- Toolbar Pencarian --}}
-            <form method="GET" action="{{ route('admin.siswa.index') }}" class="ss-toolbar">
+            
+            <form method="GET" action="<?php echo e(route('admin.siswa.index')); ?>" class="ss-toolbar">
                 <div class="ss-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input
                         type="text"
                         name="search"
-                        value="{{ request('search') }}"
+                        value="<?php echo e(request('search')); ?>"
                         placeholder="Cari nama siswa, NIS, atau email..."
                     >
                 </div>
@@ -107,7 +105,7 @@
                 </button>
             </form>
 
-            {{-- Tabel Siswa --}}
+            
             <div class="ss-table-wrap">
                 <table class="ss-table">
                     <thead>
@@ -120,8 +118,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($siswas as $s)
-                            @php
+                        <?php $__empty_1 = true; $__currentLoopData = $siswas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
                                 $student         = $s->student;
                                 $latestEnrollment= ($latestEnrollmentMap ?? collect())->get($s->usersID);
                                 $activeClass     = $latestEnrollment?->class;
@@ -138,53 +136,56 @@
                                 $initial = strtoupper(substr($s->name, 0, 1));
                                 $avatarColors = ['#e53935','#2ea8ab','#c5352c','#9e9e9e','#1f2937'];
                                 $avatarBg = $avatarColors[crc32($s->name) % count($avatarColors)];
-                            @endphp
+                            ?>
                             <tr>
-                                {{-- Nama & Profil Siswa --}}
+                                
                                 <td>
                                     <div class="ss-student">
-                                        <div class="ss-avatar" style="background:{{ $avatarBg }}">
-                                            {{ $initial }}
+                                        <div class="ss-avatar" style="background:<?php echo e($avatarBg); ?>">
+                                            <?php echo e($initial); ?>
+
                                         </div>
                                         <div class="ss-student-info">
-                                            <strong>{{ $s->name }}</strong>
-                                            <span>NIS: {{ $student?->national_id_number ?? '-' }}</span>
-                                            <small>{{ $s->email }}</small>
+                                            <strong><?php echo e($s->name); ?></strong>
+                                            <span>NIS: <?php echo e($student?->national_id_number ?? '-'); ?></span>
+                                            <small><?php echo e($s->email); ?></small>
                                         </div>
                                     </div>
                                 </td>
 
-                                {{-- Kelas --}}
+                                
                                 <td>
-                                    @if($activeClass)
-                                        <span class="ss-class-badge">Kelas {{ $activeClass->class_id }}</span>
-                                    @else
+                                    <?php if($activeClass): ?>
+                                        <span class="ss-class-badge">Kelas <?php echo e($activeClass->class_id); ?></span>
+                                    <?php else: ?>
                                         <span class="ss-muted">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
 
-                                {{-- Program --}}
+                                
                                 <td>
-                                    <span class="ss-program-name">{{ $activeClass?->program_name ?? '—' }}</span>
+                                    <span class="ss-program-name"><?php echo e($activeClass?->program_name ?? '—'); ?></span>
                                 </td>
 
-                                {{-- Status (Desain Dot Pulsing) --}}
+                                
                                 <td>
-                                    <span class="ss-status {{ $st['cls'] }}">
+                                    <span class="ss-status <?php echo e($st['cls']); ?>">
                                         <span class="ss-dot-wrapper">
                                             <i class="ss-dot"></i>
                                             <i class="ss-dot-pulse"></i>
                                         </span>
-                                        {{ $st['label'] }}
+                                        <?php echo e($st['label']); ?>
+
                                     </span>
                                 </td>
 
-                                {{-- Tanggal Daftar --}}
+                                
                                 <td class="ss-date">
-                                    <i class="fa-regular fa-clock"></i> {{ $s->created_at?->translatedFormat('d M Y') ?? '-' }}
+                                    <i class="fa-regular fa-clock"></i> <?php echo e($s->created_at?->translatedFormat('d M Y') ?? '-'); ?>
+
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="5">
                                     <div class="ss-empty">
@@ -196,49 +197,50 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Navigasi Halaman (Pagination) --}}
+            
             <div class="ss-pagination">
                 <p>
                     Menampilkan
-                    <strong>{{ $siswas->firstItem() ?? 0 }}</strong>–<strong>{{ $siswas->lastItem() ?? 0 }}</strong>
-                    dari <strong>{{ number_format($siswas->total() ?? 0) }}</strong> siswa
+                    <strong><?php echo e($siswas->firstItem() ?? 0); ?></strong>–<strong><?php echo e($siswas->lastItem() ?? 0); ?></strong>
+                    dari <strong><?php echo e(number_format($siswas->total() ?? 0)); ?></strong> siswa
                 </p>
 
-                @if(method_exists($siswas, 'hasPages') && $siswas->hasPages())
+                <?php if(method_exists($siswas, 'hasPages') && $siswas->hasPages()): ?>
                     <div class="ss-pages">
-                        @if($siswas->onFirstPage())
+                        <?php if($siswas->onFirstPage()): ?>
                             <span class="ss-page-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
-                        @else
-                            <a href="{{ $siswas->previousPageUrl() }}" class="ss-page-btn">
+                        <?php else: ?>
+                            <a href="<?php echo e($siswas->previousPageUrl()); ?>" class="ss-page-btn">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        @foreach(range(1, $siswas->lastPage()) as $page)
-                            @if($page == 1 || $page == $siswas->lastPage() || abs($page - $siswas->currentPage()) <= 1)
-                                <a href="{{ $siswas->url($page) }}"
-                                   class="ss-page-btn {{ $page == $siswas->currentPage() ? 'active' : '' }}">
-                                    {{ $page }}
+                        <?php $__currentLoopData = range(1, $siswas->lastPage()); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($page == 1 || $page == $siswas->lastPage() || abs($page - $siswas->currentPage()) <= 1): ?>
+                                <a href="<?php echo e($siswas->url($page)); ?>"
+                                   class="ss-page-btn <?php echo e($page == $siswas->currentPage() ? 'active' : ''); ?>">
+                                    <?php echo e($page); ?>
+
                                 </a>
-                            @elseif(abs($page - $siswas->currentPage()) == 2)
+                            <?php elseif(abs($page - $siswas->currentPage()) == 2): ?>
                                 <span class="ss-page-dots">…</span>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @if($siswas->hasMorePages())
-                            <a href="{{ $siswas->nextPageUrl() }}" class="ss-page-btn">
+                        <?php if($siswas->hasMorePages()): ?>
+                            <a href="<?php echo e($siswas->nextPageUrl()); ?>" class="ss-page-btn">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @else
+                        <?php else: ?>
                             <span class="ss-page-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
@@ -247,9 +249,9 @@
 
 </div>
 
-{{-- ══════════════════════════════════════════════════════════ --}}
-{{--  STYLES MODERN STYLE (STYLE GEN-Z)                         --}}
-{{-- ══════════════════════════════════════════════════════════ --}}
+
+
+
 <style>
 /* ── Base ─────────────────────────────────────────────────── */
 .ss-page {
@@ -803,4 +805,5 @@
     .ss-pagination { flex-direction: column; align-items: flex-start; }
 }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\perkuliahan\PA 2 - code\PAAAAA2\BackEnd\resources\views/admin/siswa/index.blade.php ENDPATH**/ ?>
