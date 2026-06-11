@@ -1113,5 +1113,7 @@
         .activity-item { grid-template-columns: 36px 1fr; }
         .activity-right { grid-column: 2 / 3; text-align: left; margin-top: 4px; }
     }
+    /* test hapus disini kenn */
 </style>
 @endsection
+
