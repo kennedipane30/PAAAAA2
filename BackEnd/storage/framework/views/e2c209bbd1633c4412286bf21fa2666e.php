@@ -1,85 +1,53 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Latihan Soal - Spekta Academy'); ?>
 
-@section('title', 'Bank Soal Tryout - Spekta Academy')
-
-@section('content')
-@php
-    // ✅ Data sudah dikirim dari controller, tidak perlu query DB langsung
+<?php $__env->startSection('content'); ?>
+<?php
     $assignmentCollection = collect($assignmentsWithSubjects ?? []);
     $totalAssignment = $assignmentCollection->count();
-@endphp
+?>
 
 <div class="cp-page">
 
-    {{-- ── 1. HEADER MINIMALIS MODERN ── --}}
+    
     <section class="cp-header">
         <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">Teacher Tryout Portal</span>
-            <h1>Tryout Question Center</h1>
-            <p>Kontribusikan draf soal terbaik Anda. Admin akan mengkurasi draf tersebut menjadi satu paket Tryout resmi.</p>
+            <span class="cp-breadcrumb-capsule">Teacher Portal</span>
+            <h1>Latihan Soal</h1>
+            <p>Pilih bidang ajar Anda untuk mengelola kumpulan bank soal latihan mingguan secara berkala.</p>
         </div>
     </section>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="tm-alert-modern success">
             <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
+            <span><?php echo e(session('success')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if(session('error'))
+    <?php if(session('error')): ?>
         <div class="tm-alert-modern error">
             <i class="fa-solid fa-circle-xmark"></i>
-            <span>{{ session('error') }}</span>
+            <span><?php echo e(session('error')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if(session('warning'))
-        <div class="tm-alert-modern warning">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>{{ session('warning') }}</span>
-        </div>
-    @endif
-
-    {{-- ── 2. STATS SUMMARY GRID (3 KOLOM SEIMBANG) ── --}}
+    
     <section class="cp-stats">
-        <!-- Penugasan Kelas -->
-        <div class="cp-stat-card card-teal">
+        <div class="cp-stat-card card-teal" style="max-width: 320px;">
             <div class="cp-stat-icon teal"><i class="fa-solid fa-briefcase"></i></div>
             <div class="cp-stat-info">
-                <p>Penugasan Kelas</p>
-                <h2>{{ $totalAssignment }} <span>Kelas</span></h2>
-            </div>
-        </div>
-
-        <!-- Total Soal Disetor -->
-        <div class="cp-stat-card card-red">
-            <div class="cp-stat-icon red"><i class="fa-solid fa-file-circle-check"></i></div>
-            <div class="cp-stat-info">
-                <p>Soal Disetor</p>
-                <h2>{{ $totalSoalSelesai ?? 0 }} <span>Soal</span></h2>
-            </div>
-            @if(($totalSoalSelesai ?? 0) > 0)
-                <span class="cp-pulse-dot"></span>
-            @endif
-        </div>
-
-        <!-- Target Target Selesai -->
-        <div class="cp-stat-card card-gray">
-            <div class="cp-stat-icon gray"><i class="fa-solid fa-flag-checkered"></i></div>
-            <div class="cp-stat-info">
-                <p>Target Publikasi</p>
-                <h2>{{ $totalAssignment }} <span>Paket TO</span></h2>
+                <p>Total Penugasan</p>
+                <h2><?php echo e($totalAssignment); ?> <span>Kelas</span></h2>
             </div>
         </div>
     </section>
 
-    {{-- ── 3. MAIN TABLE ── --}}
+    
     <section class="cp-main-card">
-        <div class="card-header-flex">
+        <div class="card-header-flex" style="margin-bottom: 20px;">
             <div>
-                <h2>Daftar Penugasan Soal</h2>
-                <p>Klik tombol input untuk mengelola soal di setiap mata pelajaran.</p>
+                <h2>Daftar Bidang Ajar</h2>
+                <p>Semua kombinasi kelas dan mata pelajaran latihan yang Anda ampu.</p>
             </div>
         </div>
 
@@ -87,18 +55,14 @@
             <table class="cp-table-modern">
                 <thead>
                     <tr>
-                        <th width="30%">PROGRAM KELAS</th>
+                        <th width="35%">PROGRAM KELAS</th>
                         <th width="25%" class="text-center">MATA PELAJARAN</th>
-                        <th width="25%" class="text-center">PROGRES SETORAN</th>
+                        <th width="20%" class="text-center">DURASI</th>
                         <th width="20%" class="text-right">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($assignmentsWithSubjects as $assign)
-                        @php
-                            $subjectName = $assign->subject_name;
-                            $count = $assign->total_soal ?? 0;
-                        @endphp
+                    <?php $__empty_1 = true; $__currentLoopData = $assignmentsWithSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assign): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
                             <td>
                                 <div class="program-info">
@@ -106,63 +70,44 @@
                                         <i class="fa-solid fa-school-flag"></i>
                                     </div>
                                     <div>
-                                        <strong>{{ $assign->classModel->program_name ?? 'Program' }}</strong>
-                                        <small>ID Kelas: #{{ $assign->class_id }}</small>
+                                        <strong><?php echo e($assign->classModel->program_name ?? 'Program'); ?></strong>
+                                        <small>ID Kelas: #<?php echo e($assign->class_id); ?></small>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-center">
                                 <span class="subject-tag">
                                     <i class="fa-solid fa-book-bookmark mr-1"></i>
-                                    {{ $subjectName }}
+                                    <?php echo e($assign->subject_name); ?>
+
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="progress-container-flex">
-                                    <div class="contribution-info {{ $count > 0 ? 'active' : '' }}">
-                                        <div class="info-content">
-                                            <strong>{{ $count }} Soal</strong>
-                                            <span>{{ $count > 0 ? 'TERUPLOAD' : 'BELUM ADA' }}</span>
-                                        </div>
-                                        @if($count > 0)
-                                            <i class="fa-solid fa-circle-check check-icon" style="color: #10b981;"></i>
-                                        @else
-                                            <i class="fa-solid fa-circle-minus" style="color: #cbd5e1;"></i>
-                                        @endif
-                                    </div>
-
-                                    @if($count > 0)
-                                        <form action="{{ route('pengajar.tryout.deleteAll') }}" method="POST" onsubmit="return confirm('Tarik kembali semua soal {{ $subjectName }}?')">
-                                            @csrf
-                                            <input type="hidden" name="class_id" value="{{ $assign->class_id }}">
-                                            <input type="hidden" name="subject_name" value="{{ $subjectName }}">
-                                            <button type="submit" class="btn-action-delete" title="Tarik/Hapus Semua Draf Mapel Ini">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+                                    20 Minggu
+                                </span>
                             </td>
                             <td class="text-right">
-                                <a href="{{ route('pengajar.tryout.create', [$assign->class_id, $subjectName]) }}"
-                                   class="btn-input-modern {{ $count > 0 ? 'btn-has-content' : '' }}">
-                                    <span>{{ $count > 0 ? 'EDIT / TAMBAH' : 'INPUT SOAL' }}</span>
+                                <!-- Memanggil rute pengajar.latihan.pilih -->
+                                <a href="<?php echo e(route('pengajar.latihan.pilih', [$assign->class_id, $assign->subject_name])); ?>"
+                                   class="btn-input-modern">
+                                    <span>Kelola Latihan</span>
                                     <div class="icon-circle">
-                                        <i class="fa-solid fa-{{ $count > 0 ? 'pen-to-square' : 'pen-nib' }}"></i>
+                                        <i class="fa-solid fa-arrow-right"></i>
                                     </div>
                                 </a>
                             </td>
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="4">
                                 <div class="cp-empty-state">
                                     <i class="fa-solid fa-file-circle-xmark"></i>
-                                    <span>Belum ada penugasan soal untuk Anda saat ini.</span>
+                                    <span>Belum ada penugasan bidang ajar untuk Anda saat ini.</span>
                                 </div>
                             </td>
                         </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -231,7 +176,6 @@
     .tm-alert-modern { padding: 12px 16px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 13px; }
     .tm-alert-modern.success { background: #e6f7ed; color: #15803d; border-left: 5px solid #22c55e; }
     .tm-alert-modern.error { background: #fee2e2; color: #b91c1c; border-left: 5px solid #ef4444; }
-    .tm-alert-modern.warning { background: #fef3c7; color: #92400e; border-left: 5px solid #f59e0b; }
 
     /* Stats Grid */
     .cp-stats {
@@ -239,6 +183,9 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 16px;
         margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+        .cp-stats { grid-template-columns: 1fr; }
     }
     .cp-stat-card {
         background: var(--spekta-white);
@@ -250,15 +197,12 @@
         border: 1px solid var(--border-soft);
         box-shadow: 0 2px 10px rgba(0,0,0,0.01);
         transition: all 0.25s ease;
-        position: relative;
     }
     .cp-stat-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(0,0,0,0.03);
     }
     .cp-stat-card.card-teal:hover { border-color: var(--spekta-teal); }
-    .cp-stat-card.card-red:hover { border-color: var(--spekta-red); }
-    .cp-stat-card.card-gray:hover { border-color: var(--spekta-gray); }
 
     .cp-stat-icon {
         width: 42px;
@@ -268,9 +212,7 @@
         place-items: center;
         font-size: 16px;
     }
-    .cp-stat-icon.red { background: var(--spekta-red-light); color: var(--spekta-red); }
     .cp-stat-icon.teal { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .cp-stat-icon.gray { background: var(--spekta-gray-light); color: var(--text-muted); }
 
     .cp-stat-info p {
         margin: 0 0 4px;
@@ -296,21 +238,6 @@
         color: var(--text-muted);
     }
 
-    .cp-pulse-dot {
-        position: absolute;
-        top: 14px; right: 14px;
-        width: 6px; height: 6px;
-        background: var(--spekta-red);
-        border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7);
-        animation: pulseRed 1.5s infinite;
-    }
-    @keyframes pulseRed {
-        0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7); }
-        70% { box-shadow: 0 0 0 8px rgba(229, 57, 53, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
-    }
-
     /* Table Panel */
     .cp-main-card { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
 
@@ -330,34 +257,13 @@
 
     .subject-tag { background: var(--spekta-red-light); color: var(--spekta-red-dark); padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(229, 57, 53, 0.1); display: inline-flex; align-items: center; }
 
-    .progress-container-flex { display: inline-flex; align-items: center; gap: 10px; }
-    .contribution-info {
-        display: flex; align-items: center; gap: 12px;
-        padding: 8px 12px; background: var(--spekta-gray-light);
-        border-radius: 10px; border: 1px solid var(--border-soft);
-        min-width: 150px; text-align: left;
-    }
-    .contribution-info.active { background: #e6f7ed; border-color: #bbf7d0; }
-    .info-content strong { display: block; font-size: 12px; color: var(--text-main); line-height: 1.2; font-weight: 800; }
-    .info-content span { font-size: 8px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .check-icon { font-size: 12px; }
-
-    .btn-action-delete {
-        background: var(--spekta-red-light); color: var(--spekta-red); border: none;
-        width: 32px; height: 32px; border-radius: 8px;
-        cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
-    }
-    .btn-action-delete:hover { background: #fecaca; color: #991b1b; transform: scale(1.05); }
-
     .btn-input-modern {
         display: inline-flex; align-items: center; gap: 8px;
         background: #1f2937; color: white !important; padding: 4px 4px 4px 12px;
         border-radius: 8px; text-decoration: none; transition: 0.2s;
         white-space: nowrap; font-weight: 800; font-size: 11px;
     }
-    .btn-input-modern.btn-has-content { background: #15803d; }
-    .btn-input-modern:hover { transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .btn-input-modern.btn-has-content:hover { background: #166534; }
+    .btn-input-modern:hover { transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); background: #111827; }
 
     .icon-circle { width: 24px; height: 24px; background: rgba(255,255,255,0.15); border-radius: 6px; display: grid; place-items: center; font-size: 10px; }
 
@@ -376,9 +282,6 @@
 
     .text-center { text-align: center; }
     .text-right { text-align: right; }
-
-    @media (max-width: 1100px) {
-        .cp-table-modern th:nth-child(3), .cp-table-modern td:nth-child(3) { display: none; }
-    }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\perkuliahan\PA 2 - code\PAAAAA2\BackEnd\resources\views/pengajar/Latihan/index.blade.php ENDPATH**/ ?>
