@@ -16,15 +16,19 @@ class SubjectListPage extends StatelessWidget {
   });
 
   // ============================================================
-  // 🎨 PALET WARNA BARU SPEKTA GEN-Z (KONTRAS TINGGI, CLEAN, PREMIUM)
+  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
   // ============================================================
-  static const Color primaryRed = Color(0xFFC5352C);       // Merah Spekta
-  static const Color brightRed = Color(0xFFE53935);        // Aksen Merah Terang
-  static const Color pageBg = Color(0xFFF8FAFC);           // Slate 50 (Abu Terang Bersih)
-  static const Color textDark = Color(0xFF0F172A);         // Slate 900
-  static const Color textDarkVariant = Color(0xFF334155);  // Slate 700
-  static const Color neutralGray = Color(0xFF64748B);      // Slate 500
-  static const Color outlineVariant = Color(0xFFE2E8F0);   // Border Abu Halus
+  static const Color primaryRed      = Color(0xFFC5352C);
+  static const Color accentTeal      = Color(0xFF2EA8AB);
+  static const Color darkTeal        = Color(0xFF00696C);
+  static const Color lightBlueBg     = Color(0xFFEFF4FF);
+  static const Color pageBg          = Color(0xFFF1F5F9);
+  static const Color textDark        = Color(0xFF0F172A);
+  static const Color textDarkVariant = Color(0xFF334155);
+  static const Color neutralGray     = Color(0xFF64748B);
+  static const Color outlineVariant  = Color(0xFFE2BEBA);
+  static const Color lightGray       = Color(0xFFE2E8F0);
+  static const Color cardWhite       = Color(0xFFFFFFFF);
 
   // HELPER UNTUK MENENTUKAN IKON DAN WARNA ASYIK UNTUK TIAP MATAPELAJARAN UNIK
   Map<String, dynamic> _getSubjectStyle(String subjectName) {
@@ -32,34 +36,34 @@ class SubjectListPage extends StatelessWidget {
     
     if (s.contains('tiu')) {
       return {
-        'color': const Color(0xFF3B82F6), // Biru
+        'color': accentTeal,
         'icon': Icons.psychology_rounded,
       };
     } else if (s.contains('psych') || s.contains('psiko')) {
       return {
-        'color': const Color(0xFF8B5CF6), // Ungu
+        'color': accentTeal,
         'icon': Icons.insights_rounded,
       };
     } else if (s.contains('math') || s.contains('matematika')) {
       return {
-        'color': const Color(0xFFF97316), // Oranye
+        'color': accentTeal,
         'icon': Icons.calculate_rounded,
       };
     } else if (s.contains('twk')) {
       return {
-        'color': const Color(0xFF14B8A6), // Teal
+        'color': accentTeal,
         'icon': Icons.flag_rounded,
       };
     } else if (s.contains('tkp')) {
       return {
-        'color': const Color(0xFF10B981), // Hijau
+        'color': accentTeal,
         'icon': Icons.gavel_rounded,
       };
     }
     
     // Default Fallback
     return {
-      'color': primaryRed,
+      'color': accentTeal,
       'icon': Icons.import_contacts_rounded,
     };
   }
@@ -103,7 +107,7 @@ class SubjectListPage extends StatelessWidget {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [primaryRed, brightRed],
+              colors: [primaryRed, accentTeal],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -123,10 +127,10 @@ class SubjectListPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: primaryRed.withOpacity(0.08),
+                    color: accentTeal.withOpacity(0.08),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.import_contacts_rounded, size: 52, color: primaryRed),
+                  child: const Icon(Icons.import_contacts_rounded, size: 52, color: accentTeal),
                 ),
                 const SizedBox(height: 18),
                 const Text(
@@ -163,7 +167,7 @@ class SubjectListPage extends StatelessWidget {
             return Container(
               margin: const EdgeInsets.only(bottom: 14),
               decoration: BoxDecoration(
-                color: Colors.white, 
+                color: cardWhite, 
                 borderRadius: BorderRadius.circular(22), 
                 border: Border.all(color: outlineVariant.withOpacity(0.4)),
                 boxShadow: [
@@ -209,10 +213,18 @@ class SubjectListPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                trailing: const Icon(
-                  Icons.arrow_forward_ios_rounded, 
-                  size: 14,
-                  color: neutralGray,
+                trailing: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accentTeal,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded, 
+                    size: 20,
+                    color: Colors.white,
+                  ),
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(

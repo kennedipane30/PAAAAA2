@@ -42,16 +42,19 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   bool isLoading = true;
 
   // ============================================================
-  // 🎨 PALET WARNA BARU SPEKTA GEN-Z (KONTRAS TINGGI, CLEAN, PREMIUM)
+  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
   // ============================================================
-  static const Color primaryRed = Color(0xFFC5352C);       // Merah Spekta
-  static const Color brightRed = Color(0xFFE53935);        // Aksen Merah Terang
-  static const Color accentTeal = Color(0xFF2EA8AB);       // Teal Estetik
-  static const Color pageBg = Color(0xFFF8FAFC);           // Slate 50 (Abu Terang Bersih)
-  static const Color textDark = Color(0xFF0F172A);         // Slate 900
-  static const Color textDarkVariant = Color(0xFF334155);  // Slate 700
-  static const Color neutralGray = Color(0xFF64748B);      // Slate 500
-  static const Color outlineVariant = Color(0xFFE2E8F0);   // Border Abu Halus
+  static const Color primaryRed      = Color(0xFFC5352C);
+  static const Color accentTeal      = Color(0xFF2EA8AB);
+  static const Color darkTeal        = Color(0xFF00696C);
+  static const Color lightBlueBg     = Color(0xFFEFF4FF);
+  static const Color pageBg          = Color(0xFFF1F5F9);
+  static const Color textDark        = Color(0xFF0F172A);
+  static const Color textDarkVariant = Color(0xFF334155);
+  static const Color neutralGray     = Color(0xFF64748B);
+  static const Color outlineVariant  = Color(0xFFE2BEBA);
+  static const Color spektaYellow    = Color(0xFFF5A623);
+  static const Color softRed         = Color(0xFFFEE2E2);
 
   final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -235,10 +238,10 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     return Scaffold(
       backgroundColor: pageBg,
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: primaryRed))
+          ? const Center(child: CircularProgressIndicator(color: accentTeal))
           : RefreshIndicator(
               onRefresh: _fetchDetail,
-              color: primaryRed,
+              color: accentTeal,
               child: CustomScrollView(
                 slivers: [
                   _buildSliverAppBar(),
@@ -316,7 +319,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                                 : "${tryouts.length} Paket Tryout tersedia",
                             onTap: _navigateToTryouts,
                             isLocked: !isActive,
-                            color: Colors.orange,
+                            color: accentTeal,
                           ),
                           const SizedBox(height: 100),
                         ],
@@ -330,7 +333,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
     );
   }
 
-  // HEADER KELAS DENGAN FLOATING BACK BUTTON & GRADIENT TRANPARAN
+  // HEADER KELAS DENGAN FLOATING BACK BUTTON & GRADIENT TRANSPARAN
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       expandedHeight: 280.0,
@@ -357,7 +360,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               errorBuilder: (context, error, stackTrace) => Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [primaryRed, brightRed],
+                    colors: [primaryRed, accentTeal],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -402,7 +405,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   // STATUS BADGE PIL KAPSUL MODERN
   Widget _buildStatusBadge(bool enrolled) {
     String txt = enrolled ? "TERDAFTAR" : "TERSEDIA KELAS";
-    Color col = enrolled ? const Color(0xFF10B981) : const Color(0xFF3B82F6); // Hijau / Biru Pastel
+    Color col = enrolled ? darkTeal : accentTeal;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -453,7 +456,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 borderRadius: BorderRadius.circular(12)),
             child: Icon(
                 isLocked ? Icons.lock_outline_rounded : icon,
-                color: isLocked ? Colors.grey : color,
+                color: isLocked ? neutralGray : color,
                 size: 24,
             )),
         title: Text(
@@ -461,7 +464,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
           style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 15,
-              color: isLocked ? Colors.grey.shade400 : textDark,
+              color: isLocked ? neutralGray : textDark,
           ),
         ),
         subtitle: Padding(
@@ -528,7 +531,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                                   token: widget.token,
                                   userData: currentLocalUserData))),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: hasOtherClass ? Colors.grey : primaryRed,
+                      backgroundColor: hasOtherClass ? neutralGray : accentTeal,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                       elevation: 0,
                       shape: RoundedRectangleBorder(

@@ -37,20 +37,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static const String baseUrl = 'http://10.0.2.2:8000';
 
-  // ============================================================
-  // 🎨 PALET WARNA BARU SPEKTA (KONTRAS TINGGI, SANGAT JELAS)
-  // ============================================================
-  static const Color primaryRed = Color(0xFFC5352C);       // #c5352c (Merah Utama Spekta)
-  static const Color brightRed = Color(0xFFE53935);        // #e53935 (Aksen Merah Terang)
-  static const Color accentTeal = Color(0xFF2EA8AB);       // #2ea8ab (Teal Utama)
-  static const Color darkTeal = Color(0xFF00696C);         // #00696c (Warna Progress Ring/Selesai)
-  static const Color lightBlueBg = Color(0xFFEFF4FF);      // #eff4ff (Warna Latar Ikon Bento)
-  static const Color pageBg = Color(0xFFF1F5F9);           // #f1f5f9 (Latar Belakang Utama)
-  static const Color textDark = Color(0xFF0F172A);         // #0f172a (Slate 900 - Tulisan Super Jelas & Nyata)
-  static const Color textDarkVariant = Color(0xFF334155);  // #334155 (Slate 700 - Sub-teks Jelas & Tajam)
-  static const Color outlineVariant = Color(0xFFE2BEBA);   // #e2beba (Warna Border)
-  static const Color neutralGray = Color(0xFF64748B);      // #64748b (Slate 500 - Keterangan Jelas)
-  static const Color lightGray = Color(0xFFE2E8F0);        // #e2e8f0 (Warna Border Tipis)
+  static const Color primaryRed = Color(0xFFC5352C);
+  static const Color brightRed = Color(0xFFE53935);
+  static const Color accentTeal = Color(0xFF2EA8AB);
+  static const Color darkTeal = Color(0xFF00696C);
+  static const Color lightBlueBg = Color(0xFFEFF4FF);
+  static const Color pageBg = Color(0xFFF1F5F9);
+  static const Color textDark = Color(0xFF0F172A);
+  static const Color textDarkVariant = Color(0xFF334155);
+  static const Color outlineVariant = Color(0xFFE2BEBA);
+  static const Color neutralGray = Color(0xFF64748B);
+  static const Color lightGray = Color(0xFFE2E8F0);
 
   Map? currentData;
 
@@ -59,7 +56,6 @@ class _HomePageState extends State<HomePage> {
   List scheduleData = []; 
   List upcomingData = []; 
 
-  // --- STATE VARIABEL GRAPH/TRYOUT REPORT DINAMIS ---
   Map? latestTryoutResult;
   double progressPercentage = 0.0;
   int currentScore = 0;
@@ -101,7 +97,7 @@ class _HomePageState extends State<HomePage> {
       fetchBanners(),
       fetchTryouts(),
       fetchSchedules(),
-      fetchLearningReport(), // Memanggil rute laporan belajar dinamis
+      fetchLearningReport(),
     ]);
   }
 
@@ -120,7 +116,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // MENGAMBIL LAPORAN TRYOUT DINAMIS DARI LARAVEL (learning-report)
   Future<void> fetchLearningReport() async {
     try {
       setState(() => isLoadingReport = true);
@@ -137,7 +132,6 @@ class _HomePageState extends State<HomePage> {
         final List results = decoded['data'] ?? [];
         
         if (results.isNotEmpty) {
-          // Hasil tryout terakhir berada di posisi paling akhir list
           final latest = results.last;
           
           final score = int.tryParse(latest['score']?.toString() ?? '0') ?? 0;
@@ -149,7 +143,6 @@ class _HomePageState extends State<HomePage> {
           String impText = "0% change";
           bool isImp = true;
 
-          // Bandingkan skor dengan tryout sebelumnya untuk menghitung tren kenaikan dinamis
           if (results.length > 1) {
             final prev = results[results.length - 2];
             final prevScore = int.tryParse(prev['score']?.toString() ?? '0') ?? 0;
@@ -456,11 +449,9 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 12), 
                 _buildBannerSection(),
                 const SizedBox(height: 18), 
-                _buildBentoGrid(), // 🚀 4 Bento Cards Besar Utama
-                const SizedBox(height: 20), 
-                _buildTryoutProgressCard(),
+                _buildBentoGrid(),
                 const SizedBox(height: 24), 
-                _sectionTitle(title: 'Jadwal Hari Ini', onTap: null), // Label diubah agar bebas dari redundansi
+                _sectionTitle(title: 'Jadwal Hari Ini', onTap: null),
                 const SizedBox(height: 10),
                 _buildScheduleWidget(),
 
@@ -471,7 +462,7 @@ class _HomePageState extends State<HomePage> {
                   _buildUpcomingClassesList(),
                 ],
                 const SizedBox(height: 24),
-                _buildUtilityCardsRow(), // 🚀 3 Utilitas Pendukung di Bagian Paling Bawah
+                _buildUtilityCardsRow(),
               ],
             ),
           ),
@@ -480,7 +471,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 1. TOP APP BAR (GRADIENT PREMIUM MERAH CRIMSON KE TEAL)
   Widget _buildHeader() {
     final name = _safeText(currentData?['name'] ?? widget.userData['name'], fallback: widget.userName);
 
@@ -490,7 +480,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [primaryRed, accentTeal], // Diubah menjadi gradasi Crimson Red ke Teal Estetik!
+          colors: [primaryRed, accentTeal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -623,7 +613,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 2. HERO BANNER SPEKTA ELITE
   Widget _buildBannerSection() {
     if (isLoadingBanner) {
       return Container(
@@ -853,13 +842,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 3. MAIN MENU BENTO GRID (DIREKONSILIASI MENJADI 4 KARTU BENTO UTAMA YANG BESAR & DINAMIS - SUBTITLE DIHAPUS)
   Widget _buildBentoGrid() {
     final bentoItems = [
       {
         'title': 'Materi', 
         'icon': Icons.import_contacts, 
-        'bgColor': const Color(0xFFE2F9FC), // Soft Teal
+        'bgColor': const Color(0xFFE2F9FC),
         'borderColor': const Color(0xFFBFEFF5),
         'iconColor': const Color(0xFF00696C),
         'action': () => _handleLearningMaterials()
@@ -867,7 +855,7 @@ class _HomePageState extends State<HomePage> {
       {
         'title': 'Tryout', 
         'icon': Icons.assignment, 
-        'bgColor': const Color(0xFFFFF1F1), // Soft Pink
+        'bgColor': const Color(0xFFFFF1F1),
         'borderColor': const Color(0xFFFCD3D1),
         'iconColor': primaryRed,
         'action': () => _handleTryout()
@@ -875,7 +863,7 @@ class _HomePageState extends State<HomePage> {
       {
         'title': 'Tutor', 
         'icon': Icons.school, 
-        'bgColor': const Color(0xFFF8FAFC), // Soft Slate
+        'bgColor': const Color(0xFFF8FAFC),
         'borderColor': const Color(0xFFE2E8F0),
         'iconColor': neutralGray,
         'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => DedicatedTutorPage(token: widget.token, userData: widget.userData)))
@@ -883,7 +871,7 @@ class _HomePageState extends State<HomePage> {
       {
         'title': 'Bank Soal', 
         'icon': Icons.menu_book, 
-        'bgColor': const Color(0xFFEFF4FF), // Soft Blue
+        'bgColor': const Color(0xFFEFF4FF),
         'borderColor': const Color(0xFFD0E1FF),
         'iconColor': const Color(0xFF1D4ED8),
         'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token)))
@@ -899,7 +887,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisCount: 2,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14, 
-        childAspectRatio: 1.6, // Diperlebar rasionya agar kartu tidak terlalu tinggi pasca teks dihapus
+        childAspectRatio: 1.6,
       ),
       itemBuilder: (context, index) {
         final item = bentoItems[index];
@@ -946,7 +934,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // BARIS UTILITAS PENDUKUNG DI PALING BAWAH LAYAR (Consult, About, Support)
   Widget _buildUtilityCardsRow() {
     final utilities = [
       {
@@ -975,7 +962,7 @@ class _HomePageState extends State<HomePage> {
             margin: EdgeInsets.only(
               right: index == utilities.length - 1 ? 0 : 12,
             ),
-            height: 84, // Proporsional berbentuk kotak segi empat tipis
+            height: 84,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -1017,7 +1004,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 4. TRYOUT PROGRESS CARD (DIUBAH DINAMIS TERHUBUNG KE LARAVEL: /api/learning-report)
+  // Method _buildTryoutProgressCard() tetap ada di sini namun tidak dipanggil dari build()
   Widget _buildTryoutProgressCard() {
     if (isLoadingReport) {
       return Container(
@@ -1027,7 +1014,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Jika data report kosong/tidak ditemukan di server
     if (latestTryoutResult == null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -1100,11 +1086,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text(
                 "Tryout Progress",
-                style: TextStyle(
-                  fontSize: 14, 
-                  fontWeight: FontWeight.w900, 
-                  color: textDark
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: textDark),
               ),
               const SizedBox(height: 2),
               Row(
@@ -1209,7 +1191,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 5. UPCOMING SCHEDULE WIDGET
   Widget _buildScheduleWidget() {
     if (isLoadingSchedule) {
       return Container(
@@ -1358,7 +1339,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 6. KELAS MENDATANG
   Widget _buildUpcomingClassesList() {
     return ListView.builder(
       shrinkWrap: true,

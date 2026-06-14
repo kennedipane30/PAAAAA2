@@ -25,19 +25,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _dobCtrl = TextEditingController();
 
   // ============================================================
-  // 🎨 PALET WARNA BARU SPEKTA GEN-Z (KONTRAS TINGGI, CLEAN, PREMIUM)
+  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
   // ============================================================
-  static const Color primaryRed = Color(0xFFC5352C);       // Merah Spekta
-  static const Color brightRed = Color(0xFFE53935);        // Aksen Merah Terang
-  static const Color accentTeal = Color(0xFF2EA8AB);       // Teal Estetik
-  static const Color pageBg = Color(0xFFF8FAFC);           // Slate 50 (Abu Terang Bersih)
-  static const Color textDark = Color(0xFF0F172A);         // Slate 900
-  static const Color textDarkVariant = Color(0xFF334155);  // Slate 700
-  static const Color neutralGray = Color(0xFF64748B);      // Slate 500
-  static const Color outlineVariant = Color(0xFFE2E8F0);   // Border Abu Halus
-  static const Color lightBlueBg = Color(0xFFEFF4FF);      // Latar Ikon
-  static const Color softRed = Color(0xFFFEE2E2);          // Latar Merah Lembut
-  static const Color errorRed = Color(0xFFBA1A1A);         // Merah Logout
+  static const Color primaryRed      = Color(0xFFC5352C);
+  static const Color accentTeal      = Color(0xFF2EA8AB);
+  static const Color darkTeal        = Color(0xFF00696C);
+  static const Color lightBlueBg     = Color(0xFFEFF4FF);
+  static const Color pageBg          = Color(0xFFF1F5F9);
+  static const Color textDark        = Color(0xFF0F172A);
+  static const Color textDarkVariant = Color(0xFF334155);
+  static const Color neutralGray     = Color(0xFF64748B);
+  static const Color outlineVariant  = Color(0xFFE2BEBA);
+  static const Color softRed         = Color(0xFFFEE2E2);
+  static const Color errorRed        = Color(0xFFBA1A1A);
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: primaryRed,
+              primary: accentTeal,
               onPrimary: Colors.white,
               onSurface: textDark,
             ),
@@ -97,7 +97,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _nisnCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.orange,
+          backgroundColor: accentTeal,
           content: const Text("Harap isi semua bidang yang wajib!", style: TextStyle(fontWeight: FontWeight.bold)),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -110,7 +110,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(color: primaryRed),
+        child: CircularProgressIndicator(color: accentTeal),
       ),
     );
 
@@ -128,7 +128,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (resp.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF10B981),
+          backgroundColor: darkTeal,
           content: const Text("Data profil berhasil diperbarui", style: TextStyle(fontWeight: FontWeight.bold)),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -159,7 +159,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: primaryRed,
+        backgroundColor: accentTeal,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -306,7 +306,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: primaryRed,
+                        color: accentTeal,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2.5),
                         boxShadow: const [
@@ -379,7 +379,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               width: 4,
               height: 18,
               decoration: BoxDecoration(
-                color: primaryRed,
+                color: accentTeal,
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -531,11 +531,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: primaryRed,
+          color: accentTeal,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryRed.withOpacity(0.2),
+              color: accentTeal.withOpacity(0.2),
               blurRadius: 8,
               offset: const Offset(0, 4),
             )
@@ -739,15 +739,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         fillColor: const Color(0xFFFBFBFB),
         labelText: label,
         labelStyle: const TextStyle(color: neutralGray, fontSize: 12, fontWeight: FontWeight.w600),
-        prefixIcon: Icon(icon, color: primaryRed, size: 20),
+        prefixIcon: Icon(icon, color: accentTeal, size: 20),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: outlineVariant),
+          borderSide: BorderSide(color: outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: primaryRed, width: 1.5),
+          borderSide: const BorderSide(color: accentTeal, width: 1.5),
         ),
       ),
     );
@@ -761,8 +761,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         onPressed: _handleSave,
         style: ElevatedButton.styleFrom(
           elevation: 8,
-          shadowColor: primaryRed.withOpacity(0.3),
-          backgroundColor: primaryRed,
+          shadowColor: accentTeal.withOpacity(0.3),
+          backgroundColor: accentTeal,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         ),
         child: const Text(

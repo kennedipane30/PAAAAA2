@@ -26,18 +26,18 @@ class KelasPage extends StatefulWidget {
 
 class _KelasPageState extends State<KelasPage> {
   // ============================================================
-  // 🎨 PALET WARNA BARU SPEKTA GEN-Z (KONTRAS TINGGI, CLEAN, PREMIUM)
+  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
   // ============================================================
-  static const Color primaryRed = Color(0xFFC5352C);       // Merah Spekta
-  static const Color brightRed = Color(0xFFE53935);        // Aksen Merah Terang
-  static const Color accentTeal = Color(0xFF2EA8AB);       // Teal Estetik
-  static const Color pageBg = Color(0xFFF8FAFC);           // Slate 50 (Abu Terang)
-  static const Color textDark = Color(0xFF0F172A);         // Slate 900
-  static const Color textDarkVariant = Color(0xFF334155);  // Slate 700
-  static const Color neutralGray = Color(0xFF64748B);      // Slate 500
-  static const Color outlineVariant = Color(0xFFE2E8F0);   // Border Abu Halus
-  static const Color lightBlueBg = Color(0xFFEFF4FF);      // Latar Ikon
-  static const Color spektaYellow = Color(0xFFF1B401);     // Kuning Spekta
+  static const Color primaryRed      = Color(0xFFC5352C);
+  static const Color accentTeal      = Color(0xFF2EA8AB);
+  static const Color darkTeal        = Color(0xFF00696C);
+  static const Color lightBlueBg     = Color(0xFFEFF4FF);
+  static const Color pageBg          = Color(0xFFF1F5F9);
+  static const Color textDark        = Color(0xFF0F172A);
+  static const Color textDarkVariant = Color(0xFF334155);
+  static const Color neutralGray     = Color(0xFF64748B);
+  static const Color outlineVariant  = Color(0xFFE2BEBA);
+  static const Color spektaYellow    = Color(0xFFF5A623);
 
   List programs = [];
   Map? currentData;
@@ -113,21 +113,16 @@ class _KelasPageState extends State<KelasPage> {
     return Scaffold(
       backgroundColor: pageBg,
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: primaryRed))
+          ? const Center(child: CircularProgressIndicator(color: accentTeal))
           : CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // 1. APP BAR GRADIEN LENGKUNG PREMIUM
                 _buildCurvedAppBar(),
-
-                // 2. SEARCH BAR MODERN
                 SliverToBoxAdapter(
                   child: _buildSearchBar(),
                 ),
-
-                // 3. DAFTAR PROGRAM KELAS SISWA (DARI DATABASE)
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100), // Padding bawah 100 agar aman dari navigasi melayang
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _buildProgramCard(context, programs[index]), 
@@ -140,7 +135,6 @@ class _KelasPageState extends State<KelasPage> {
     );
   }
 
-  // WIDGET APP BAR GRADIEN LENGKUNG MERAH CRIMSON KE TEAL
   Widget _buildCurvedAppBar() {
     return SliverAppBar(
       expandedHeight: 110.0,
@@ -186,7 +180,6 @@ class _KelasPageState extends State<KelasPage> {
     );
   }
 
-  // WIDGET PENCARIAN PROGRAM KELAS MELAYANG (SEARCH BAR)
   Widget _buildSearchBar() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -216,7 +209,6 @@ class _KelasPageState extends State<KelasPage> {
     );
   }
 
-  // WIDGET KARTU PROGRAM KELAS ESTETIK
   Widget _buildProgramCard(BuildContext context, Map<String, dynamic> item) {
     dynamic activeClassId = currentData?['student']?['class_id'];
     bool isMyClass = activeClassId?.toString() == item['class_id'].toString();
@@ -249,7 +241,6 @@ class _KelasPageState extends State<KelasPage> {
                   fit: BoxFit.cover,
                 ),
               ),
-              // Badge Program Anda
               if (isMyClass) 
                 Positioned(
                   top: 15, 
@@ -257,7 +248,7 @@ class _KelasPageState extends State<KelasPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), 
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981), // Hijau pastel menyala
+                      color: darkTeal,
                       borderRadius: BorderRadius.circular(8),
                     ), 
                     child: const Row(
@@ -267,7 +258,6 @@ class _KelasPageState extends State<KelasPage> {
                     ),
                   ),
                 ),
-              // Badge Harga melayang putih bersih
               Positioned(
                 top: 15, 
                 right: 15, 
@@ -306,8 +296,8 @@ class _KelasPageState extends State<KelasPage> {
                 ElevatedButton(
                   onPressed: () => _navigateToDetail(context, item),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: spektaYellow, 
-                    foregroundColor: textDark, 
+                    backgroundColor: accentTeal,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 52), 
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
@@ -333,7 +323,7 @@ class _KelasPageState extends State<KelasPage> {
     bool isEnrolledInThis = activeClassId?.toString() == classId.toString();
 
     if (isEnrolledInThis) {
-      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: primaryRed)));
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: accentTeal)));
 
       try {
         final response = await AuthService.getClassContent(classId, widget.token);

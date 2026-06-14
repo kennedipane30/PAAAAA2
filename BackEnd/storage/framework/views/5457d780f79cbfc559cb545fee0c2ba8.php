@@ -141,7 +141,7 @@
                                         </form>
                                     <?php endif; ?>
                                 </div>
-                            </td
+                            </td>
                             <td class="text-right">
                                 <a href="<?php echo e(route('pengajar.tryout.create', [$assign->class_id, $subjectName])); ?>"
                                    class="btn-input-modern <?php echo e($count > 0 ? 'btn-has-content' : ''); ?>">
@@ -150,8 +150,8 @@
                                         <i class="fa-solid fa-<?php echo e($count > 0 ? 'pen-to-square' : 'pen-nib'); ?>"></i>
                                     </div>
                                 </a>
-                            </td
-                        </tr
+                            </td>
+                        </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="4">
@@ -159,8 +159,8 @@
                                     <i class="fa-solid fa-file-circle-xmark"></i>
                                     <span>Belum ada penugasan soal untuk Anda saat ini.</span>
                                 </div>
-                            </td
-                        </tr
+                            </td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -381,5 +381,4 @@
     }
 </style>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/pengajar/tryout/index.blade.php ENDPATH**/ ?>
