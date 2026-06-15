@@ -557,4 +557,4 @@
     }
 </style>
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\perkuliahan\PA 2 - code\PAAAAA2\BackEnd\resources\views/pengajar/Latihan/pilih.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/pengajar/Latihan/pilih.blade.php ENDPATH**/ ?>
