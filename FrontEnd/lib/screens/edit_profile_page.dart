@@ -25,7 +25,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _dobCtrl = TextEditingController();
 
   // ============================================================
-  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
+  // 🎨 PALET WARNA SPEKTA
   // ============================================================
   static const Color primaryRed      = Color(0xFFC5352C);
   static const Color accentTeal      = Color(0xFF2EA8AB);
@@ -43,14 +43,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
 
-    if (widget.userData['student'] != null) {
-      final s = widget.userData['student'];
+    // 🚨 LAMPU SENTER: Kita intip isi asli datanya di tab DEBUG CONSOLE VS Code!
+    debugPrint("🔍 [DEBUG PROFIL] Isi mentah userData: ${widget.userData}");
 
-      _parentCtrl.text = s['parent_name'] ?? "";
-      _addressCtrl.text = s['address'] ?? "";
-      _parentPhoneCtrl.text = s['parent_phone'] ?? "";
-      _nisnCtrl.text = s['national_id_number'] ?? "";
-      _dobCtrl.text = s['date_of_birth'] ?? "";
+    // ✅ PENCARIAN AGRESIF: Cari data student di semua kemungkinan tempat
+    Map? s;
+    
+    if (widget.userData['student'] != null && widget.userData['student'] is Map) {
+      s = widget.userData['student'];
+    } else if (widget.userData['data'] != null && widget.userData['data'] is Map && widget.userData['data']['student'] != null) {
+      s = widget.userData['data']['student'];
+    } else if (widget.userData['user'] != null && widget.userData['user'] is Map && widget.userData['user']['student'] != null) {
+      s = widget.userData['user']['student'];
+    } else if (widget.userData.containsKey('parent_name')) {
+      // Terkadang API mengirim datanya langsung sejajar (flat) tanpa dibungkus 'student'
+      s = widget.userData;
+    }
+
+    // Jika data ditemukan, masukkan ke dalam Text Controller
+    if (s != null) {
+      debugPrint("✅ [DEBUG PROFIL] Data Student ketemu: $s");
+      _parentCtrl.text = s['parent_name']?.toString() ?? "";
+      _addressCtrl.text = s['address']?.toString() ?? "";
+      _parentPhoneCtrl.text = s['parent_phone']?.toString() ?? "";
+      _nisnCtrl.text = s['national_id_number']?.toString() ?? "";
+      _dobCtrl.text = s['date_of_birth']?.toString() ?? "";
+    } else {
+      debugPrint("❌ [DEBUG PROFIL] GAGAL: Objek 'student' benar-benar tidak ada di dalam userData!");
     }
   }
 
@@ -274,55 +293,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
               
-              // Avatar dengan floating Camera Icon
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    padding: const EdgeInsets.all(2.5),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: const ClipOval(
-                      child: Icon(Icons.person, color: primaryRed, size: 52), 
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: accentTeal,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.5),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 12),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
+              
               Text(
                 name,
                 style: const TextStyle(

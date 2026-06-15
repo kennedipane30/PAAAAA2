@@ -1,14 +1,13 @@
 // =====================================================================
-//  login_page.dart — Spekta Academy  (NO flutter_svg dependency)
-//  Logo Spekta digambar dengan CustomPainter Flutter native
-//  Google Fonts: google_fonts sudah ada di pubspec.yaml ✓
+//  login_page.dart — Spekta Academy (Logo di Tengah)
+//  Logo digambar via CustomPainter (tidak butuh asset file)
+//  Tampilan mengikuti register_page dengan penyesuaian tata letak tengah
 // =====================================================================
 
 import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
@@ -17,21 +16,6 @@ import 'register_page.dart';
 import 'main_screen.dart';
 import 'forgot_password_page.dart';
 
-// ─────────────────────────────────────────────────────────────────────
-//  BRAND COLORS
-// ─────────────────────────────────────────────────────────────────────
-class _C {
-  static const red1   = Color(0xFFC50337);
-  static const red2   = Color(0xFF9C0412);
-  static const red3   = Color(0xFF520102);
-  static const red4   = Color(0xFF1A0003);
-  static const gold   = Color(0xFFF5A623);
-  static const dark   = Color(0xFF172033);
-}
-
-// ─────────────────────────────────────────────────────────────────────
-//  LOGIN PAGE
-// ─────────────────────────────────────────────────────────────────────
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -44,36 +28,31 @@ class _LoginPageState extends State<LoginPage>
 
   final _nameCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  bool _obscure   = true;
-  bool _loading   = false;
+  bool _obscure  = true;
+  bool _loading  = false;
 
   late AnimationController _ac;
   late Animation<double>   _fade;
   late Animation<Offset>   _slide;
 
-  // ── Theme helpers ────────────────────────────────────────────────
-  List<Color> _bg(bool d) => d
-      ? const [Color(0xFF050002), Color(0xFF180308), _C.red3]
-      : const [Color(0xFFFF8099), _C.red1, _C.red2, _C.red3, _C.red4];
+  static const Color mainRed  = Color(0xFFD32F2F);
+  static const Color teal1    = Color(0xFF26A69A);
+  static const Color teal2    = Color(0xFF00796B);
+  static const Color textDark = Color(0xFF1F2028);
+  static const Color textMuted = Color(0xFF8C8C95);
 
-  Color _cardBg(bool d)    => d ? Colors.white.withOpacity(0.07) : Colors.white;
-  Color _inputBg(bool d)   => d ? Colors.white.withOpacity(0.06) : const Color(0xFFFFF5F7);
-  Color _inputBdr(bool d)  => d ? Colors.white.withOpacity(0.10) : const Color(0xFFFFCDD2);
-  Color _iconCol(bool d)   => d ? Colors.white60 : _C.red2;
-  Color _labelCol(bool d)  => d ? Colors.white38 : Colors.black38;
-  Color _fieldTxt(bool d)  => d ? Colors.white   : _C.dark;
-  Color _subTxt(bool d)    => Colors.white.withOpacity(d ? 0.55 : 0.82);
-  Color _cardLbl(bool d)   => d ? Colors.white   : _C.dark;
-  Color _cardSub(bool d)   => d ? Colors.white38 : Colors.black38;
-  Color _fgPw(bool d)      => d ? Colors.white60 : _C.red2;
+  static const double radiusLg = 22;
+  static const double radiusMd = 12;
+  static const double spacing  = 14;
 
-  // ── Lifecycle ────────────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    _ac = AnimationController(vsync: this, duration: const Duration(milliseconds: 850));
+    _ac = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
     _fade  = CurvedAnimation(parent: _ac, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.07), end: Offset.zero)
+    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
         .animate(CurvedAnimation(parent: _ac, curve: Curves.easeOutCubic));
     _ac.forward();
   }
@@ -86,17 +65,19 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  // ── Login ────────────────────────────────────────────────────────
+  // ── Login handler ─────────────────────────────────────────────────
   Future<void> _login() async {
     if (_nameCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
-      _snack('Nama dan Password wajib diisi!', err: true);
+      _snack('Nama dan Password wajib diisi!', isError: true);
       return;
     }
     setState(() => _loading = true);
     try {
-      final r = await AuthService.login(_nameCtrl.text.trim(), _passCtrl.text);
+      final r = await AuthService.login(
+          _nameCtrl.text.trim(), _passCtrl.text);
       if (!mounted) return;
       setState(() => _loading = false);
+
       if (r.statusCode == 200) {
         final d = jsonDecode(r.body);
         Navigator.pushAndRemoveUntil(
@@ -112,273 +93,363 @@ class _LoginPageState extends State<LoginPage>
         );
       } else {
         final e = jsonDecode(r.body);
-        _snack(e['message'] ?? 'Nama atau Password salah!', err: true);
+        _snack(e['message'] ?? 'Nama atau Password salah!', isError: true);
       }
     } catch (_) {
       if (mounted) {
         setState(() => _loading = false);
-        _snack('Koneksi gagal. Periksa server.', err: true);
+        _snack('Koneksi gagal. Periksa server.', isError: true);
       }
     }
   }
 
-  void _snack(String msg, {bool err = false}) {
+  void _snack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg, style: const TextStyle(fontWeight: FontWeight.w600)),
-      backgroundColor: err ? _C.red2 : const Color(0xFF22C55E),
+      backgroundColor: isError ? mainRed : const Color(0xFF22C55E),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       margin: const EdgeInsets.all(16),
     ));
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  //  BUILD
-  // ─────────────────────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme  = Provider.of<ThemeController>(context);
     final isDark = theme.isDark;
+    final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        width: double.infinity,
-        height: MediaQuery.of(context).size.height,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: _bg(isDark),
-          ),
-        ),
-        child: Stack(children: [
-          // Dekorasi latar
-          const Positioned.fill(child: _BgDecor()),
-
-          // Konten
-          SafeArea(
-            child: FadeTransition(
-              opacity: _fade,
-              child: SlideTransition(
-                position: _slide,
+      backgroundColor:
+          isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF0F2F5),
+      body: FadeTransition(
+        opacity: _fade,
+        child: SlideTransition(
+          position: _slide,
+          child: Column(
+            children: [
+              _buildHeader(isDark, topPad, theme),
+              Expanded(
                 child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
-                  child: Column(children: [
-
-                    // Toggle dark mode
-                    _ThemeToggle(isDark: isDark, theme: theme),
-                    const SizedBox(height: 26),
-
-                    // ── LOGO SPEKTA (CustomPainter) ──────────────
-                    _SpektaLogo(),
-                    const SizedBox(height: 16),
-
-                    // Judul
-                    Text(
-                      'SPEKTA ACADEMY',
-                      style: GoogleFonts.oswald(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 2.5,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: Transform.translate(
+                    offset: const Offset(0, -22),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                        borderRadius: BorderRadius.circular(radiusLg),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black
+                                .withOpacity(isDark ? 0.30 : 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Achieve Your Dream of Serving the Nation',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.nunito(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        color: _subTxt(isDark),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 34),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Full Name
+                          _fieldLabel(isDark, 'Full Name'),
+                          const SizedBox(height: 6),
+                          _buildInput(
+                            isDark,
+                            ctrl: _nameCtrl,
+                            hint: 'Masukkan nama lengkap',
+                            icon: Icons.person_outline_rounded,
+                            inputType: TextInputType.name,
+                          ),
+                          const SizedBox(height: spacing),
 
-                    // Kartu login
-                    _buildCard(isDark),
-                    const SizedBox(height: 20),
+                          // Password
+                          _fieldLabel(isDark, 'Password'),
+                          const SizedBox(height: 6),
+                          _buildPasswordInput(isDark),
 
-                    // Divider ATAU
-                    _buildDivider(),
-                    const SizedBox(height: 16),
-
-                    // Tombol Google
-                    _buildGoogleBtn(),
-                    const SizedBox(height: 28),
-
-                    // Link daftar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Belum punya akun? ',
-                          style: TextStyle(color: _subTxt(isDark), fontSize: 13),
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => const RegisterPage())),
-                          child: const Text(
-                            'Daftar Sekarang',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.white,
+                          // Forgot password
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ForgotPasswordPage()),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.only(
+                                    top: 4, bottom: 2),
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white60 : mainRed,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+
+                          const SizedBox(height: 8),
+                          _buildLoginButton(),
+                          const SizedBox(height: 18),
+
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const RegisterPage()),
+                              ),
+                              child: RichText(
+                                text: TextSpan(
+                                  text: 'Belum punya akun? ',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.55)
+                                        : textMuted,
+                                    fontSize: 12.5,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: 'Daftar Sekarang',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : mainRed,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Header dengan logo CustomPainter di Tengah ─────────────────────
+  Widget _buildHeader(bool isDark, double topPad, ThemeController theme) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(18, topPad + 10, 18, 40),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF7B0000), Color(0xFF1A1A2E)]
+              : const [Color(0xFFC62828), Color(0xFF26A69A)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center, // Ubah ke center
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Toggle dark mode (tetap di kanan)
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: theme.toggleTheme,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.20),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isDark
+                      ? Icons.dark_mode_rounded
+                      : Icons.light_mode_rounded,
+                  color: Colors.white,
+                  size: 18,
                 ),
               ),
             ),
           ),
-        ]),
-      ),
-    );
-  }
+          const SizedBox(height: 4),
 
-  // ─────────────────────────────────────────────────────────────────
-  //  CARD LOGIN
-  // ─────────────────────────────────────────────────────────────────
-  Widget _buildCard(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
-      decoration: BoxDecoration(
-        color: _cardBg(isDark),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(isDark ? 0.08 : 0.65)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.32 : 0.12),
-            blurRadius: 34,
-            offset: const Offset(0, 16),
+          // ── Logo CustomPainter di Tengah ──────────────────────────────
+          _SpektaLogoWidget(),
+          const SizedBox(height: 14),
+
+          // Teks Judul dan Tagline di Tengah
+          const Text(
+            'SPEKTA ACADEMY',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Achieve Your Dream of Serving the Nation',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+
+          // Judul Form Masuk Ke Akun
+          const Text(
+            'Masuk ke Akun',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Gunakan nama & password yang terdaftar',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-        Text('Masuk ke Akun',
-            style: GoogleFonts.nunito(
-              fontSize: 18, fontWeight: FontWeight.w900, color: _cardLbl(isDark))),
-        const SizedBox(height: 4),
-        Text('Gunakan nama & password yang terdaftar',
-            style: TextStyle(fontSize: 12, color: _cardSub(isDark))),
-        const SizedBox(height: 22),
-
-        // Full Name
-        _field(isDark,
-            ctrl: _nameCtrl,
-            label: 'Full Name',
-            hint: 'Masukkan nama lengkap',
-            icon: Icons.person_outline_rounded),
-        const SizedBox(height: 14),
-
-        // Password
-        _field(isDark,
-            ctrl: _passCtrl,
-            label: 'Password',
-            hint: 'Masukkan password',
-            icon: Icons.lock_outline_rounded,
-            isPass: true),
-
-        // Forgot PW
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ForgotPasswordPage())),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.only(top: 4, bottom: 2),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text('Forgot Password?',
-                style: TextStyle(
-                  color: _fgPw(isDark),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
-                )),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // Tombol MASUK
-        _buildLoginBtn(),
-      ]),
     );
   }
 
-  // ── Input field ──────────────────────────────────────────────────
-  Widget _field(bool isDark,
-      {required TextEditingController ctrl,
-      required String label,
-      required String hint,
-      required IconData icon,
-      bool isPass = false}) {
-    return TextField(
-      controller: ctrl,
-      obscureText: isPass ? _obscure : false,
+  // ── Helpers field ─────────────────────────────────────────────────
+  Widget _fieldLabel(bool isDark, String text) {
+    return Text(
+      text,
       style: TextStyle(
-          color: _fieldTxt(isDark), fontSize: 14, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: _inputBg(isDark),
-        labelText: label,
-        hintText: hint,
-        hintStyle: TextStyle(color: _labelCol(isDark), fontSize: 13),
-        labelStyle: TextStyle(
-            color: _labelCol(isDark), fontSize: 13, fontWeight: FontWeight.w500),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Icon(icon, color: _iconCol(isDark), size: 22),
-        ),
-        suffixIcon: isPass
-            ? IconButton(
-                icon: Icon(
-                  _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: _iconCol(isDark), size: 20,
-                ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              )
-            : null,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: _inputBdr(isDark), width: 1.2),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: _C.red1, width: 2.0),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 17, horizontal: 16),
+        color: isDark ? Colors.white : textDark,
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
 
-  // ── Tombol MASUK ─────────────────────────────────────────────────
-  Widget _buildLoginBtn() {
+  InputDecoration _baseDecoration(bool isDark, String hint, IconData icon,
+      {Widget? suffixIcon}) {
+    final fill = isDark
+        ? Colors.white.withOpacity(0.06)
+        : const Color(0xFFF4F6FB);
+    final border = isDark
+        ? Colors.white.withOpacity(0.12)
+        : const Color(0xFFDDE3EF);
+
+    return InputDecoration(
+      filled: true,
+      fillColor: fill,
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: isDark ? Colors.white30 : const Color(0xFFB0B8C8),
+        fontSize: 13,
+      ),
+      prefixIcon: Icon(icon,
+          color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+          size: 18),
+      suffixIcon: suffixIcon,
+      isDense: true,
+      contentPadding:
+          const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: BorderSide(color: border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: const BorderSide(color: mainRed, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: const BorderSide(color: mainRed),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: const BorderSide(color: mainRed),
+      ),
+    );
+  }
+
+  Widget _buildInput(bool isDark,
+      {required TextEditingController ctrl,
+      required String hint,
+      required IconData icon,
+      TextInputType inputType = TextInputType.text}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: inputType,
+      style: TextStyle(
+          color: isDark ? Colors.white : textDark,
+          fontSize: 13,
+          fontWeight: FontWeight.w500),
+      decoration: _baseDecoration(isDark, hint, icon),
+    );
+  }
+
+  Widget _buildPasswordInput(bool isDark) {
+    return TextField(
+      controller: _passCtrl,
+      obscureText: _obscure,
+      style: TextStyle(
+          color: isDark ? Colors.white : textDark,
+          fontSize: 13,
+          fontWeight: FontWeight.w500),
+      decoration: _baseDecoration(
+        isDark,
+        'Masukkan password',
+        Icons.lock_outline_rounded,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+            size: 18,
+          ),
+          onPressed: () => setState(() => _obscure = !_obscure),
+        ),
+      ),
+    );
+  }
+
+  // ── Tombol MASUK — teal gradient ──────────────────────────────────
+  Widget _buildLoginButton() {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 48,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(radiusMd),
         gradient: const LinearGradient(
-          colors: [_C.red1, _C.red2, _C.red3],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [teal1, teal2],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-              color: _C.red2.withOpacity(0.42),
-              blurRadius: 18,
-              offset: const Offset(0, 8)),
+            color: teal1.withOpacity(0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: ElevatedButton(
@@ -386,98 +457,57 @@ class _LoginPageState extends State<LoginPage>
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radiusMd)),
         ),
         child: _loading
             ? const SizedBox(
-                width: 22, height: 22,
+                width: 20, height: 20,
                 child: CircularProgressIndicator(
                     color: Colors.white, strokeWidth: 2.5))
-            : Text('MASUK',
-                style: GoogleFonts.oswald(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  letterSpacing: 2.5,
-                )),
-      ),
-    );
-  }
-
-  // ── Divider ATAU ─────────────────────────────────────────────────
-  Widget _buildDivider() {
-    return Row(children: [
-      Expanded(child: Divider(color: Colors.white.withOpacity(0.25), thickness: 1)),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Text('ATAU',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.45),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.5,
-            )),
-      ),
-      Expanded(child: Divider(color: Colors.white.withOpacity(0.25), thickness: 1)),
-    ]);
-  }
-
-  // ── Tombol Google ────────────────────────────────────────────────
-  Widget _buildGoogleBtn() {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: () {/* TODO: Google Sign-In */},
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.white.withOpacity(0.28), width: 1.2),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: Colors.white.withOpacity(0.07),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Google "G" icon painted natively
-            CustomPaint(size: const Size(22, 22), painter: _GoogleIconPainter()),
-            const SizedBox(width: 12),
-            const Text('Lanjutkan dengan Google',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14)),
-          ],
-        ),
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('MASUK',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5)),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
+              ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────
-//  SPEKTA LOGO — CustomPainter (garuda + ring + text)
+//  LOGO SPEKTA — CustomPainter
+//  Menggambar logo lingkaran merah dengan gedung + tulisan SPEKTA
 // ─────────────────────────────────────────────────────────────────────
-class _SpektaLogo extends StatelessWidget {
+class _SpektaLogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 116, height: 116,
+      width: 64,
+      height: 64,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: _C.gold, width: 3.5),
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
         boxShadow: [
           BoxShadow(
-              color: _C.red1.withOpacity(0.55),
-              blurRadius: 32, spreadRadius: 4,
-              offset: const Offset(0, 8)),
-          BoxShadow(
-              color: _C.gold.withOpacity(0.28),
-              blurRadius: 20, spreadRadius: 0),
+            color: Colors.black.withOpacity(0.22),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: ClipOval(
         child: CustomPaint(
-          size: const Size(116, 116),
+          size: const Size(64, 64),
           painter: _SpektaLogoPainter(),
         ),
       ),
@@ -492,334 +522,183 @@ class _SpektaLogoPainter extends CustomPainter {
     final cy = size.height / 2;
     final r  = size.width / 2;
 
-    // ── Background merah ─────────────────────────────────────────
+    // ── Background: merah ke merah gelap ──────────────────────────
+    final bgPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.3, -0.3),
+        radius: 1.0,
+        colors: [Color(0xFFE53935), Color(0xFF7B0000)],
+      ).createShader(Rect.fromCircle(
+          center: Offset(cx, cy), radius: r));
+    canvas.drawCircle(Offset(cx, cy), r, bgPaint);
+
+    // ── Ring dalam putih transparan ───────────────────────────────
     canvas.drawCircle(
-      Offset(cx, cy), r,
-      Paint()..color = _C.red2,
+      Offset(cx, cy), r - 3,
+      Paint()
+        ..color = Colors.white.withOpacity(0.18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
     );
 
-    // ── Ring putih dalam ────────────────────────────────────────
-    canvas.drawCircle(Offset(cx, cy), r - 4,
-        Paint()..color = Colors.white.withOpacity(0.35)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0);
-    canvas.drawCircle(Offset(cx, cy), r - 9,
-        Paint()..color = Colors.white.withOpacity(0.20)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.7);
-
-    final white  = Paint()..color = Colors.white;
-    final wFill  = Paint()..color = Colors.white..style = PaintingStyle.fill;
-    final gold   = Paint()..color = _C.gold;
-    final redFill= Paint()..color = _C.red2;
-
-    // ── SAYAP KIRI ───────────────────────────────────────────────
-    final leftWing = Path()
-      ..moveTo(cx, cy - 10)
-      ..cubicTo(cx - 12, cy - 20, cx - 30, cy - 18, cx - 38, cy - 8)
-      ..cubicTo(cx - 28, cy - 14, cx - 18, cy - 10, cx - 8, cy - 2)
-      ..close();
-    canvas.drawPath(leftWing, wFill);
-
-    final leftWing2 = Path()
-      ..moveTo(cx, cy - 10)
-      ..cubicTo(cx - 10, cy - 24, cx - 26, cy - 26, cx - 38, cy - 18)
-      ..cubicTo(cx - 28, cy - 18, cx - 18, cy - 14, cx - 6, cy - 4)
-      ..close();
-    canvas.drawPath(leftWing2,
-        Paint()..color = Colors.white.withOpacity(0.75));
-
-    // ── SAYAP KANAN ──────────────────────────────────────────────
-    final rightWing = Path()
-      ..moveTo(cx, cy - 10)
-      ..cubicTo(cx + 12, cy - 20, cx + 30, cy - 18, cx + 38, cy - 8)
-      ..cubicTo(cx + 28, cy - 14, cx + 18, cy - 10, cx + 8, cy - 2)
-      ..close();
-    canvas.drawPath(rightWing, wFill);
-
-    final rightWing2 = Path()
-      ..moveTo(cx, cy - 10)
-      ..cubicTo(cx + 10, cy - 24, cx + 26, cy - 26, cx + 38, cy - 18)
-      ..cubicTo(cx + 28, cy - 18, cx + 18, cy - 14, cx + 6, cy - 4)
-      ..close();
-    canvas.drawPath(rightWing2,
-        Paint()..color = Colors.white.withOpacity(0.75));
-
-    // ── BADAN ────────────────────────────────────────────────────
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy + 4), width: 18, height: 26),
-      wFill,
-    );
-
-    // ── KEPALA ───────────────────────────────────────────────────
-    canvas.drawCircle(Offset(cx, cy - 14), 12, wFill);
-
-    // ── PARUH ────────────────────────────────────────────────────
-    final beak = Path()
-      ..moveTo(cx, cy - 8)
-      ..lineTo(cx + 9, cy - 4)
-      ..lineTo(cx, cy - 2)
-      ..close();
-    canvas.drawPath(beak, gold);
-
-    // ── MATA ─────────────────────────────────────────────────────
-    canvas.drawCircle(Offset(cx + 4, cy - 16), 2.8, redFill);
-    canvas.drawCircle(Offset(cx + 4, cy - 16), 1.4,
-        Paint()..color = const Color(0xFF1A0003));
-
-    // ── EKOR ─────────────────────────────────────────────────────
-    final tail = Path()
-      ..moveTo(cx - 10, cy + 16)
-      ..quadraticBezierTo(cx - 12, cy + 30, cx - 6, cy + 34)
-      ..quadraticBezierTo(cx - 2, cy + 30, cx, cy + 20)
-      ..close();
-    canvas.drawPath(tail, wFill);
-
-    final tail2 = Path()
-      ..moveTo(cx, cy + 20)
-      ..quadraticBezierTo(cx + 2, cy + 30, cx + 6, cy + 34)
-      ..quadraticBezierTo(cx + 12, cy + 30, cx + 10, cy + 16)
-      ..close();
-    canvas.drawPath(tail2, wFill);
-
-    // Bulu ekor tengah
-    canvas.drawLine(Offset(cx, cy + 18), Offset(cx, cy + 36),
-        Paint()..color = Colors.white..strokeWidth = 3..strokeCap = StrokeCap.round);
-
-    // ── CAKAR ────────────────────────────────────────────────────
-    final clawL = Path()
-      ..moveTo(cx - 8, cy + 17)
-      ..cubicTo(cx - 16, cy + 22, cx - 18, cy + 28, cx - 14, cy + 30)
-      ..lineTo(cx - 8, cy + 22)
-      ..close();
-    canvas.drawPath(clawL, wFill);
-
-    final clawR = Path()
-      ..moveTo(cx + 8, cy + 17)
-      ..cubicTo(cx + 16, cy + 22, cx + 18, cy + 28, cx + 14, cy + 30)
-      ..lineTo(cx + 8, cy + 22)
-      ..close();
-    canvas.drawPath(clawR, wFill);
-
-    // ── PERISAI dada ────────────────────────────────────────────
-    final shield = Path()
-      ..moveTo(cx - 7, cy - 2)
-      ..lineTo(cx, cy - 6)
-      ..lineTo(cx + 7, cy - 2)
-      ..lineTo(cx + 7, cy + 10)
-      ..lineTo(cx, cy + 14)
-      ..lineTo(cx - 7, cy + 10)
-      ..close();
-    canvas.drawPath(shield, redFill);
-    canvas.drawPath(shield, Paint()
+    final whiteFill = Paint()
       ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2);
+      ..style = PaintingStyle.fill;
+    final goldPaint = Paint()..color = const Color(0xFFFDD835);
 
-    // ── BINTANG kiri-kanan ──────────────────────────────────────
-    _drawStar(canvas, Offset(cx - 36, cy + 2), 5.5, gold);
-    _drawStar(canvas, Offset(cx + 36, cy + 2), 5.5, gold);
+    // ──────────────────────────────────────────────────────────────
+    // GEDUNG UTAMA (bangunan tengah tinggi)
+    // ──────────────────────────────────────────────────────────────
+    final bx = cx; 
+    final baseY = cy + r * 0.38; 
 
-    // ── TEKS "SPEKTA" di atas ───────────────────────────────────
-    _drawArcText(canvas, size, 'S P E K T A', r - 12, -math.pi * 0.68,
-        isTop: true);
+    // Badan gedung utama
+    final mainBuilding = RRect.fromRectAndRadius(
+      Rect.fromLTWH(bx - 10, baseY - 26, 20, 26),
+      const Radius.circular(1.5),
+    );
+    canvas.drawRRect(mainBuilding, whiteFill);
 
-    // ── TEKS "ACADEMY" di bawah ─────────────────────────────────
-    _drawArcText(canvas, size, 'A C A D E M Y', r - 12, math.pi * 0.55,
-        isTop: false);
-  }
+    // Atap segitiga gedung utama
+    final roofMain = Path()
+      ..moveTo(bx - 13, baseY - 26)
+      ..lineTo(bx, baseY - 36)
+      ..lineTo(bx + 13, baseY - 26)
+      ..close();
+    canvas.drawPath(roofMain, whiteFill);
 
-  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
-    final path = Path();
-    for (int i = 0; i < 5; i++) {
-      final outerAngle = (i * 4 * math.pi / 5) - math.pi / 2;
-      final innerAngle = outerAngle + (2 * math.pi / 10);
-      final outer = Offset(
-        center.dx + size * math.cos(outerAngle),
-        center.dy + size * math.sin(outerAngle),
-      );
-      final inner = Offset(
-        center.dx + (size * 0.4) * math.cos(innerAngle),
-        center.dy + (size * 0.4) * math.sin(innerAngle),
-      );
-      if (i == 0) {
-        path.moveTo(outer.dx, outer.dy);
-      } else {
-        path.lineTo(outer.dx, outer.dy);
+    // Pintu tengah gedung
+    final door = RRect.fromRectAndRadius(
+      Rect.fromLTWH(bx - 3.5, baseY - 10, 7, 10),
+      const Radius.circular(3.5),
+    );
+    canvas.drawRRect(
+        door,
+        Paint()
+          ..color = const Color(0xFF7B0000)
+          ..style = PaintingStyle.fill);
+
+    // Jendela gedung utama (2 baris x 2 kolom)
+    final winPaint = Paint()
+      ..color = const Color(0xFF7B0000)
+      ..style = PaintingStyle.fill;
+    for (int row = 0; row < 2; row++) {
+      for (int col = 0; col < 2; col++) {
+        final wx = bx - 7 + col * 9.0;
+        final wy = baseY - 24 + row * 8.0;
+        canvas.drawRect(Rect.fromLTWH(wx, wy, 5, 5), winPaint);
       }
-      path.lineTo(inner.dx, inner.dy);
     }
-    path.close();
-    canvas.drawPath(path, paint);
+
+    // ── Gedung sayap kiri ─────────────────────────────────────────
+    final leftWing = RRect.fromRectAndRadius(
+      Rect.fromLTWH(bx - 22, baseY - 18, 13, 18),
+      const Radius.circular(1),
+    );
+    canvas.drawRRect(leftWing, whiteFill);
+
+    // Atap sayap kiri
+    final roofLeft = Path()
+      ..moveTo(bx - 24, baseY - 18)
+      ..lineTo(bx - 15.5, baseY - 25)
+      ..lineTo(bx - 9, baseY - 18)
+      ..close();
+    canvas.drawPath(roofLeft, whiteFill);
+
+    // Jendela sayap kiri
+    for (int row = 0; row < 2; row++) {
+      canvas.drawRect(
+          Rect.fromLTWH(bx - 20, baseY - 16 + row * 7.0, 4, 5), winPaint);
+      canvas.drawRect(
+          Rect.fromLTWH(bx - 14, baseY - 16 + row * 7.0, 4, 5), winPaint);
+    }
+
+    // ── Gedung sayap kanan ────────────────────────────────────────
+    final rightWing = RRect.fromRectAndRadius(
+      Rect.fromLTWH(bx + 9, baseY - 18, 13, 18),
+      const Radius.circular(1),
+    );
+    canvas.drawRRect(rightWing, whiteFill);
+
+    // Atap sayap kanan
+    final roofRight = Path()
+      ..moveTo(bx + 9, baseY - 18)
+      ..lineTo(bx + 15.5, baseY - 25)
+      ..lineTo(bx + 24, baseY - 18)
+      ..close();
+    canvas.drawPath(roofRight, whiteFill);
+
+    // Jendela sayap kanan
+    for (int row = 0; row < 2; row++) {
+      canvas.drawRect(
+          Rect.fromLTWH(bx + 10, baseY - 16 + row * 7.0, 4, 5), winPaint);
+      canvas.drawRect(
+          Rect.fromLTWH(bx + 16, baseY - 16 + row * 7.0, 4, 5), winPaint);
+    }
+
+    // ── Tiang bendera di atas atap ────────────────────────────────
+    canvas.drawLine(
+      Offset(bx, baseY - 36),
+      Offset(bx, baseY - 46),
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
+    );
+    // Bendera
+    final flag = Path()
+      ..moveTo(bx, baseY - 46)
+      ..lineTo(bx + 7, baseY - 43)
+      ..lineTo(bx, baseY - 40)
+      ..close();
+    canvas.drawPath(flag, goldPaint);
+
+    // ── Garis tanah ───────────────────────────────────────────────
+    canvas.drawLine(
+      Offset(cx - r * 0.62, baseY),
+      Offset(cx + r * 0.62, baseY),
+      Paint()
+        ..color = Colors.white.withOpacity(0.6)
+        ..strokeWidth = 1.2,
+    );
+
+    // ── Tulisan "SPEKTA" melengkung di bawah ──────────────────────
+    _drawArcText(canvas, size, 'SPEKTA', r - 8, math.pi * 0.3);
   }
 
-  void _drawArcText(Canvas canvas, Size size, String text, double radius,
-      double startAngle,
-      {required bool isTop}) {
+  void _drawArcText(
+      Canvas canvas, Size size, String text, double radius, double startAngle) {
     final cx = size.width / 2;
     final cy = size.height / 2;
-
     final tp = TextPainter(textDirection: TextDirection.ltr);
     final charCount = text.length;
-    // arc span berdasarkan panjang teks
-    final totalAngle = (charCount * 0.095).clamp(0.0, math.pi * 0.9);
-    final angleStep  = totalAngle / (charCount - 1);
+    const angleStep = 0.26; 
+    final totalAngle = angleStep * (charCount - 1);
+    final angleStart = math.pi / 2 + startAngle - totalAngle / 2;
 
     for (int i = 0; i < charCount; i++) {
-      final angle = startAngle + (i - (charCount - 1) / 2) * angleStep;
-
+      final angle = angleStart + i * angleStep;
       tp.text = TextSpan(
         text: text[i],
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 8,
+          fontSize: 7.5,
           fontWeight: FontWeight.w900,
           letterSpacing: 0,
         ),
       );
       tp.layout();
-
       canvas.save();
       canvas.translate(
         cx + radius * math.cos(angle),
         cy + radius * math.sin(angle),
       );
-      // rotasi karakter ikut kurva
-      canvas.rotate(angle + (isTop ? -math.pi / 2 : math.pi / 2));
+      canvas.save();
+      canvas.rotate(angle + math.pi / 2);
       canvas.translate(-tp.width / 2, -tp.height / 2);
       tp.paint(canvas, Offset.zero);
       canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-//  GOOGLE ICON — CustomPainter (4 warna asli Google)
-// ─────────────────────────────────────────────────────────────────────
-class _GoogleIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size s) {
-    final cx = s.width / 2;
-    final cy = s.height / 2;
-    final r  = s.width / 2 - 1;
-
-    // Clip circle
-    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)));
-
-    // Blue (top-right)
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        -math.pi / 4, math.pi, false,
-        Paint()..color = const Color(0xFF4285F4)..style = PaintingStyle.fill);
-
-    // Green (bottom-right)
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        math.pi * 3 / 4, math.pi / 2, false,
-        Paint()..color = const Color(0xFF34A853)..style = PaintingStyle.fill);
-
-    // Yellow (bottom-left)
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        math.pi * 5 / 4, math.pi / 2, false,
-        Paint()..color = const Color(0xFFFBBC05)..style = PaintingStyle.fill);
-
-    // Red (top-left)
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        math.pi * 7 / 4, math.pi / 2, false,
-        Paint()..color = const Color(0xFFEA4335)..style = PaintingStyle.fill);
-
-    // White center + G bar
-    canvas.drawCircle(Offset(cx, cy), r * 0.6,
-        Paint()..color = Colors.white);
-    canvas.drawRect(
-      Rect.fromLTWH(cx, cy - r * 0.18, r * 0.75, r * 0.36),
-      Paint()..color = const Color(0xFF4285F4),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-//  THEME TOGGLE BUTTON
-// ─────────────────────────────────────────────────────────────────────
-class _ThemeToggle extends StatelessWidget {
-  final bool isDark;
-  final ThemeController theme;
-  const _ThemeToggle({required this.isDark, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: GestureDetector(
-        onTap: theme.toggleTheme,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(isDark ? 0.10 : 0.18),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.22)),
-          ),
-          child: Icon(
-            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-//  BACKGROUND DECORATION
-// ─────────────────────────────────────────────────────────────────────
-class _BgDecor extends StatelessWidget {
-  const _BgDecor();
-
-  @override
-  Widget build(BuildContext context) =>
-      CustomPaint(painter: _BgDecorPainter(), child: const SizedBox.expand());
-}
-
-class _BgDecorPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final ring = Paint()
-      ..color = Colors.white.withOpacity(0.045)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    canvas.drawCircle(Offset(-size.width * 0.18, size.height * 0.04),
-        size.width * 0.58, ring);
-    canvas.drawCircle(Offset(size.width * 1.18, size.height * 0.88),
-        size.width * 0.46, ring);
-    canvas.drawCircle(Offset(size.width * 0.90, size.height * 0.40),
-        size.width * 0.18, ring);
-
-    final dot = Paint()
-      ..color = Colors.white.withOpacity(0.07)
-      ..style = PaintingStyle.fill;
-    for (int r = 0; r < 5; r++) {
-      for (int c = 0; c < 4; c++) {
-        canvas.drawCircle(
-          Offset(size.width * 0.70 + c * 20.0, size.height * 0.10 + r * 20.0),
-          2.2, dot,
-        );
-      }
-    }
-
-    final line = Paint()
-      ..color = Colors.white.withOpacity(0.04)
-      ..strokeWidth = 0.8;
-    for (int i = 0; i < 5; i++) {
-      final x = size.width * 0.04 + i * 24.0;
-      canvas.drawLine(
-        Offset(x, size.height * 0.62), Offset(x + 32, size.height * 0.82), line);
+      canvas.restore();
     }
   }
 
