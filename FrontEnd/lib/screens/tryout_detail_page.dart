@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http; // ✅ Tambahan Import HTTP
+import 'package:http/http.dart' as http; 
 import '../services/auth_service.dart';
 import 'quiz_page.dart';
 import 'explanation_page.dart';
@@ -236,7 +236,6 @@ class TryoutDetailPage extends StatelessWidget {
                           ),
                         );
 
-                        // ✅ DENGAN KODE DEBUGGER LENGKAP
                         try {
                           String urlAPI = 'http://10.0.2.2:9002/api/tryouts/submissions?tryout_id=$id';
                           debugPrint("🔍 [DEBUG-1] Menembak API: $urlAPI");
@@ -296,9 +295,21 @@ class TryoutDetailPage extends StatelessWidget {
                             }
                           } else {
                             debugPrint("❌ [DEBUG-ERROR] API Gagal. Status: ${subRes.statusCode}");
+                            // BARU: Penanganan Error Server saat mengambil Submission
+                            if (context.mounted) {
+                               Navigator.pop(context); // Tutup dialog loading
+                               _showError(context, "Mohon maaf sistem sedang sibuk");
+                            }
+                            return;
                           }
                         } catch (e) {
                           debugPrint("❌ [DEBUG-FATAL] Terjadi Error Code: $e");
+                          // BARU: Penanganan Error Koneksi saat mengambil Submission
+                          if (context.mounted) {
+                             Navigator.pop(context); // Tutup dialog loading
+                             _showError(context, "Mohon maaf sistem sedang sibuk");
+                          }
+                          return;
                         }
 
                         if (!context.mounted) return;
@@ -325,12 +336,14 @@ class TryoutDetailPage extends StatelessWidget {
                         );
                       }
                     } else {
-                      _showError(context, "Gagal mengambil soal (Status: ${resp.statusCode})");
+                      // BARU: Penanganan Error Server 500 saat Fetch Questions
+                      _showError(context, "Mohon maaf sistem sedang sibuk");
                     }
                   } catch (e) {
-                    if (context.mounted) Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context); // Tutup loading
                     debugPrint("❌ Tryout Error: $e");
-                    _showError(context, "Kesalahan koneksi ke server Tryout.");
+                    // BARU: Penanganan Error Koneksi Terputus / Timeout saat klik Mulai Ujian
+                    _showError(context, "Mohon maaf sistem sedang sibuk");
                   }
                 },
                 child: Row(

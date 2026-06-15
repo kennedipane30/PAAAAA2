@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage>
     final isDark = theme.isDark;
 
     return Scaffold(
-      extendBody: true, // Allow content to flow under the bottom nav
+      extendBody: true,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -135,17 +135,7 @@ class _LoginPageState extends State<LoginPage>
             ),
           ),
 
-          // 2. Atmospheric Grid Overlay
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.2,
-              child: CustomPaint(
-                painter: _GridPainter(),
-              ),
-            ),
-          ),
-
-          // 3. Main Content
+          // 2. Main Content (Grid painter removed)
           SafeArea(
             bottom: false,
             child: FadeTransition(
@@ -190,7 +180,7 @@ class _LoginPageState extends State<LoginPage>
                             _buildLoginCard(isDark),
                             const SizedBox(height: 24),
                             _buildFooterLinks(),
-                            const SizedBox(height: 100), // Space for bottom nav
+                            const SizedBox(height: 50),
                           ],
                         ),
                       ),
@@ -199,12 +189,6 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
             ),
-          ),
-
-          // 4. Bottom Navigation Shell
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildBottomNav(),
           ),
         ],
       ),
@@ -345,80 +329,6 @@ class _LoginPageState extends State<LoginPage>
               const SizedBox(height: 32),
               _buildActionBtn(),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Bottom Navigation Shell ───────────────────────────────────────
-  Widget _buildBottomNav() {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(0.1)),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Active Tab (Sign In)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: primaryContainer,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.login_rounded, color: Colors.white, size: 24),
-                      SizedBox(height: 2),
-                      Text('Sign In',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                // Inactive Tab (Join)
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterPage()),
-                  ),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                    color: Colors.transparent,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.person_add_outlined,
-                            color: Colors.white.withOpacity(0.7), size: 24),
-                        const SizedBox(height: 2),
-                        Text('Join',
-                            style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -599,31 +509,4 @@ class _LoginPageState extends State<LoginPage>
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-//  GRID PAINTER
-//  Menggambar garis pattern kotak-kotak transparan di belakang (Atmospheric overlay)
-// ─────────────────────────────────────────────────────────────────────
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 1.0;
-
-    const double step = 40.0;
-
-    // Gambar garis vertikal
-    for (double i = 0; i < size.width; i += step) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-    // Gambar garis horizontal
-    for (double j = 0; j < size.height; j += step) {
-      canvas.drawLine(Offset(0, j), Offset(size.width, j), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
