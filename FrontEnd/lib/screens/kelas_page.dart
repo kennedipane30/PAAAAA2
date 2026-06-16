@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'class_detail_page.dart';
 import 'subject_list_page.dart';
 import '../services/auth_service.dart';
+import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
 
 class KelasPage extends StatefulWidget {
   final String token;
@@ -60,8 +61,9 @@ class _KelasPageState extends State<KelasPage> {
 
   Future<void> _refreshUserStatus() async {
     try {
+      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk menembak ke server AWS (Port 80 via Nginx)
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/user'),
+        Uri.parse('http://${AppConfig.host}/api/user'),
         headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
       );
       if (response.statusCode == 200) {
@@ -74,20 +76,19 @@ class _KelasPageState extends State<KelasPage> {
 
   Future<void> _fetchPrograms() async {
     try {
+      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk mengambil daftar program studi dari server AWS
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/classes'),
+        Uri.parse('http://${AppConfig.host}/api/classes'),
         headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) setState(() => programs = data['data'] ?? []);
       } else {
-        // BARU: Penanganan error saat server merespon 500 / Sibuk
         if (mounted) _showWarningSnack("Mohon maaf sistem sedang sibuk");
       }
     } catch (e) {
       debugPrint('CLASSES FETCH EXCEPTION: $e');
-      // BARU: Penanganan error saat koneksi terputus / Microservice mati total
       if (mounted) _showWarningSnack("Mohon maaf sistem sedang sibuk");
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -349,13 +350,11 @@ class _KelasPageState extends State<KelasPage> {
             return; 
           }
         } else {
-          // BARU: Penanganan error dari Microservice saat tap detail
           _showWarningSnack("Mohon maaf sistem sedang sibuk");
         }
       } catch (e) {
         if (mounted) Navigator.pop(context);
         debugPrint("Error Auto Navigate: $e");
-        // BARU: Penanganan error koneksi saat tap detail
         if (mounted) _showWarningSnack("Mohon maaf sistem sedang sibuk");
       }
     }

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../services/auth_service.dart';
+import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
 
 import 'fitur/about_academy_page.dart';
 import 'fitur/support_center_page.dart';
@@ -35,7 +36,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  // ✨ MODIFIKASI: Hubungkan baseUrl langsung ke host AppConfig (Port 80 via Nginx)
+  static const String baseUrl = 'http://${AppConfig.host}';
 
   static const Color primaryRed = Color(0xFFC5352C);
   static const Color brightRed = Color(0xFFE53935);
@@ -334,6 +336,7 @@ class _HomePageState extends State<HomePage> {
     if (path.isEmpty) return '';
     path = path.replaceAll('\\', '/');
 
+    // ✨ MODIFIKASI: Bersihkan replace string lama agar dinamis mendeteksi localhost dan menggantinya ke host AWS
     if (path.startsWith('http://127.0.0.1:8000')) return path.replaceFirst('http://127.0.0.1:8000', baseUrl);
     if (path.startsWith('http://localhost:8000')) return path.replaceFirst('http://localhost:8000', baseUrl);
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -672,7 +675,7 @@ class _HomePageState extends State<HomePage> {
 
     return Column(
       children: [
-        SizedBox(
+        Navigator.of(context).mounted ? SizedBox(
           height: 160, 
           child: PageView.builder(
             controller: _bannerController, 
@@ -735,7 +738,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-        ),
+        ) : const SizedBox.shrink(),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.center, 
@@ -794,7 +797,7 @@ class _HomePageState extends State<HomePage> {
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
-                  fontWeight: FontWeight.bold, 
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -907,7 +910,6 @@ class _HomePageState extends State<HomePage> {
         'bgColor': const Color(0xFFEFF4FF),
         'borderColor': const Color(0xFFD0E1FF),
         'iconColor': const Color(0xFF1D4ED8),
-        // ✅ PERUBAHAN: tambah userData
         'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token, userData: currentData ?? widget.userData)))
       },
     ];
@@ -940,12 +942,14 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.015),
+                  // Tips tambahan: ganti dengan .withValues jika ingin menghilangkan warning deprecated
+                  color: Colors.black.withValues(alpha: 0.015), 
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 )
               ],
             ),
+            // ✅ PERBAIKAN: Langsung gunakan satu Column seperti di bawah ini
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1108,7 +1112,7 @@ class _HomePageState extends State<HomePage> {
                   'Tidak ada jadwal terdekat', 
                   style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w900) 
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Jadwal belajar baru akan muncul di sini', 
                   style: TextStyle(color: textDarkVariant, fontSize: 11, fontWeight: FontWeight.bold) 
@@ -1308,7 +1312,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ✅ DIALOG BELUM TERDAFTAR
   void _showNotEnrolledDialog() {
     showDialog(
       context: context,

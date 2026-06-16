@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'midtrans_payment_page.dart';
 import '../../services/auth_service.dart';
+import '../../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
 
 class PaymentConfirmationPage extends StatefulWidget {
   final int classId;
@@ -61,8 +62,9 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
     setState(() => isChecking = true);
 
     try {
+      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk mengarahkan request promo ke server AWS
       final response = await http.post(
-        Uri.parse("http://10.0.2.2:8000/api/promo/check"),
+        Uri.parse("http://${AppConfig.host}/api/promo/check"),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Accept': 'application/json'

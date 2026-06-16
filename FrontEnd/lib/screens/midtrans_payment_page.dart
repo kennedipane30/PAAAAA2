@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
 
 class MidtransPaymentPage extends StatefulWidget {
   final String url;
@@ -96,8 +97,9 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
     });
 
     try {
+      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk menembak endpoint ke server AWS (Port 80 via Nginx)
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/payment/manual-success'),
+        Uri.parse('http://${AppConfig.host}/api/payment/manual-success'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Content-Type': 'application/json',

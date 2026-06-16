@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
 
 class ModuleWeekListPage extends StatelessWidget {
   final String subjectName;
@@ -31,7 +32,6 @@ class ModuleWeekListPage extends StatelessWidget {
     final Uri url = Uri.parse(pdfUrl);
     
     try {
-      // Cek apakah bisa dibuka
       if (await canLaunchUrl(url)) {
         await launchUrl(
           url,
@@ -138,16 +138,16 @@ class ModuleWeekListPage extends StatelessWidget {
                 if (isAvailable) {
                   String path = materialData['file_path'].toString();
                   
-                  // Buat URL lengkap untuk akses file
+                  // ✨ MODIFIKASI: Menggunakan AppConfig.host untuk menyusun URL PDF dari server AWS (Port 80 via Nginx)
                   String pdfUrl;
                   if (path.startsWith('http')) {
                     pdfUrl = path;
                   } else if (path.startsWith('/storage')) {
-                    pdfUrl = "http://10.0.2.2:8000$path";
+                    pdfUrl = "http://${AppConfig.host}$path";
                   } else if (path.startsWith('storage')) {
-                    pdfUrl = "http://10.0.2.2:8000/$path";
+                    pdfUrl = "http://${AppConfig.host}/$path";
                   } else {
-                    pdfUrl = "http://10.0.2.2:8000/storage/$path";
+                    pdfUrl = "http://${AppConfig.host}/storage/$path";
                   }
                   
                   // Tambahkan token jika diperlukan (opsional)
