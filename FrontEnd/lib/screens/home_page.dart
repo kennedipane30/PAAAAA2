@@ -1,6 +1,5 @@
-import 'dart:async';
 import 'dart:convert';
-
+import 'dart:async'; 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart'; 
@@ -16,7 +15,6 @@ import 'fitur/consultation_page.dart';
 import 'banner_detail_page.dart'; 
 import 'tryout_page.dart';
 
-// ✅ IMPORT HALAMAN BARU YANG DIBUTUHKAN
 import 'subject_list_page.dart';
 import 'practice_subject_list_page.dart';
 
@@ -354,11 +352,10 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
-  // ✅ 1. PERUBAHAN FUNGSI KLIK MATERI (LANGSUNG KE SUBJECT LIST PAGE)
   Future<void> _handleLearningMaterials() async {
     final student = currentData?['student'] ?? widget.userData['student'];
     if (student == null || student['class_id'] == null) {
-      _showWarning('Kamu belum terdaftar di kelas mana pun. Daftar kelas dulu ya!');
+      _showNotEnrolledDialog();
       return;
     }
 
@@ -371,16 +368,14 @@ class _HomePageState extends State<HomePage> {
     try {
       final classId = int.parse(student['class_id'].toString());
       
-      // ✅ Tambahkan .timeout agar loading tidak nyangkut selamanya
       final response = await AuthService.getClassContent(classId, widget.token).timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
-      Navigator.pop(context); // Tutup Loading
+      Navigator.pop(context);
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         
-        // Ekstrak List Materi dari JSON Response
         List listMateri = [];
         if (decoded is List) {
           listMateri = decoded;
@@ -388,7 +383,6 @@ class _HomePageState extends State<HomePage> {
           listMateri = decoded['materi'] ?? decoded['data'] ?? [];
         }
 
-        // Langsung lompat ke SubjectListPage
         Navigator.push(
           context, 
           MaterialPageRoute(
@@ -404,16 +398,15 @@ class _HomePageState extends State<HomePage> {
         _showWarning("Mohon maaf sistem sedang sibuk");
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context); // Tutup Loading
+      if (mounted) Navigator.pop(context);
       _showWarning("Mohon maaf sistem sedang sibuk");
     }
   }
 
-  // ✅ 2. FUNGSI BARU UNTUK FITUR LATIHAN SOAL
   Future<void> _handlePracticeQuestions() async {
     final student = currentData?['student'] ?? widget.userData['student'];
     if (student == null || student['class_id'] == null) {
-      _showWarning('Kamu belum terdaftar di kelas mana pun.');
+      _showNotEnrolledDialog();
       return;
     }
 
@@ -426,11 +419,10 @@ class _HomePageState extends State<HomePage> {
     try {
       final classId = int.parse(student['class_id'].toString());
       
-      // Mengambil data latihan soal (menggunakan endpoint getTryouts seperti pada kode lama)
       final response = await AuthService.getTryouts(widget.token, classId: classId).timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
-      Navigator.pop(context); // Tutup Loading
+      Navigator.pop(context);
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -441,7 +433,6 @@ class _HomePageState extends State<HomePage> {
           return;
         }
 
-        // Arahkan ke Halaman Daftar Latihan Soal
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -455,7 +446,7 @@ class _HomePageState extends State<HomePage> {
         _showWarning("Mohon maaf sistem sedang sibuk");
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context); // Tutup Loading
+      if (mounted) Navigator.pop(context);
       _showWarning("Mohon maaf sistem sedang sibuk");
     }
   }
@@ -876,7 +867,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ✅ 3. TAMBAH FITUR LATIHAN SOAL KE DALAM BENTO GRID
   Widget _buildBentoGrid() {
     final bentoItems = [
       {
@@ -888,11 +878,11 @@ class _HomePageState extends State<HomePage> {
         'action': () => _handleLearningMaterials()
       },
       {
-        'title': 'Latihan Soal', // FITUR BARU!
+        'title': 'Latihan Soal',
         'icon': Icons.quiz_rounded, 
-        'bgColor': const Color(0xFFFFF7ED), // Orange muda pastel
+        'bgColor': const Color(0xFFFFF7ED),
         'borderColor': const Color(0xFFFFEDD5),
-        'iconColor': const Color(0xFFEA580C), // Orange tegas
+        'iconColor': const Color(0xFFEA580C),
         'action': () => _handlePracticeQuestions()
       },
       {
@@ -917,7 +907,8 @@ class _HomePageState extends State<HomePage> {
         'bgColor': const Color(0xFFEFF4FF),
         'borderColor': const Color(0xFFD0E1FF),
         'iconColor': const Color(0xFF1D4ED8),
-        'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token)))
+        // ✅ PERUBAHAN: tambah userData
+        'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token, userData: currentData ?? widget.userData)))
       },
     ];
 
@@ -1314,6 +1305,68 @@ class _HomePageState extends State<HomePage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
         content: Text(message)
       )
+    );
+  }
+
+  // ✅ DIALOG BELUM TERDAFTAR
+  void _showNotEnrolledDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(28),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: accentTeal.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.lock_rounded, color: accentTeal, size: 52),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Akses Terkunci',
+              style: TextStyle(
+                color: textDark,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Maaf, Anda belum terdaftar di kelas mana pun. Silakan hubungi Admin Spekta untuk mendaftar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: textDarkVariant, fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentTeal,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'MENGERTI',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

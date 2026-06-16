@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import 'edit_profile_page.dart';
 import 'login_page.dart';
+import 'forgot_password_page.dart';
 
 class AkunPage extends StatefulWidget {
   final String token;
@@ -570,21 +571,18 @@ class _AkunPageState extends State<AkunPage> {
             },
           ),
           _line(),
-          _menuItem(
-            title: "Security",
-            subtitle: "Change password and security",
-            icon: Icons.lock_outline_rounded,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text("Fitur sedang dalam pengembangan"),
-                  backgroundColor: accentTeal,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              );
-            },
-          ),
+          // SESUDAH
+_menuItem(
+  title: "Security",
+  subtitle: "Change password and security",
+  icon: Icons.lock_outline_rounded,
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+    );
+  },
+),
         ],
       ),
     );
