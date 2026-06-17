@@ -37,7 +37,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // ✨ MODIFIKASI: Hubungkan baseUrl langsung ke host AppConfig (Port 80 via Nginx)
-  static const String baseUrl = 'http://${AppConfig.host}';
+  //static const String baseUrl = 'http://${AppConfig.host}';
+  static final String baseUrl = AppConfig.baseUrl.replaceAll('/api', '');
 
   static const Color primaryRed = Color(0xFFC5352C);
   static const Color brightRed = Color(0xFFE53935);
@@ -95,6 +96,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+/*
   Future<void> refreshAllData() async {
     _hasShownNetworkError = false; 
     await Future.wait([
@@ -104,6 +106,24 @@ class _HomePageState extends State<HomePage> {
       fetchSchedules(),
       fetchLearningReport(),
     ]);
+  }
+  */
+
+  Future<void> refreshAllData() async {
+    _hasShownNetworkError = false; 
+    
+    // Menggunakan try-catch pembungkus agar eksekusi paralel tidak crash di tengah jalan
+    try {
+      await Future.wait([
+        refreshUserData().catchError((e) => debugPrint('Error User Data: $e')),
+        fetchBanners().catchError((e) => debugPrint('Error Banners: $e')),
+        fetchTryouts().catchError((e) => debugPrint('Error Tryouts: $e')),
+        fetchSchedules().catchError((e) => debugPrint('Error Schedules: $e')),
+        fetchLearningReport().catchError((e) => debugPrint('Error Report: $e')),
+      ]);
+    } catch (e) {
+      debugPrint("Gagal memperbarui beberapa data: $e");
+    }
   }
 
   void _showGlobalNetworkError() {
@@ -128,6 +148,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /*
   Future<void> fetchLearningReport() async {
     try {
       setState(() => isLoadingReport = true);
@@ -194,6 +215,77 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() => isLoadingReport = false);
     }
   }
+  */
+
+  Future<void> fetchLearningReport() async {
+    try {
+      setState(() => isLoadingReport = true);
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/learning-report'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      ).timeout(const Duration(seconds: 5));
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List results = decoded['data'] ?? [];
+        
+        if (results.isNotEmpty) {
+          final latest = results.last;
+          final score = int.tryParse(latest['score']?.toString() ?? '0') ?? 0;
+          final maxSc = int.tryParse(latest['max_score']?.toString() ?? '1000') ?? 1000;
+          
+          double percent = maxSc > 0 ? (score / maxSc) : 0.0;
+          if (percent > 1.0) percent = 1.0;
+
+          String impText = "0% change";
+          bool isImp = true;
+
+          if (results.length > 1) {
+            final prev = results[results.length - 2];
+            final prevScore = int.tryParse(prev['score']?.toString() ?? '0') ?? 0;
+            final difference = score - prevScore;
+            
+            if (prevScore > 0) {
+              final percentageDiff = ((difference / prevScore) * 100).round();
+              if (percentageDiff >= 0) {
+                impText = "+$percentageDiff% improvement";
+                isImp = true;
+              } else {
+                impText = "$percentageDiff% decline";
+                isImp = false;
+              }
+            } else if (difference > 0) {
+              impText = "+$difference score points";
+              isImp = true;
+            }
+          } else {
+            impText = "First tryout completed";
+            isImp = true;
+          }
+
+          setState(() {
+            latestTryoutResult = latest;
+            currentScore = score;
+            maxScore = maxSc;
+            progressPercentage = percent;
+            improvementText = impText;
+            isImprovement = isImp;
+          });
+        }
+      } 
+    } catch (e) {
+      debugPrint('LEARNING REPORT CATCH ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingReport = false); // ✅ PASTI DIMATIKAN
+      }
+    }
+  }
 
   Future<void> fetchBanners() async {
     try {
@@ -245,6 +337,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /*
   Future<void> fetchSchedules() async {
     try {
       setState(() => isLoadingSchedule = true);
@@ -272,6 +365,44 @@ class _HomePageState extends State<HomePage> {
       debugPrint('SCHEDULE ERROR: $e');
     } finally {
       if (mounted) setState(() => isLoadingSchedule = false);
+    }
+  }
+  */
+
+  Future<void> fetchSchedules() async {
+    try {
+      setState(() => isLoadingSchedule = true);
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/schedules/today'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      ).timeout(const Duration(seconds: 5)); // ⏱️ Tambahkan timeout agar tidak menunggu selamanya
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        setState(() {
+          if (decoded['data'] != null && decoded['data'] is Map) {
+             scheduleData = decoded['data']['today'] ?? [];
+             upcomingData = decoded['data']['upcoming'] ?? [];
+          } else {
+             scheduleData = [];
+             upcomingData = [];
+          }
+        });
+      } else {
+        debugPrint('SCHEDULE SERVER ERROR: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('SCHEDULE CATCH ERROR: $e');
+      _showGlobalNetworkError(); // Tampilkan pesan ke user jika koneksi putus
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingSchedule = false); // ✅ PASTI DIMATIKAN di sini
+      }
     }
   }
 
@@ -870,6 +1001,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+/*
   Widget _buildBentoGrid() {
     final bentoItems = [
       {
@@ -969,6 +1101,125 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
+    );
+  }
+*/
+
+  Widget _buildBentoGrid() {
+    final bentoItems = [
+      {
+        'title': 'Materi', 
+        'icon': Icons.import_contacts, 
+        'bgColor': const Color(0xFFE2F9FC),
+        'borderColor': const Color(0xFFBFEFF5),
+        'iconColor': const Color(0xFF00696C),
+        'action': () => _handleLearningMaterials()
+      },
+      {
+        'title': 'Latihan Soal',
+        'icon': Icons.quiz_rounded, 
+        'bgColor': const Color(0xFFFFF7ED),
+        'borderColor': const Color(0xFFFFEDD5),
+        'iconColor': const Color(0xFFEA580C),
+        'action': () => _handlePracticeQuestions()
+      },
+      {
+        'title': 'Tryout', 
+        'icon': Icons.assignment, 
+        'bgColor': const Color(0xFFFFF1F1),
+        'borderColor': const Color(0xFFFCD3D1),
+        'iconColor': primaryRed,
+        'action': () => _handleTryout()
+      },
+      {
+        'title': 'Tutor', 
+        'icon': Icons.school, 
+        'bgColor': const Color(0xFFF8FAFC),
+        'borderColor': const Color(0xFFE2E8F0),
+        'iconColor': neutralGray,
+        'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => DedicatedTutorPage(token: widget.token, userData: widget.userData)))
+      },
+      {
+        'title': 'Bank Soal', 
+        'icon': Icons.menu_book, 
+        'bgColor': const Color(0xFFEFF4FF),
+        'borderColor': const Color(0xFFD0E1FF),
+        'iconColor': const Color(0xFF1D4ED8),
+        'action': () => Navigator.push(context, MaterialPageRoute(builder: (c) => QuestionSharingPage(token: widget.token, userData: currentData ?? widget.userData)))
+      },
+    ];
+
+    // Fungsi helper untuk membangun item bento secara konsisten
+    Widget buildCard(Map item) {
+      return Expanded(
+        child: InkWell(
+          onTap: item['action'] as VoidCallback,
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            height: 95, // Menentukan tinggi pasti agar seragam dan rapi
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: item['bgColor'] as Color,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: item['borderColor'] as Color),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.015), 
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(item['icon'] as IconData, color: item['iconColor'] as Color, size: 24),
+                const SizedBox(height: 8),
+                Text(
+                  item['title'] as String,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: textDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Mengganti GridView dengan susunan Row & Column manual yang jauh lebih stabil
+    return Column(
+      children: [
+        Row(
+          children: [
+            buildCard(bentoItems[0]),
+            const SizedBox(width: 14),
+            buildCard(bentoItems[1]),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            buildCard(bentoItems[2]),
+            const SizedBox(width: 14),
+            buildCard(bentoItems[3]),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            buildCard(bentoItems[4]),
+            const SizedBox(width: 14),
+            const Expanded(child: SizedBox.shrink()), // Spacer kosong agar seimbang di baris terakhir
+          ],
+        ),
+      ],
     );
   }
 

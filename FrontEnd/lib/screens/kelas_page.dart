@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:async'; // 🔥 Diperlukan untuk Timer Debouncing
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; 
 import 'class_detail_page.dart';
 import 'subject_list_page.dart';
 import '../services/auth_service.dart';
-import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
+import '../config/app_config.dart'; 
 
 class KelasPage extends StatefulWidget {
   final String token;
@@ -29,20 +30,26 @@ class _KelasPageState extends State<KelasPage> {
   // ============================================================
   // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
   // ============================================================
-  static const Color primaryRed      = Color(0xFFC5352C);
-  static const Color accentTeal      = Color(0xFF2EA8AB);
-  static const Color darkTeal        = Color(0xFF00696C);
-  static const Color lightBlueBg     = Color(0xFFEFF4FF);
-  static const Color pageBg          = Color(0xFFF1F5F9);
-  static const Color textDark        = Color(0xFF0F172A);
+  static const Color primaryRed       = Color(0xFFC5352C);
+  static const Color accentTeal       = Color(0xFF2EA8AB);
+  static const Color darkTeal         = Color(0xFF00696C);
+  static const Color lightBlueBg      = Color(0xFFEFF4FF);
+  static const Color pageBg           = Color(0xFFF1F5F9);
+  static const Color textDark         = Color(0xFF0F172A);
   static const Color textDarkVariant = Color(0xFF334155);
   static const Color neutralGray     = Color(0xFF64748B);
   static const Color outlineVariant  = Color(0xFFE2BEBA);
   static const Color spektaYellow    = Color(0xFFF5A623);
 
   List programs = [];
+  List filteredPrograms = []; // 🔥 Menyimpan hasil filter pencarian
   Map? currentData;
   bool isLoading = true;
+
+  // 🔥 Kontroler Debouncing Search
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce; 
+
   final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   @override
@@ -50,6 +57,13 @@ class _KelasPageState extends State<KelasPage> {
     super.initState();
     currentData = widget.userData;
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel(); // 🔥 Bersihkan timer untuk mencegah kebocoran memori
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -61,9 +75,9 @@ class _KelasPageState extends State<KelasPage> {
 
   Future<void> _refreshUserStatus() async {
     try {
-      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk menembak ke server AWS (Port 80 via Nginx)
+      // 🔥 PERBAIKAN: Menggunakan AppConfig.baseUrl agar port :8000 lokal terikat
       final response = await http.get(
-        Uri.parse('http://${AppConfig.host}/api/user'),
+        Uri.parse('${AppConfig.baseUrl}/user'),
         headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
       );
       if (response.statusCode == 200) {
@@ -76,14 +90,19 @@ class _KelasPageState extends State<KelasPage> {
 
   Future<void> _fetchPrograms() async {
     try {
-      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk mengambil daftar program studi dari server AWS
+      // 🔥 PERBAIKAN: Menggunakan AppConfig.baseUrl agar port :8000 lokal terikat
       final response = await http.get(
-        Uri.parse('http://${AppConfig.host}/api/classes'),
+        Uri.parse('${AppConfig.baseUrl}/classes'),
         headers: {'Authorization': 'Bearer ${widget.token}', 'Accept': 'application/json'},
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (mounted) setState(() => programs = data['data'] ?? []);
+        if (mounted) {
+          setState(() {
+            programs = data['data'] ?? [];
+            filteredPrograms = programs; // Default awal menampilkan semua data
+          });
+        }
       } else {
         if (mounted) _showWarningSnack("Mohon maaf sistem sedang sibuk");
       }
@@ -93,6 +112,26 @@ class _KelasPageState extends State<KelasPage> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  // 🔥 FUNGSI DEBOUNCING SEARCH (Hemat Resource API)
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Beri jeda 500ms setelah user berhenti mengetik sebelum memfilter
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.isEmpty) {
+        setState(() => filteredPrograms = programs);
+        return;
+      }
+
+      setState(() {
+        filteredPrograms = programs.where((program) {
+          final name = program['program_name'].toString().toLowerCase();
+          return name.contains(query.toLowerCase());
+        }).toList();
+      });
+    });
   }
 
   String _getProgramImage(dynamic id) {
@@ -131,8 +170,9 @@ class _KelasPageState extends State<KelasPage> {
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildProgramCard(context, programs[index]), 
-                      childCount: programs.length,
+                      // 🔥 Menggunakan filteredPrograms hasil pencarian debounced
+                      (context, index) => _buildProgramCard(context, filteredPrograms[index]), 
+                      childCount: filteredPrograms.length,
                     ),
                   ),
                 ),
@@ -202,9 +242,11 @@ class _KelasPageState extends State<KelasPage> {
           )
         ],
       ),
-      child: const TextField(
-        style: TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.bold),
-        decoration: InputDecoration(
+      child: TextField(
+        controller: _searchController, // 🔥 Controller pasang
+        onChanged: _onSearchChanged,   // 🔥 Trigger Debouncing
+        style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
           hintText: "Search program...",
           hintStyle: TextStyle(color: neutralGray, fontSize: 13, fontWeight: FontWeight.bold),
           prefixIcon: Icon(Icons.search_rounded, color: neutralGray, size: 20),
@@ -236,6 +278,9 @@ class _KelasPageState extends State<KelasPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ============================================================
+          // 🖼️ GAME OVERLAY IMAGE (BERSIH DARI TEKS TIMPAAN)
+          // ============================================================
           Stack(
             children: [
               ClipRRect(
@@ -247,23 +292,6 @@ class _KelasPageState extends State<KelasPage> {
                   fit: BoxFit.cover,
                 ),
               ),
-              if (isMyClass) 
-                Positioned(
-                  top: 15, 
-                  left: 15, 
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), 
-                    decoration: BoxDecoration(
-                      color: darkTeal,
-                      borderRadius: BorderRadius.circular(8),
-                    ), 
-                    child: const Row(
-                      children: [
-                        Text("PROGRAM ANDA ✅", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                      ],
-                    ),
-                  ),
-                ),
               Positioned(
                 top: 15, 
                 right: 15, 
@@ -288,13 +316,40 @@ class _KelasPageState extends State<KelasPage> {
               ),
             ],
           ),
+          
+          // ============================================================
+          // 📝 BAGIAN DESKRIPSI (DENGAN BADGE "PROGRAM ANDA" DI DALAMNYA)
+          // ============================================================
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("OFFICIAL ACADEMY PROGRAM", style: TextStyle(color: neutralGray, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
-                const SizedBox(height: 6),
+                // Baris Header Tag deskripsi
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // 🔥 Perbaikan Typo huruf Kapital S besar
+                  children: [
+                    const Text(
+                      "OFFICIAL ACADEMY PROGRAM", 
+                      style: TextStyle(color: neutralGray, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.1),
+                    ),
+                    // 🔥 Elemen dipindah ke sini demi kenyamanan UX siswa saat membaca
+                    if (isMyClass) 
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), 
+                        decoration: BoxDecoration(
+                          color: darkTeal.withOpacity(0.12), 
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: darkTeal, width: 1),
+                        ), 
+                        child: const Text(
+                          "PROGRAM ANDA  ✅", 
+                          style: TextStyle(color: darkTeal, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(item['program_name'], style: const TextStyle(color: textDark, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                 const SizedBox(height: 8),
                 Text(item['description'] ?? "...", maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: textDarkVariant, fontSize: 13, height: 1.4, fontWeight: FontWeight.w600)),

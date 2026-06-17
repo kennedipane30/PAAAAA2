@@ -35,7 +35,7 @@ class ModuleWeekListPage extends StatelessWidget {
       if (await canLaunchUrl(url)) {
         await launchUrl(
           url,
-          mode: LaunchMode.externalApplication, // Buka di browser eksternal
+          mode: LaunchMode.inAppWebView, // Buka di browser eksternal
           webViewConfiguration: const WebViewConfiguration(
             enableJavaScript: true,
             enableDomStorage: true,
@@ -134,6 +134,8 @@ class ModuleWeekListPage extends StatelessWidget {
                 style: TextStyle(color: isAvailable ? textDarkVariant : neutralGray),
               ),
               trailing: const Icon(Icons.open_in_browser, size: 16, color: neutralGray),
+              
+              /*
               onTap: () {
                 if (isAvailable) {
                   String path = materialData['file_path'].toString();
@@ -167,6 +169,54 @@ class ModuleWeekListPage extends StatelessWidget {
                   );
                 }
               },
+              */
+              onTap: () {
+                if (isAvailable) {
+                  String path = materialData['file_path'].toString().trim();
+                  
+                  // ✨ PERBAIKAN UTAMA: Bersihkan localhost lama dan paksa pakai base URL yang valid
+                  String pdfUrl;
+
+                  // Ambil base URL bersih (misal: http://10.0.2.2:8000 jika emulator, atau http://127.0.0.1:8000)
+                  // Kita bersihkan teks '/api' di ujung AppConfig.baseUrl
+                  final String cleanBaseUrl = AppConfig.baseUrl.replaceAll('/api', '');
+
+                  if (path.startsWith('http://127.0.0.1:8000') || path.startsWith('http://localhost:8000') || path.startsWith('http://10.0.2.2:8000')) {
+                    // Jika database menyimpan url localhost/emulator lama, ganti kepalanya dengan base URL yang seragam
+                    pdfUrl = path
+                        .replaceFirst('http://127.0.0.1:8000', cleanBaseUrl)
+                        .replaceFirst('http://localhost:8000', cleanBaseUrl)
+                        .replaceFirst('http://10.0.2.2:8000', cleanBaseUrl);
+                  } else if (path.startsWith('http')) {
+                    // Jika sudah berupa link server/hosting online (AWS/Nginx), gunakan langsung
+                    pdfUrl = path;
+                  } else {
+                    // Jika database hanya menyimpan path relatif (misal: 'storage/materi/xxx.pdf')
+                    if (path.startsWith('/storage/')) {
+                      pdfUrl = '$cleanBaseUrl$path';
+                    } else if (path.startsWith('storage/')) {
+                      pdfUrl = '$cleanBaseUrl/$path';
+                    } else if (path.startsWith('/')) {
+                      pdfUrl = '$cleanBaseUrl/storage$path';
+                    } else {
+                      pdfUrl = '$cleanBaseUrl/storage/$path';
+                    }
+                  }
+                  
+                  // Tambahkan token jika diperlukan
+                  if (token.isNotEmpty) {
+                    // Periksa apakah sudah ada query param '?' di dalam URL
+                    pdfUrl = pdfUrl.contains('?') ? "$pdfUrl&token=$token" : "$pdfUrl?token=$token";
+                  }
+
+                  debugPrint('📡 MEMBUKA PDF VIA URL: $pdfUrl'); // Memudahkan Anda memantau URL di terminal
+                  
+                  // Buka di Chrome/browser eksternal
+                  _openPdfInBrowser(pdfUrl, context);
+                } else {
+                  // ... snackbar materi belum tersedia ...
+                }
+              }
             ),
           );
         },

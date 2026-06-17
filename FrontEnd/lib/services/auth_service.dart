@@ -5,20 +5,26 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
+
 class AuthService {
   // ============================================================
-  // 🌐 CONFIGURATION (LINKED TO CENTRAL APPCONFIG)
+  // 🌐 CENTRALIZED CONFIGURATION (LINKED TO APPCONFIG)
   // ============================================================
-  static const String baseUrl            = AppConfig.baseUrl;
-  static const String storageBaseUrl     = AppConfig.storageUrl;
   
-  // Mengikuti pola host dari AppConfig untuk fallback download PDF
-  static const String alternativeBaseUrl = 'http://${AppConfig.host}/pdf-materi';
-  
-  // Endpoint Microservices yang sudah di-handle jalurnya oleh Nginx Reverse Proxy
-  static const String materiUrl          = AppConfig.materiUrl;
-  static const String tryoutUrl          = AppConfig.tryoutUrl;
-  static const String practiceUrl        = AppConfig.practiceUrl;
+  // 👉 Ambil murni dari konfigurasi pusat agar tidak terjadi tumpang tindih string
+  static const String baseUrl            = AppConfig.baseUrl;       // http://10.0.2.2:8000/api
+  static const String storageBaseUrl     = AppConfig.storageUrl;    // http://10.0.2.2:8000/storage
+  static const String alternativeBaseUrl = 'http://10.0.2.2:8000/pdf-materi';
+
+  // 👉 Kembalikan port asli Microservices untuk pengujian BYPASS LOKAL:
+  static const String materiUrl          = AppConfig.materiUrl;     // http://10.0.2.2:9001/api
+  static const String tryoutUrl          = AppConfig.tryoutUrl;     // http://10.0.2.2:9002/api
+  static const String practiceUrl        = AppConfig.practiceUrl;   // http://10.0.2.2:9003/api
+
+  // ============================================================
+  // 📥 DOWNLOAD & CACHE SERVICE (PDF)
+  // ============================================================
+  // 📥 DOWNLOAD & CACHE SERVICE (PDF)
 
   // ============================================================
   // 📥 DOWNLOAD & CACHE SERVICE (PDF)
@@ -167,15 +173,42 @@ class AuthService {
   }
 
   static Future<http.Response> forgotPassword(String email) async {
-    return await http.post(Uri.parse('$baseUrl/forgot-password'),
-        body: {'email': email.trim()});
+    return await http.post(
+      Uri.parse('$baseUrl/forgot-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'email': email.trim()}),
+    );
   }
 
   static Future<http.Response> resetPassword(Map<String, dynamic> data) async {
-    return await http.post(Uri.parse('$baseUrl/reset-password'),
-        body: data.map((key, value) => MapEntry(key, value.toString())));
+    return await http.post(
+      Uri.parse('$baseUrl/reset-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode(data), // 🔥 Ubah menjadi jsonEncode murni
+    );
   }
 
+  static Future<http.Response> validateResetOtp(String email, String otp) async {
+    return await http.post(
+      Uri.parse('$baseUrl/validate-reset-otp'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email.trim(),
+        'otp': otp.trim(),
+      }),
+    );
+  } 
+
+  // ✅ MODIFIKASI: Memanggil endpoint /profile dan mengambil nested user object
   static Future<Map<String, dynamic>?> getUserProfile(String token) async {
     final response = await http.get(Uri.parse('$baseUrl/profile'), headers: {
       'Authorization': 'Bearer $token',
@@ -187,6 +220,7 @@ class AuthService {
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
+      // ✅ LANGSUNG KEMBALIKAN DATA USER
       if (data['status'] == 'success' && data['user'] != null) {
         return data['user'];
       }
@@ -209,38 +243,69 @@ class AuthService {
   // 📚 CONTENT & TRYOUT METHODS (MICROSERVICES)
   // ============================================================
 
-  static Future<http.Response> getClassContent(
-      int classId, String token) async {
-    return await http.get(
-      Uri.parse('$materiUrl/materials?class_id=$classId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-    ).timeout(const Duration(seconds: 10),
-        onTimeout: () => http.Response('[]', 408));
+  // 1. Mengambil Materi (Port 9001)
+  static Future<http.Response> getClassContent(int classId, String token) async {
+    try {
+      // Kita pastikan format URL bersih dan tepat sasaran
+      final urlString = '${materiUrl.endsWith('/') ? materiUrl.substring(0, materiUrl.length - 1) : materiUrl}/materials?class_id=$classId';
+      debugPrint("📡 [TRY-CATCH MATERI] Menembak URL: $urlString");
+
+      final response = await http.get(
+        Uri.parse(urlString),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint("📡 [TRY-CATCH MATERI] Status Kode: ${response.statusCode}");
+      debugPrint("📡 [TRY-CATCH MATERI] Isi Respons: ${response.body}");
+      return response;
+    } catch (e, stacktrace) {
+      debugPrint("❌ [TRY-CATCH MATERI] Terjadi Eror: $e");
+      debugPrint("❌ [TRY-CATCH MATERI] Stacktrace: $stacktrace");
+      // Mengembalikan objek response kosong dengan status 500 agar interupsi catch terisolasi
+      return http.Response(jsonEncode({'status': 'error', 'message': e.toString()}), 500);
+    }
   }
 
+  // 2. Mengambil Latihan Soal Mingguan (Port 9003)
   static Future<http.Response> getTryouts(String token, {int? classId}) async {
-    String url = '$practiceUrl/tryouts';
-    if (classId != null) url += '?class_id=$classId';
-    return await http.get(
-      Uri.parse(url),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-    ).timeout(const Duration(seconds: 10),
-        onTimeout: () => http.Response('[]', 408));
+    try {
+      // 🔥 KOREKSI UTAMA: Mengubah akhiran dari '/tryouts' menjadi '/practices' agar tidak salah kamar ke modul Tryout
+      String urlString = '${practiceUrl.endsWith('/') ? practiceUrl.substring(0, practiceUrl.length - 1) : practiceUrl}/practices';
+      if (classId != null) urlString += '?class_id=$classId';
+      
+      debugPrint("📡 [TRY-CATCH LATIHAN] Menembak URL: $urlString");
+
+      final response = await http.get(
+        Uri.parse(urlString),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint("📡 [TRY-CATCH LATIHAN] Status Kode: ${response.statusCode}");
+      debugPrint("📡 [TRY-CATCH LATIHAN] Isi Respons: ${response.body}");
+      return response;
+    } catch (e, stacktrace) {
+      debugPrint("❌ [TRY-CATCH LATIHAN] Terjadi Eror: $e");
+      debugPrint("❌ [TRY-CATCH LATIHAN] Stacktrace: $stacktrace");
+      return http.Response(jsonEncode({'status': 'error', 'message': e.toString()}), 500);
+    }
   }
 
+  // (Fungsi submitPracticeAnswer dihapus dari sini karena dikerjakan secara lokal)
+
+  // 3. Mengambil Simulasi Tryout (Port 9002)
   static Future<http.Response> getSimulasi(String token,
       {int? classId, int? userId}) async {
     String url = '$tryoutUrl/tryouts';
     if (classId != null) url += '?class_id=$classId';
-    if (userId != null) url += '&user_id=$userId';
+    if (userId != null) url += '&user_id=$userId'; // ✨ Kirim userID
 
     return await http.get(Uri.parse(url), headers: {
       'Authorization': 'Bearer $token',
@@ -249,15 +314,18 @@ class AuthService {
     }).timeout(const Duration(seconds: 15));
   }
 
+  // Mengambil soal Tryout dari tryoutUrl (Port 9002)
   static Future<http.Response> getQuestions(int tryoutId, String token) async {
     return await http.get(Uri.parse('$tryoutUrl/tryouts/$tryoutId/questions'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
           'Content-Type': 'application/json'
-        }).timeout(const Duration(seconds: 10));
+        }).timeout(const Duration(
+        seconds: 10)); // Jangan return 408 di sini agar catch di UI berfungsi
   }
 
+  // Submit Hasil Tryout ke Port 9002
   static Future<http.Response> submitTryout({
     required int tryoutId,
     required int userId,
@@ -326,11 +394,11 @@ class AuthService {
     }
     return null;
   }
+// ============================================================
+// 💳 PAYMENT METHODS
+// ============================================================
 
-  // ============================================================
-  // 💳 PAYMENT METHODS
-  // ============================================================
-
+  /// Mendapatkan Snap Token dari Midtrans
   static Future<Map<String, dynamic>?> getSnapToken({
     required int classId,
     required String token,
@@ -367,6 +435,7 @@ class AuthService {
     }
   }
 
+  /// Manual update payment success (dipanggil setelah sukses bayar di WebView)
   static Future<bool> manualPaymentSuccess({
     required String orderId,
     required String token,

@@ -24,7 +24,8 @@
                     KODE VERIFIKASI (OTP)
                 </span>
                 <h1 style="letter-spacing: 8px; color: #0f172a; font-size: 42px; font-weight: 800; margin: 0; padding-left: 8px;">
-                    {{ $otp }}
+                    <?php echo e($otp); ?>
+
                 </h1>
             </div>
 
@@ -48,3 +49,4 @@
     </div>
 </body>
 </html>
+<?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/emails/otp.blade.php ENDPATH**/ ?>
