@@ -94,6 +94,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('announcement', AnnouncementController::class);
     Route::get('/penugasan-materi', [TeacherAssignmentController::class, 'index'])->name('assignments.index');
     Route::post('/penugasan-materi', [TeacherAssignmentController::class, 'store'])->name('assignments.store');
+        Route::get('/penugasan-materi/{id}/edit', [TeacherAssignmentController::class, 'edit'])->name('assignments.edit');  // ✨ TAMBAHKAN
+    Route::put('/penugasan-materi/{id}', [TeacherAssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('/penugasan-materi/{id}', [TeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
 
     // ✅ ROUTE AJAX UNTUK DROP DOWN (PENTING)
