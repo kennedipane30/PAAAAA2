@@ -44,7 +44,6 @@ func main() {
 	handler := http.NewPracticeHandler(uc)
 
 	// Initialize Gin
-	// Initialize Gin
     r := gin.Default()
     r.Use(CORSMiddleware())
 

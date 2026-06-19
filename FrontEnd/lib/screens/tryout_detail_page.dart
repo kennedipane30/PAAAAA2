@@ -238,13 +238,14 @@ class TryoutDetailPage extends StatelessWidget {
                         );
 
                         try {
-                          String urlAPI = 'http://${AppConfig.host}/api/tryouts/submissions?tryout_id=$id';
-                          debugPrint("🔍 [DEBUG-1] Menembak API AWS: $urlAPI");
+                          // ✨ MODIFIKASI: Ganti baseUrl dengan tryoutUrl (Arahkan ke Golang Port 9002)
+                          String urlAPI = '${AppConfig.tryoutUrl}/tryouts/submissions?tryout_id=$id';
+                          debugPrint("🔍 [DEBUG] URL API Pembahasan: $urlAPI");
 
                           final subRes = await http.get(
                             Uri.parse(urlAPI),
                             headers: {'Authorization': 'Bearer $token'},
-                          );
+                          ).timeout(const Duration(seconds: 10));
 
                           if (subRes.statusCode == 200) {
                             final subDecoded = jsonDecode(subRes.body);
@@ -283,14 +284,16 @@ class TryoutDetailPage extends StatelessWidget {
                           } else {
                             if (context.mounted) {
                                Navigator.pop(context); 
-                               _showError(context, "Mohon maaf sistem sedang sibuk");
+                               debugPrint("❌ Gagal: Status ${subRes.statusCode}, Body: ${subRes.body}");
+                               _showError(context, "Mohon maaf sistem sedang sibuk (Error Server: ${subRes.statusCode})");
                             }
                             return;
                           }
                         } catch (e) {
                           if (context.mounted) {
                                Navigator.pop(context); 
-                               _showError(context, "Mohon maaf sistem sedang sibuk");
+                               debugPrint("❌ Error Fetching Submissions: $e");
+                               _showError(context, "Gagal terhubung ke server. Periksa koneksi Anda.");
                           }
                           return;
                         }
@@ -305,8 +308,7 @@ class TryoutDetailPage extends StatelessWidget {
                           ),
                         );
                       } else {
-                        // ✨ MODIFIKASI: Mengganti pushReplacement menjadi push
-                        // agar kita bisa meneruskan sinyal pop kembali ke TryoutPage
+                        // Jika belum dikerjakan, Buka QuizPage
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -318,8 +320,6 @@ class TryoutDetailPage extends StatelessWidget {
                             ),
                           ),
                         ).then((_) {
-                          // Begitu QuizPage ditutup, otomatis tutup juga halaman instruksi ini
-                          // Hal ini akan memicu fungsi refresh _fetchAllTryouts() yang ada di TryoutPage!
                           if (context.mounted) {
                             Navigator.pop(context);
                           }
@@ -331,7 +331,7 @@ class TryoutDetailPage extends StatelessWidget {
                   } catch (e) {
                     if (context.mounted) Navigator.pop(context); 
                     debugPrint("❌ Tryout Error: $e");
-                    _showError(context, "Mohon maaf sistem sedang sibuk");
+                    _showError(context, "Terjadi kesalahan, pastikan internet stabil.");
                   }
                 },
                 child: Row(

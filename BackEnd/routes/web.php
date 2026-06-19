@@ -152,13 +152,18 @@ Route::middleware(['auth', 'role:pengajar'])->prefix('pengajar')->name('pengajar
         Route::get('/export-pdf/{class_id}/{subject}/{week}', [AbsensiController::class, 'exportPdf'])->name('export-pdf');
     });
 
-    // ✅ MANAJEMEN LATIHAN SOAL (CSV)
+    // ✅ MANAJEMEN LATIHAN SOAL (CSV & MANUAL)
     Route::prefix('latihan')->name('latihan.')->group(function() {
         Route::get('/', [PracticeQuestionController::class, 'index'])->name('index');
         Route::get('/pilih/{class_id}/{subject_name}', [PracticeQuestionController::class, 'selectPractice'])->name('pilih');
         Route::post('/upload/{class_id}', [PracticeQuestionController::class, 'storeCSV'])->name('store');
         Route::delete('/destroy-week/{class_id}/{subject_name}/{week}', [PracticeQuestionController::class, 'destroyByWeek'])->name('destroy_week');
         Route::get('/questions/{class_id}/{subject_name}/{week}', [PracticeQuestionController::class, 'showQuestions'])->name('questions');
+
+        // ✨ MODIFIKASI: 3 Rute Baru Untuk Form Manual (Tahap 1)
+        Route::post('/draft/simpan/{class_id}', [PracticeQuestionController::class, 'storeDraft'])->name('store_draft');
+        Route::post('/draft/terbitkan/{class_id}', [PracticeQuestionController::class, 'publishDraft'])->name('publish_draft');
+        Route::get('/draft/hapus/{class_id}/{draft_id}', [PracticeQuestionController::class, 'deleteDraft'])->name('delete_draft');
     });
 });
 
