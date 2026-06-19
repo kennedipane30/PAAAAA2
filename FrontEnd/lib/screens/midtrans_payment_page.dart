@@ -97,9 +97,10 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
     });
 
     try {
-      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk menembak endpoint ke server AWS (Port 80 via Nginx)
+      // ✨ MODIFIKASI: Mengganti AppConfig.host menjadi AppConfig.baseUrl
+      // Agar port :8000 ikut terbawa saat mengupdate status sukses di server lokal
       final response = await http.post(
-        Uri.parse('http://${AppConfig.host}/api/payment/manual-success'),
+        Uri.parse('${AppConfig.baseUrl}/payment/manual-success'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http; 
 import '../services/auth_service.dart';
-import '../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
+import '../config/app_config.dart'; 
 import 'quiz_page.dart';
 import 'explanation_page.dart';
 
@@ -21,7 +21,7 @@ class TryoutDetailPage extends StatelessWidget {
   });
 
   // ============================================================
-  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN HOMEPAGE)
+  // 🎨 PALET WARNA SPEKTA
   // ============================================================
   static const Color primaryRed      = Color(0xFFC5352C);
   static const Color accentTeal      = Color(0xFF2EA8AB);
@@ -238,7 +238,6 @@ class TryoutDetailPage extends StatelessWidget {
                         );
 
                         try {
-                          // ✨ MODIFIKASI: Menggunakan AppConfig.host dan menghilangkan port internal :9002
                           String urlAPI = 'http://${AppConfig.host}/api/tryouts/submissions?tryout_id=$id';
                           debugPrint("🔍 [DEBUG-1] Menembak API AWS: $urlAPI");
 
@@ -246,9 +245,6 @@ class TryoutDetailPage extends StatelessWidget {
                             Uri.parse(urlAPI),
                             headers: {'Authorization': 'Bearer $token'},
                           );
-
-                          debugPrint("🔍 [DEBUG-2] Status Code API: ${subRes.statusCode}");
-                          debugPrint("🔍 [DEBUG-3] Body API Mentah: ${subRes.body}");
 
                           if (subRes.statusCode == 200) {
                             final subDecoded = jsonDecode(subRes.body);
@@ -260,9 +256,6 @@ class TryoutDetailPage extends StatelessWidget {
                               submissions = subDecoded['data'];
                             }
 
-                            debugPrint("🔍 [DEBUG-4] Total riwayat di Tryout ID $id: ${submissions.length}");
-                            debugPrint("🔍 [DEBUG-5] Mencari jawaban untuk User ID: $userId");
-
                             var mySubmission;
                             for (var s in submissions) {
                               if (s['user_id'].toString() == userId.toString()) {
@@ -272,9 +265,6 @@ class TryoutDetailPage extends StatelessWidget {
                             }
 
                             if (mySubmission != null) {
-                              debugPrint("✅ [DEBUG-6] HORE! Jawaban milik User $userId DITEMUKAN!");
-                              debugPrint("✅ [DEBUG-7] Isi mentah dari DB: ${mySubmission['answers']}");
-                              
                               if (mySubmission['answers'] != null) {
                                 Map<String, dynamic> userAnswersMap = {};
                                 
@@ -284,36 +274,29 @@ class TryoutDetailPage extends StatelessWidget {
                                   userAnswersMap = mySubmission['answers'];
                                 }
 
-                                debugPrint("✅ [DEBUG-8] Map Jawaban berhasil: $userAnswersMap");
-
                                 for (var i = 0; i < questions.length; i++) {
                                   String qId = questions[i]['question_id'].toString();
                                   questions[i]['user_answer'] = userAnswersMap[qId];
-                                  debugPrint("   -> Soal ID $qId disuntik: ${userAnswersMap[qId]}");
                                 }
                               }
-                            } else {
-                              debugPrint("❌ [DEBUG-ERROR] Gagal: Riwayat untuk User ID $userId TIDAK ADA.");
                             }
                           } else {
-                            debugPrint("❌ [DEBUG-ERROR] API Gagal. Status: ${subRes.statusCode}");
                             if (context.mounted) {
-                               Navigator.pop(context); // Tutup dialog loading
+                               Navigator.pop(context); 
                                _showError(context, "Mohon maaf sistem sedang sibuk");
                             }
                             return;
                           }
                         } catch (e) {
-                          debugPrint("❌ [DEBUG-FATAL] Terjadi Error Code: $e");
                           if (context.mounted) {
-                               Navigator.pop(context); // Tutup dialog loading
+                               Navigator.pop(context); 
                                _showError(context, "Mohon maaf sistem sedang sibuk");
                           }
                           return;
                         }
 
                         if (!context.mounted) return;
-                        Navigator.pop(context); // Tutup loading kedua (ambil jawaban)
+                        Navigator.pop(context); // Tutup loading kedua
 
                         Navigator.push(
                           context,
@@ -322,8 +305,9 @@ class TryoutDetailPage extends StatelessWidget {
                           ),
                         );
                       } else {
-                        // Jika belum dikerjakan, Buka QuizPage
-                        Navigator.pushReplacement(
+                        // ✨ MODIFIKASI: Mengganti pushReplacement menjadi push
+                        // agar kita bisa meneruskan sinyal pop kembali ke TryoutPage
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => QuizPage(
@@ -333,13 +317,19 @@ class TryoutDetailPage extends StatelessWidget {
                               userId: userId,
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          // Begitu QuizPage ditutup, otomatis tutup juga halaman instruksi ini
+                          // Hal ini akan memicu fungsi refresh _fetchAllTryouts() yang ada di TryoutPage!
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        });
                       }
                     } else {
                       _showError(context, "Mohon maaf sistem sedang sibuk");
                     }
                   } catch (e) {
-                    if (context.mounted) Navigator.pop(context); // Tutup loading
+                    if (context.mounted) Navigator.pop(context); 
                     debugPrint("❌ Tryout Error: $e");
                     _showError(context, "Mohon maaf sistem sedang sibuk");
                   }

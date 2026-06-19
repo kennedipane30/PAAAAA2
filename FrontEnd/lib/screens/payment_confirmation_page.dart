@@ -4,7 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'midtrans_payment_page.dart';
 import '../../services/auth_service.dart';
-import '../../config/app_config.dart'; // 👈 Tambahkan import file konfigurasi terpusat Anda di sini
+import '../../config/app_config.dart';
+
+// ✨ MODIFIKASI 1: Tambahkan import HomePage Anda di sini
+// Sesuaikan path (../ atau ./) dengan letak folder file home_page.dart Anda
+import 'home_page.dart'; 
 
 class PaymentConfirmationPage extends StatefulWidget {
   final int classId;
@@ -28,7 +32,7 @@ class PaymentConfirmationPage extends StatefulWidget {
 
 class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
   // ============================================================
-  // 🎨 PALET WARNA SPEKTA (KONSISTEN DENGAN TRYOUTDETAILPAGE)
+  // 🎨 PALET WARNA SPEKTA
   // ============================================================
   static const Color primaryRed      = Color(0xFFC5352C);
   static const Color accentTeal      = Color(0xFF2EA8AB);
@@ -62,9 +66,8 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
     setState(() => isChecking = true);
 
     try {
-      // ✨ MODIFIKASI: Gunakan AppConfig.host untuk mengarahkan request promo ke server AWS
       final response = await http.post(
-        Uri.parse("http://${AppConfig.host}/api/promo/check"),
+        Uri.parse("${AppConfig.baseUrl}/promo/check"),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Accept': 'application/json'
@@ -138,8 +141,57 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           )
         );
 
+        // ✨ MODIFIKASI 2: Logika Loading & Refresh Halaman Utama
         if (paymentResult == true) {
-          if (mounted) Navigator.pop(context, true);
+          if (!mounted) return;
+
+          // Munculkan pop-up loading indikator
+          showDialog(
+            context: context, 
+            barrierDismissible: false, 
+            builder: (_) => const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: accentTeal),
+                  SizedBox(height: 16),
+                  Text(
+                    "Mengaktifkan Kelas...", 
+                    style: TextStyle(
+                      color: Colors.white, 
+                      fontWeight: FontWeight.bold, 
+                      decoration: TextDecoration.none, 
+                      fontSize: 14
+                    )
+                  ),
+                ],
+              )
+            )
+          );
+
+          // Beri jeda 2 detik agar database backend selesai update status enrollment
+          await Future.delayed(const Duration(seconds: 2));
+
+          if (!mounted) return;
+          
+          // Tutup pop-up loading
+          Navigator.pop(context); 
+
+          // Ambil nama user untuk dikirim ke HomePage
+          String uName = widget.userData['name'] ?? 'Siswa';
+
+          // Hapus semua tumpukan layar sebelumnya, dan buka HomePage dari awal (segar)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                userName: uName,
+                token: widget.token,
+                userData: widget.userData,
+              )
+            ),
+            (Route<dynamic> route) => false, 
+          );
         }
       } else {
         _showError(result?['message'] ?? "Gagal memproses pembayaran");
@@ -250,16 +302,16 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                     style: const TextStyle(color: textDark, fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       hintText: "Masukkan Kode",
-                      hintStyle: TextStyle(color: neutralGray),
+                      hintStyle: const TextStyle(color: neutralGray),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15), 
-                        borderSide: BorderSide(color: outlineVariant)
+                        borderSide: const BorderSide(color: outlineVariant)
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15), 
-                        borderSide: BorderSide(color: outlineVariant)
+                        borderSide: const BorderSide(color: outlineVariant)
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15), 
@@ -319,7 +371,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(label, style: TextStyle(color: neutralGray, fontSize: 13, fontWeight: FontWeight.w500))),
+          Expanded(child: Text(label, style: const TextStyle(color: neutralGray, fontSize: 13, fontWeight: FontWeight.w500))),
           Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14)),
         ],
       ),
