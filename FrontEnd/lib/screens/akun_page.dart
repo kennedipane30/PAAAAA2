@@ -272,7 +272,17 @@ class _AkunPageState extends State<AkunPage> {
     String photoUrl = currentData['photo_url'] ?? '';
     String name = currentData['name'] ?? "User Name";
     String email = currentData['email'] ?? "user@email.com";
-    String role = currentData['role'] ?? "STUDENT";
+    
+    // ✨ MODIFIKASI: Pengecekan Aman untuk Role
+    String roleName = "STUDENT"; // Default jika kosong
+    if (currentData['role'] != null) {
+      if (currentData['role'] is String) {
+        roleName = currentData['role'];
+      } else if (currentData['role'] is Map) {
+        // Jika Map (dari Eager Loading Laravel), cari key 'name' atau 'role_name'
+        roleName = currentData['role']['name'] ?? currentData['role']['role_name'] ?? "STUDENT";
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -441,7 +451,7 @@ class _AkunPageState extends State<AkunPage> {
                       border: Border.all(color: Colors.white.withOpacity(0.2)),
                     ),
                     child: Text(
-                      role.toUpperCase(),
+                      roleName.toUpperCase(), // ✨ Variabel aman dipanggil di sini
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -557,32 +567,30 @@ class _AkunPageState extends State<AkunPage> {
             subtitle: "Update address and parent info",
             icon: Icons.person_outline_rounded,
             onTap: () {
-              // ✅ Perbaikan: Kirim semua parameter yang dibutuhkan EditProfilePage
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => EditProfilePage(
                     userData: currentData,
                     token: widget.token,
-                    userName: widget.userName, // ✅ Kirim userName
+                    userName: widget.userName, 
                   ),
                 ),
               ).then((_) => _refreshProfile());
             },
           ),
           _line(),
-          // SESUDAH
-_menuItem(
-  title: "Security",
-  subtitle: "Change password and security",
-  icon: Icons.lock_outline_rounded,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-    );
-  },
-),
+          _menuItem(
+            title: "Security",
+            subtitle: "Change password and security",
+            icon: Icons.lock_outline_rounded,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -621,7 +629,7 @@ _menuItem(
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: neutralGray),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: neutralGray),
           ],
         ),
       ),
