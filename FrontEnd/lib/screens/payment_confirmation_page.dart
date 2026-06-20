@@ -6,9 +6,8 @@ import 'midtrans_payment_page.dart';
 import '../../services/auth_service.dart';
 import '../../config/app_config.dart';
 
-// ✨ MODIFIKASI 1: Tambahkan import HomePage Anda di sini
-// Sesuaikan path (../ atau ./) dengan letak folder file home_page.dart Anda
-import 'home_page.dart'; 
+// ✨ MODIFIKASI: Mengganti import home_page menjadi main_screen
+import 'main_screen.dart'; 
 
 class PaymentConfirmationPage extends StatefulWidget {
   final int classId;
@@ -141,11 +140,9 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           )
         );
 
-        // ✨ MODIFIKASI 2: Logika Loading & Refresh Halaman Utama
         if (paymentResult == true) {
           if (!mounted) return;
 
-          // Munculkan pop-up loading indikator
           showDialog(
             context: context, 
             barrierDismissible: false, 
@@ -169,25 +166,22 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
             )
           );
 
-          // Beri jeda 2 detik agar database backend selesai update status enrollment
           await Future.delayed(const Duration(seconds: 2));
 
           if (!mounted) return;
           
-          // Tutup pop-up loading
           Navigator.pop(context); 
 
-          // Ambil nama user untuk dikirim ke HomePage
           String uName = widget.userData['name'] ?? 'Siswa';
 
-          // Hapus semua tumpukan layar sebelumnya, dan buka HomePage dari awal (segar)
+          // ✨ MODIFIKASI: Arahkan ke MainScreen agar Menu Bawah tetap ada
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (context) => HomePage(
+              builder: (context) => MainScreen(
                 userName: uName,
                 token: widget.token,
-                userData: widget.userData,
+                userProfileData: widget.userData,
               )
             ),
             (Route<dynamic> route) => false, 

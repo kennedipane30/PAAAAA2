@@ -1464,7 +1464,8 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: primaryRed, size: 20),
+              // MODIFIKASI: Menghapus icon chevron_right_rounded
+              // const Icon(Icons.chevron_right_rounded, color: primaryRed, size: 20),
             ],
           ),
         );

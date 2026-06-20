@@ -40,15 +40,11 @@ class _KelasPageState extends State<KelasPage> {
   static const Color neutralGray     = Color(0xFF64748B);
   static const Color outlineVariant  = Color(0xFFE2BEBA);
   static const Color spektaYellow    = Color(0xFFF5A623);
+  static const Color successGreen    = Color(0xFF22C55E);
 
   List programs = [];
-  List filteredPrograms = []; // 🔥 Menyimpan hasil filter pencarian
   Map? currentData;
   bool isLoading = true;
-
-  // 🔥 Kontroler Debouncing Search
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce; 
 
   final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -61,8 +57,6 @@ class _KelasPageState extends State<KelasPage> {
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _debounce?.cancel(); // 🔥 Bersihkan timer untuk mencegah kebocoran memori
     super.dispose();
   }
 
@@ -100,7 +94,6 @@ class _KelasPageState extends State<KelasPage> {
         if (mounted) {
           setState(() {
             programs = data['data'] ?? [];
-            filteredPrograms = programs; // Default awal menampilkan semua data
           });
         }
       } else {
@@ -112,26 +105,6 @@ class _KelasPageState extends State<KelasPage> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
-  }
-
-  // 🔥 FUNGSI DEBOUNCING SEARCH (Hemat Resource API)
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    // Beri jeda 500ms setelah user berhenti mengetik sebelum memfilter
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (query.isEmpty) {
-        setState(() => filteredPrograms = programs);
-        return;
-      }
-
-      setState(() {
-        filteredPrograms = programs.where((program) {
-          final name = program['program_name'].toString().toLowerCase();
-          return name.contains(query.toLowerCase());
-        }).toList();
-      });
-    });
   }
 
   String _getProgramImage(dynamic id) {
@@ -163,16 +136,12 @@ class _KelasPageState extends State<KelasPage> {
               physics: const BouncingScrollPhysics(),
               slivers: [
                 _buildCurvedAppBar(),
-                SliverToBoxAdapter(
-                  child: _buildSearchBar(),
-                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      // 🔥 Menggunakan filteredPrograms hasil pencarian debounced
-                      (context, index) => _buildProgramCard(context, filteredPrograms[index]), 
-                      childCount: filteredPrograms.length,
+                      (context, index) => _buildProgramCard(context, programs[index]), 
+                      childCount: programs.length,
                     ),
                   ),
                 ),
@@ -226,37 +195,6 @@ class _KelasPageState extends State<KelasPage> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: outlineVariant.withOpacity(0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.015),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: TextField(
-        controller: _searchController, // 🔥 Controller pasang
-        onChanged: _onSearchChanged,   // 🔥 Trigger Debouncing
-        style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.bold),
-        decoration: const InputDecoration(
-          hintText: "Search program...",
-          hintStyle: TextStyle(color: neutralGray, fontSize: 13, fontWeight: FontWeight.bold),
-          prefixIcon: Icon(Icons.search_rounded, color: neutralGray, size: 20),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 12),
-        ),
-      ),
-    );
-  }
-
   Widget _buildProgramCard(BuildContext context, Map<String, dynamic> item) {
     dynamic activeClassId = currentData?['student']?['class_id'];
     bool isMyClass = activeClassId?.toString() == item['class_id'].toString();
@@ -279,72 +217,52 @@ class _KelasPageState extends State<KelasPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ============================================================
-          // 🖼️ GAME OVERLAY IMAGE (BERSIH DARI TEKS TIMPAAN)
+          // 🖼️ GAME OVERLAY IMAGE
           // ============================================================
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), 
-                child: Image.asset(
-                  _getProgramImage(item['class_id']), 
-                  height: 180, 
-                  width: double.infinity, 
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 15, 
-                right: 15, 
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
-                  decoration: BoxDecoration(
-                    color: Colors.white, 
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      )
-                    ],
-                  ), 
-                  child: Text(
-                    currencyFormat.format(int.tryParse(item['price'].toString()) ?? 0), 
-                    style: const TextStyle(color: primaryRed, fontWeight: FontWeight.w900, fontSize: 12),
-                  ),
-                ),
-              ),
-            ],
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), 
+            child: Image.asset(
+              _getProgramImage(item['class_id']), 
+              height: 180, 
+              width: double.infinity, 
+              fit: BoxFit.cover,
+            ),
           ),
           
           // ============================================================
-          // 📝 BAGIAN DESKRIPSI (DENGAN BADGE "PROGRAM ANDA" DI DALAMNYA)
+          // 📝 BAGIAN DESKRIPSI
           // ============================================================
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Baris Header Tag deskripsi
+                // Baris Header dengan badge "TERDAFTAR" jika sudah terdaftar
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // 🔥 Perbaikan Typo huruf Kapital S besar
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       "OFFICIAL ACADEMY PROGRAM", 
                       style: TextStyle(color: neutralGray, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.1),
                     ),
-                    // 🔥 Elemen dipindah ke sini demi kenyamanan UX siswa saat membaca
-                    if (isMyClass) 
+                    // Menampilkan badge "TERDAFTAR" jika sudah terdaftar
+                    if (isMyClass)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), 
                         decoration: BoxDecoration(
-                          color: darkTeal.withOpacity(0.12), 
+                          color: successGreen, 
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: darkTeal, width: 1),
                         ), 
-                        child: const Text(
-                          "PROGRAM ANDA  ✅", 
-                          style: TextStyle(color: darkTeal, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.check_circle, color: Colors.white, size: 12),
+                            SizedBox(width: 4),
+                            Text(
+                              "TERDAFTAR", 
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 9),
+                            ),
+                          ],
                         ),
                       ),
                   ],
