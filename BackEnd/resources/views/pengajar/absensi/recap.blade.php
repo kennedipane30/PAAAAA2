@@ -12,45 +12,40 @@
 
 <div class="recap-container">
 
-    {{-- ── 1. HEADER SECTION ── --}}
+    {{-- HEADER TANPA KEMBALI DAN BADGE --}}
     <div class="recap-header">
         <div class="recap-header-left">
-            <div class="breadcrumb">
-                <a href="{{ route('pengajar.absensi.weeks', [$class->class_id, $subject]) }}" class="back-link">
-                    <i class="fa-solid fa-arrow-left"></i> Kembali
-                </a>
-                <span class="badge-capsule">ATTENDANCE RECAP</span>
-            </div>
             <h1 class="recap-title">Rekap Absensi</h1>
-            <p class="recap-subtitle">{{ $class->program_name }} • {{ $subject }} • Minggu {{ $week }}</p>
+            <p class="recap-subtitle">{{ $class->program_name }} <span class="separator">•</span> {{ $subject }} <span class="separator">•</span> Minggu {{ $week }}</p>
         </div>
     </div>
 
-    {{-- ── 2. STATISTIK CARD ── --}}
+    {{-- TOMBOL KEMBALI TERPISAH --}}
+    <div class="recap-nav">
+        <a href="{{ route('pengajar.absensi.weeks', [$class->class_id, $subject]) }}" class="back-link">Kembali ke Daftar Minggu</a>
+    </div>
+
+    {{-- STATISTIK --}}
     <div class="stats-wrapper">
         <div class="stat-item stat-hadir">
-            <div class="stat-icon">📊</div>
             <div class="stat-info">
                 <span class="stat-label">HADIR</span>
                 <strong class="stat-value">{{ $hadir }}</strong>
             </div>
         </div>
         <div class="stat-item stat-izin">
-            <div class="stat-icon">📝</div>
             <div class="stat-info">
                 <span class="stat-label">IZIN</span>
                 <strong class="stat-value">{{ $izin }}</strong>
             </div>
         </div>
         <div class="stat-item stat-alpa">
-            <div class="stat-icon">⚠️</div>
             <div class="stat-info">
                 <span class="stat-label">ALPA</span>
                 <strong class="stat-value">{{ $alpa }}</strong>
             </div>
         </div>
         <div class="stat-item stat-total">
-            <div class="stat-icon">👥</div>
             <div class="stat-info">
                 <span class="stat-label">TOTAL</span>
                 <strong class="stat-value">{{ $totalData }}</strong>
@@ -58,16 +53,13 @@
         </div>
     </div>
 
-    {{-- ── 3. TABLE CARD ── --}}
+    {{-- TABLE --}}
     <div class="table-card">
         <div class="table-card-header">
             <div class="card-title">
-                <i class="fa-solid fa-clipboard-list"></i>
                 <h3>Daftar Kehadiran Siswa</h3>
             </div>
-            <div class="card-badge">
-                <i class="fa-solid fa-database"></i> {{ $totalData }} Siswa
-            </div>
+            <div class="card-badge">{{ $totalData }} Siswa</div>
         </div>
 
         <div class="table-responsive">
@@ -95,37 +87,22 @@
                         </td>
                         <td class="status-cell">
                             @if($row->status == 'h')
-                                <span class="status-badge hadir">
-                                    <i class="fa-solid fa-check-circle"></i> HADIR
-                                </span>
+                                <span class="status-badge hadir">HADIR</span>
                             @elseif($row->status == 'i')
-                                <span class="status-badge izin">
-                                    <i class="fa-solid fa-clock"></i> IZIN
-                                </span>
+                                <span class="status-badge izin">IZIN</span>
                             @else
-                                <span class="status-badge alpa">
-                                    <i class="fa-solid fa-times-circle"></i> ALPA
-                                </span>
+                                <span class="status-badge alpa">ALPA</span>
                             @endif
                         </td>
                         <td class="action-cell">
                             <div class="action-wrapper">
-                                <span class="date-input">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    {{ $row->date ? date('d M Y', strtotime($row->date)) : '-' }}
-                                </span>
+                                <span class="date-input">{{ $row->date ? date('d M Y', strtotime($row->date)) : '-' }}</span>
                                 <div class="action-buttons-group">
                                     <a href="{{ route('pengajar.absensi.edit', [$class->class_id, $subject, $week]) }}"
-                                       class="action-icon edit-icon" title="Edit Absensi">
-                                        <i class="fa-solid fa-pencil"></i>
-                                    </a>
+                                       class="action-icon edit-icon">Edit</a>
                                     <a href="{{ route('pengajar.absensi.export-pdf', [$class->class_id, $subject, $week]) }}"
-                                       class="action-icon export-icon" title="Export PDF" target="_blank">
-                                        <i class="fa-solid fa-download"></i>
-                                    </a>
-                                    <button type="button" class="action-icon delete-icon" title="Hapus Absensi" onclick="confirmDelete({{ $week }})">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                                       class="action-icon export-icon" target="_blank">Export</a>
+                                    <button type="button" class="action-icon delete-icon" onclick="confirmDelete({{ $week }})">Hapus</button>
                                 </div>
                             </div>
                         </td>
@@ -134,7 +111,6 @@
                     <tr>
                         <td colspan="4" class="empty-row">
                             <div class="empty-state">
-                                <i class="fa-regular fa-folder-open"></i>
                                 <strong>Belum Ada Data Absensi</strong>
                                 <span>Silakan isi absensi terlebih dahulu</span>
                             </div>
@@ -147,17 +123,16 @@
     </div>
 </div>
 
-{{-- Modal Konfirmasi Delete --}}
+{{-- Modal Delete --}}
 <div id="deleteModal" class="modal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <i class="fa-solid fa-trash-can modal-icon"></i>
                 <h3>Hapus Absensi</h3>
             </div>
             <div class="modal-body">
                 <p>Yakin ingin menghapus seluruh data absensi untuk <strong>Minggu ke-<span id="weekNumber"></span></strong>?</p>
-                <p class="warning-text">⚠️ Data yang dihapus tidak dapat dikembalikan!</p>
+                <p class="warning-text">Data yang dihapus tidak dapat dikembalikan!</p>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal()">Batal</button>
@@ -201,20 +176,15 @@
     }
 
     @if(session('success'))
-        showToast('{{ session('success') }}', 'success');
+        showToast('{{ session('success') }}');
     @endif
 
-    @if(session('error'))
-        showToast('{{ session('error') }}', 'error');
-    @endif
-
-    function showToast(message, type) {
+    function showToast(message) {
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        toast.className = 'toast';
         toast.innerHTML = `
-            <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
             <span>${message}</span>
-            <button onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="this.parentElement.remove()">×</button>
         `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
@@ -222,43 +192,56 @@
 </script>
 
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
     .recap-container {
         padding: 24px 32px;
         background: #f5f7fa;
         min-height: 100vh;
-        font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Montserrat', -apple-system, sans-serif;
     }
 
-    /* Header Styles */
+    /* ── HEADER ── */
     .recap-header {
-        margin-bottom: 32px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #e8edf2;
     }
 
-    .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
+    .recap-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .recap-subtitle {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .recap-subtitle .separator {
+        margin: 0 8px;
+        color: #cbd5e1;
+    }
+
+    /* ── NAV ── */
+    .recap-nav {
+        margin-bottom: 24px;
     }
 
     .back-link {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
+        gap: 8px;
+        padding: 8px 18px;
         background: white;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         color: #64748b;
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 600;
         text-decoration: none;
         transition: all 0.2s;
     }
@@ -269,31 +252,7 @@
         border-color: #cbd5e1;
     }
 
-    .badge-capsule {
-        background: #fee2e2;
-        color: #dc2626;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
-    .recap-title {
-        font-size: 28px;
-        font-weight: 800;
-        color: #0f172a;
-        margin-bottom: 8px;
-        letter-spacing: -0.3px;
-    }
-
-    .recap-subtitle {
-        font-size: 14px;
-        color: #64748b;
-        font-weight: 500;
-    }
-
-    /* Stats Wrapper */
+    /* ── STATS ── */
     .stats-wrapper {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -303,43 +262,33 @@
 
     .stat-item {
         background: white;
-        padding: 16px 20px;
+        padding: 18px 22px;
         border-radius: 14px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
         border: 1px solid #e2e8f0;
-        transition: all 0.2s;
+        transition: all 0.25s ease;
         box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
     .stat-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-
-    .stat-icon {
-        font-size: 28px;
-    }
-
-    .stat-info {
-        flex: 1;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
 
     .stat-label {
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         color: #94a3b8;
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
 
     .stat-value {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 800;
         color: #1e293b;
+        line-height: 1.2;
     }
 
     .stat-hadir .stat-value { color: #10b981; }
@@ -347,7 +296,7 @@
     .stat-alpa .stat-value { color: #ef4444; }
     .stat-total .stat-value { color: #3b82f6; }
 
-    /* Table Card */
+    /* ── TABLE ── */
     .table-card {
         background: white;
         border-radius: 20px;
@@ -367,59 +316,40 @@
         gap: 12px;
     }
 
-    .card-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .card-title i {
-        font-size: 18px;
-        color: #2ea8ab;
-    }
-
     .card-title h3 {
         font-size: 15px;
         font-weight: 700;
         color: #1e293b;
+        margin: 0;
     }
 
     .card-badge {
-        padding: 4px 12px;
-        background: #f8fafc;
+        padding: 4px 14px;
+        background: #f1f5f9;
         border-radius: 20px;
         font-size: 11px;
         font-weight: 600;
         color: #64748b;
     }
 
-    .card-badge i {
-        margin-right: 4px;
-    }
-
-    /* Table Styles */
-    .table-responsive {
-        overflow-x: auto;
-    }
+    .table-responsive { overflow-x: auto; }
 
     .attendance-table {
         width: 100%;
         border-collapse: collapse;
     }
 
-    .attendance-table thead {
-        background: #f8fafc;
-    }
+    .attendance-table thead { background: #f8fafc; }
 
     .attendance-table th {
         padding: 14px 20px;
         text-align: left;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         color: #94a3b8;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .attendance-table td {
@@ -428,25 +358,16 @@
         vertical-align: middle;
     }
 
-    .student-row:hover {
-        background: #fafcff;
+    .attendance-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
-    .col-no {
-        width: 70px;
-    }
+    .student-row:hover { background: #fafcff; }
 
-    .col-student {
-        width: 35%;
-    }
-
-    .col-status {
-        width: 20%;
-    }
-
-    .col-action {
-        width: 40%;
-    }
+    .col-no { width: 70px; }
+    .col-student { width: 35%; }
+    .col-status { width: 20%; }
+    .col-action { width: 40%; }
 
     .no-cell {
         font-weight: 700;
@@ -454,7 +375,7 @@
         font-size: 13px;
     }
 
-    /* Student Cell */
+    /* ── STUDENT CELL ── */
     .student-cell {
         display: flex;
         align-items: center;
@@ -472,11 +393,10 @@
         font-weight: 800;
         font-size: 16px;
         color: #2ea8ab;
+        flex-shrink: 0;
     }
 
-    .student-detail {
-        flex: 1;
-    }
+    .student-detail { flex: 1; }
 
     .student-name {
         display: block;
@@ -491,43 +411,27 @@
         font-weight: 600;
         color: #94a3b8;
         background: #f1f5f9;
-        padding: 2px 8px;
+        padding: 2px 10px;
         border-radius: 10px;
         display: inline-block;
     }
 
-    /* Status Badge */
+    /* ── STATUS BADGE ── */
     .status-badge {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 5px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
     }
 
-    .status-badge.hadir {
-        background: #d1fae5;
-        color: #059669;
-    }
+    .status-badge.hadir { background: #d1fae5; color: #059669; }
+    .status-badge.izin { background: #fed7aa; color: #ea580c; }
+    .status-badge.alpa { background: #fee2e2; color: #dc2626; }
 
-    .status-badge.izin {
-        background: #fed7aa;
-        color: #ea580c;
-    }
-
-    .status-badge.alpa {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    /* Action Cell - Kunci utama: semua dalam satu baris */
-    .action-cell {
-        padding: 16px 20px !important;
-    }
-
+    /* ── ACTION ── */
     .action-wrapper {
         display: flex;
         align-items: center;
@@ -537,81 +441,43 @@
     }
 
     .date-input {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
+        padding: 6px 14px;
         background: #f8fafc;
         border-radius: 8px;
         font-size: 12px;
         font-weight: 500;
         color: #475569;
-    }
-
-    .date-input i {
-        color: #94a3b8;
-        font-size: 11px;
+        border: 1px solid #eef2f6;
     }
 
     .action-buttons-group {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
 
     .action-icon {
-        width: 32px;
-        height: 32px;
+        padding: 5px 14px;
         border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
         text-decoration: none;
         cursor: pointer;
-        transition: all 0.2s;
         border: none;
-        background: transparent;
-        font-size: 14px;
+        transition: all 0.2s ease;
     }
 
-    .edit-icon {
-        background: #dbeafe;
-        color: #2563eb;
-    }
+    .edit-icon { background: #dbeafe; color: #2563eb; }
+    .edit-icon:hover { background: #2563eb; color: white; transform: translateY(-1px); }
 
-    .edit-icon:hover {
-        background: #3b82f6;
-        color: white;
-        transform: translateY(-2px);
-    }
+    .export-icon { background: #d1fae5; color: #059669; }
+    .export-icon:hover { background: #059669; color: white; transform: translateY(-1px); }
 
-    .export-icon {
-        background: #d1fae5;
-        color: #059669;
-    }
+    .delete-icon { background: #fee2e2; color: #dc2626; }
+    .delete-icon:hover { background: #dc2626; color: white; transform: translateY(-1px); }
 
-    .export-icon:hover {
-        background: #10b981;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    .delete-icon {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .delete-icon:hover {
-        background: #ef4444;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* Empty State */
-    .empty-row td {
-        padding: 60px 20px !important;
-        text-align: center;
-    }
+    /* ── EMPTY ── */
+    .empty-row td { padding: 60px 20px !important; text-align: center; }
 
     .empty-state {
         display: flex;
@@ -620,22 +486,10 @@
         gap: 8px;
     }
 
-    .empty-state i {
-        font-size: 48px;
-        color: #cbd5e1;
-    }
+    .empty-state strong { font-size: 15px; color: #475569; }
+    .empty-state span { font-size: 12px; color: #94a3b8; }
 
-    .empty-state strong {
-        font-size: 15px;
-        color: #475569;
-    }
-
-    .empty-state span {
-        font-size: 12px;
-        color: #94a3b8;
-    }
-
-    /* Modal Styles */
+    /* ── MODAL ── */
     .modal {
         display: none;
         position: fixed;
@@ -643,7 +497,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(15, 23, 42, 0.5);
         align-items: center;
         justify-content: center;
         z-index: 1000;
@@ -653,53 +507,40 @@
     .modal-dialog {
         max-width: 440px;
         width: 90%;
-        animation: modalFadeIn 0.2s ease;
+        animation: modalFadeIn 0.25s ease;
     }
 
     @keyframes modalFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(-24px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .modal-content {
         background: white;
         border-radius: 20px;
         overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
 
     .modal-header {
         padding: 20px 24px 12px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
         border-bottom: 1px solid #f1f5f9;
-    }
-
-    .modal-icon {
-        font-size: 24px;
-        color: #dc2626;
     }
 
     .modal-header h3 {
         font-size: 18px;
         font-weight: 700;
         color: #1e293b;
+        margin: 0;
     }
 
-    .modal-body {
-        padding: 20px 24px;
-    }
+    .modal-body { padding: 20px 24px; }
 
     .modal-body p {
         color: #475569;
-        line-height: 1.5;
+        line-height: 1.6;
         margin-bottom: 8px;
+        font-size: 14px;
     }
 
     .warning-text {
@@ -716,7 +557,7 @@
     }
 
     .btn-cancel {
-        padding: 8px 20px;
+        padding: 9px 22px;
         border-radius: 10px;
         font-size: 12px;
         font-weight: 600;
@@ -727,12 +568,10 @@
         transition: all 0.2s;
     }
 
-    .btn-cancel:hover {
-        background: #f1f5f9;
-    }
+    .btn-cancel:hover { background: #f1f5f9; }
 
     .btn-delete-confirm {
-        padding: 8px 20px;
+        padding: 9px 22px;
         border-radius: 10px;
         font-size: 12px;
         font-weight: 600;
@@ -743,78 +582,58 @@
         transition: all 0.2s;
     }
 
-    .btn-delete-confirm:hover {
-        background: #b91c1c;
-    }
+    .btn-delete-confirm:hover { background: #b91c1c; }
 
-    /* Toast Notification */
+    /* ── TOAST ── */
     .toast {
         position: fixed;
         top: 24px;
         right: 24px;
-        padding: 12px 20px;
+        padding: 14px 20px;
+        background: #0f172a;
+        color: white;
         border-radius: 12px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         z-index: 1100;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         animation: slideIn 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.12);
     }
 
     @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    .toast-success {
-        background: #10b981;
-        color: white;
-    }
-
-    .toast-error {
-        background: #ef4444;
-        color: white;
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
     .toast button {
         background: none;
         border: none;
-        color: white;
+        color: #94a3b8;
+        font-size: 18px;
         cursor: pointer;
-        font-size: 14px;
-        margin-left: 8px;
+        padding: 0 4px;
     }
 
-    /* Responsive */
+    .toast button:hover { color: white; }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
-        .recap-container {
-            padding: 16px;
-        }
+        .recap-container { padding: 16px; }
 
         .stats-wrapper {
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
-        .recap-title {
-            font-size: 22px;
-        }
+        .recap-title { font-size: 22px; }
 
         .action-wrapper {
             flex-direction: column;
             align-items: flex-start;
         }
 
-        .action-buttons-group {
-            margin-top: 8px;
-        }
+        .action-buttons-group { margin-top: 8px; }
     }
 
     @media (max-width: 640px) {
@@ -823,8 +642,31 @@
             align-items: flex-start;
         }
 
-        .col-status, .col-date {
-            min-width: 120px;
+        .col-status, .col-date { min-width: 120px; }
+
+        .recap-subtitle {
+            font-size: 12px;
+        }
+
+        .recap-subtitle .separator {
+            display: none;
+        }
+
+        .recap-subtitle br {
+            display: block;
+        }
+
+        .stat-item {
+            padding: 14px 16px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+        }
+
+        .back-link {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>

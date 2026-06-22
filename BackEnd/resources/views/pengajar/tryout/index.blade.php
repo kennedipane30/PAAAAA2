@@ -4,17 +4,15 @@
 
 @section('content')
 @php
-    // ✅ Data sudah dikirim dari controller, tidak perlu query DB langsung
     $assignmentCollection = collect($assignmentsWithSubjects ?? []);
     $totalAssignment = $assignmentCollection->count();
 @endphp
 
 <div class="cp-page">
 
-    {{-- ── 1. HEADER MINIMALIS MODERN ── --}}
+    {{-- ── 1. HEADER ── --}}
     <section class="cp-header">
         <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">Teacher Tryout Portal</span>
             <h1>Tryout Question Center</h1>
             <p>Kontribusikan draf soal terbaik Anda. Admin akan mengkurasi draf tersebut menjadi satu paket Tryout resmi.</p>
         </div>
@@ -22,39 +20,32 @@
 
     @if(session('success'))
         <div class="tm-alert-modern success">
-            <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if(session('error'))
         <div class="tm-alert-modern error">
-            <i class="fa-solid fa-circle-xmark"></i>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if(session('warning'))
         <div class="tm-alert-modern warning">
-            <i class="fa-solid fa-triangle-exclamation"></i>
             <span>{{ session('warning') }}</span>
         </div>
     @endif
 
-    {{-- ── 2. STATS SUMMARY GRID (3 KOLOM SEIMBANG) ── --}}
+    {{-- ── 2. STATS SUMMARY ── --}}
     <section class="cp-stats">
-        <!-- Penugasan Kelas -->
         <div class="cp-stat-card card-teal">
-            <div class="cp-stat-icon teal"><i class="fa-solid fa-briefcase"></i></div>
             <div class="cp-stat-info">
                 <p>Penugasan Kelas</p>
                 <h2>{{ $totalAssignment }} <span>Kelas</span></h2>
             </div>
         </div>
 
-        <!-- Total Soal Disetor -->
         <div class="cp-stat-card card-red">
-            <div class="cp-stat-icon red"><i class="fa-solid fa-file-circle-check"></i></div>
             <div class="cp-stat-info">
                 <p>Soal Disetor</p>
                 <h2>{{ $totalSoalSelesai ?? 0 }} <span>Soal</span></h2>
@@ -64,9 +55,7 @@
             @endif
         </div>
 
-        <!-- Target Target Selesai -->
         <div class="cp-stat-card card-gray">
-            <div class="cp-stat-icon gray"><i class="fa-solid fa-flag-checkered"></i></div>
             <div class="cp-stat-info">
                 <p>Target Publikasi</p>
                 <h2>{{ $totalAssignment }} <span>Paket TO</span></h2>
@@ -102,9 +91,6 @@
                         <tr>
                             <td>
                                 <div class="program-info">
-                                    <div class="program-icon-box">
-                                        <i class="fa-solid fa-school-flag"></i>
-                                    </div>
                                     <div>
                                         <strong>{{ $assign->classModel->program_name ?? 'Program' }}</strong>
                                         <small>ID Kelas: #{{ $assign->class_id }}</small>
@@ -112,8 +98,7 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="subject-tag">
-                                    <i class="fa-solid fa-book-bookmark mr-1"></i>
+                                <span class="subject-tag-teal">
                                     {{ $subjectName }}
                                 </span>
                             </td>
@@ -124,11 +109,6 @@
                                             <strong>{{ $count }} Soal</strong>
                                             <span>{{ $count > 0 ? 'TERUPLOAD' : 'BELUM ADA' }}</span>
                                         </div>
-                                        @if($count > 0)
-                                            <i class="fa-solid fa-circle-check check-icon" style="color: #10b981;"></i>
-                                        @else
-                                            <i class="fa-solid fa-circle-minus" style="color: #cbd5e1;"></i>
-                                        @endif
                                     </div>
 
                                     @if($count > 0)
@@ -137,7 +117,7 @@
                                             <input type="hidden" name="class_id" value="{{ $assign->class_id }}">
                                             <input type="hidden" name="subject_name" value="{{ $subjectName }}">
                                             <button type="submit" class="btn-action-delete" title="Tarik/Hapus Semua Draf Mapel Ini">
-                                                <i class="fa-solid fa-trash-can"></i>
+                                                Hapus
                                             </button>
                                         </form>
                                     @endif
@@ -145,11 +125,8 @@
                             </td>
                             <td class="text-right">
                                 <a href="{{ route('pengajar.tryout.create', [$assign->class_id, $subjectName]) }}"
-                                   class="btn-input-modern {{ $count > 0 ? 'btn-has-content' : '' }}">
+                                   class="btn-manage-teal {{ $count > 0 ? 'btn-has-content' : '' }}">
                                     <span>{{ $count > 0 ? 'EDIT / TAMBAH' : 'INPUT SOAL' }}</span>
-                                    <div class="icon-circle">
-                                        <i class="fa-solid fa-{{ $count > 0 ? 'pen-to-square' : 'pen-nib' }}"></i>
-                                    </div>
                                 </a>
                             </td>
                         </tr>
@@ -157,8 +134,7 @@
                         <tr>
                             <td colspan="4">
                                 <div class="cp-empty-state">
-                                    <i class="fa-solid fa-file-circle-xmark"></i>
-                                    <span>Belum ada penugasan soal untuk Anda saat ini.</span>
+                                    <strong>Belum ada penugasan soal untuk Anda saat ini.</strong>
                                 </div>
                             </td>
                         </tr>
@@ -174,7 +150,8 @@
         --spekta-red-dark: #c5352c;
         --spekta-red: #e53935;
         --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal-dark: #1e878a;
+        --spekta-teal-light: rgba(46, 168, 171, 0.12);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
@@ -201,18 +178,7 @@
         border-bottom: 1px solid var(--border-soft);
         padding-bottom: 20px;
     }
-    .cp-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-    }
+
     .cp-header h1 {
         margin: 0 0 6px;
         color: var(--text-main);
@@ -228,25 +194,44 @@
     }
 
     /* Alerts */
-    .tm-alert-modern { padding: 12px 16px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 13px; }
-    .tm-alert-modern.success { background: #e6f7ed; color: #15803d; border-left: 5px solid #22c55e; }
-    .tm-alert-modern.error { background: #fee2e2; color: #b91c1c; border-left: 5px solid #ef4444; }
-    .tm-alert-modern.warning { background: #fef3c7; color: #92400e; border-left: 5px solid #f59e0b; }
+    .tm-alert-modern {
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .tm-alert-modern.success {
+        background: #e6f7ed;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .tm-alert-modern.error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .tm-alert-modern.warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
 
-    /* Stats Grid */
+    /* ── Stats ── */
     .cp-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 16px;
         margin-bottom: 24px;
     }
+
     .cp-stat-card {
         background: var(--spekta-white);
         border-radius: 14px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
+        padding: 16px 20px;
         border: 1px solid var(--border-soft);
         box-shadow: 0 2px 10px rgba(0,0,0,0.01);
         transition: all 0.25s ease;
@@ -259,18 +244,6 @@
     .cp-stat-card.card-teal:hover { border-color: var(--spekta-teal); }
     .cp-stat-card.card-red:hover { border-color: var(--spekta-red); }
     .cp-stat-card.card-gray:hover { border-color: var(--spekta-gray); }
-
-    .cp-stat-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        font-size: 16px;
-    }
-    .cp-stat-icon.red { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .cp-stat-icon.teal { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .cp-stat-icon.gray { background: var(--spekta-gray-light); color: var(--text-muted); }
 
     .cp-stat-info p {
         margin: 0 0 4px;
@@ -311,74 +284,310 @@
         100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
     }
 
-    /* Table Panel */
-    .cp-main-card { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
+    /* ── Main Card ── */
+    .cp-main-card {
+        background: var(--spekta-white);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+    }
 
-    .card-header-flex h2 { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0; }
-    .card-header-flex p { font-size: 11px; color: var(--text-muted); margin: 0; font-weight: 600; }
+    .card-header-flex {
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--spekta-gray-light);
+    }
 
-    .cp-table-modern { width: 100%; border-collapse: collapse; }
-    .cp-table-modern th { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; padding: 12px 14px; border-bottom: 2px solid var(--spekta-gray-light); letter-spacing: 0.05em; }
-    .cp-table-modern td { padding: 14px; border-bottom: 1px solid var(--spekta-gray-light); vertical-align: middle; }
-    .cp-table-modern tbody tr:last-child td { border-bottom: none; }
-    .cp-table-modern tbody tr:hover { background: #fafbfc; }
+    .card-header-flex h2 {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0 0 4px 0;
+    }
 
-    .program-info { display: flex; align-items: center; gap: 10px; }
-    .program-icon-box { width: 34px; height: 34px; background: var(--spekta-gray-light); border-radius: 8px; display: grid; place-items: center; font-size: 14px; color: var(--text-muted); border: 1px solid var(--border-soft); }
-    .program-info strong { display: block; font-size: 13px; font-weight: 800; color: var(--text-main); }
-    .program-info small { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+    .card-header-flex p {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 600;
+    }
 
-    .subject-tag { background: var(--spekta-red-light); color: var(--spekta-red-dark); padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(229, 57, 53, 0.1); display: inline-flex; align-items: center; }
+    /* ── Table ── */
+    .table-responsive { overflow-x: auto; }
 
-    .progress-container-flex { display: inline-flex; align-items: center; gap: 10px; }
+    .cp-table-modern {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .cp-table-modern th {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        padding: 12px 14px;
+        border-bottom: 2px solid var(--spekta-gray-light);
+        letter-spacing: 0.05em;
+    }
+
+    .cp-table-modern td {
+        padding: 14px;
+        border-bottom: 1px solid var(--spekta-gray-light);
+        vertical-align: middle;
+    }
+
+    .cp-table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cp-table-modern tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    /* ── Program Info ── */
+    .program-info strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-main);
+        text-transform: uppercase;
+    }
+
+    .program-info small {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 2px;
+        display: block;
+    }
+
+    /* ── Mata Pelajaran Teal ── */
+    .subject-tag-teal {
+        background: var(--spekta-teal-light);
+        color: var(--spekta-teal-dark);
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 12px;
+        text-transform: uppercase;
+        border: 1px solid rgba(46, 168, 171, 0.15);
+        display: inline-flex;
+        align-items: center;
+        letter-spacing: 0.03em;
+        transition: all 0.2s ease;
+    }
+
+    .subject-tag-teal:hover {
+        background: var(--spekta-teal);
+        color: #ffffff;
+        border-color: var(--spekta-teal);
+        box-shadow: 0 3px 10px rgba(46, 168, 171, 0.2);
+    }
+
+    /* ── Progress ── */
+    .progress-container-flex {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
     .contribution-info {
-        display: flex; align-items: center; gap: 12px;
-        padding: 8px 12px; background: var(--spekta-gray-light);
-        border-radius: 10px; border: 1px solid var(--border-soft);
-        min-width: 150px; text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        background: var(--spekta-gray-light);
+        border-radius: 10px;
+        border: 1px solid var(--border-soft);
+        min-width: 150px;
+        text-align: left;
     }
-    .contribution-info.active { background: #e6f7ed; border-color: #bbf7d0; }
-    .info-content strong { display: block; font-size: 12px; color: var(--text-main); line-height: 1.2; font-weight: 800; }
-    .info-content span { font-size: 8px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .check-icon { font-size: 12px; }
 
+    .contribution-info.active {
+        background: #e6f7ed;
+        border-color: #bbf7d0;
+    }
+
+    .info-content strong {
+        display: block;
+        font-size: 12px;
+        color: var(--text-main);
+        line-height: 1.2;
+        font-weight: 800;
+    }
+
+    .info-content span {
+        font-size: 8px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* ── Tombol Hapus ── */
     .btn-action-delete {
-        background: var(--spekta-red-light); color: var(--spekta-red); border: none;
-        width: 32px; height: 32px; border-radius: 8px;
-        cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
+        background: var(--spekta-red-light);
+        color: var(--spekta-red);
+        border: none;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 10px;
+        font-weight: 700;
     }
-    .btn-action-delete:hover { background: #fecaca; color: #991b1b; transform: scale(1.05); }
-
-    .btn-input-modern {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: #1f2937; color: white !important; padding: 4px 4px 4px 12px;
-        border-radius: 8px; text-decoration: none; transition: 0.2s;
-        white-space: nowrap; font-weight: 800; font-size: 11px;
+    .btn-action-delete:hover {
+        background: #fecaca;
+        color: #991b1b;
+        transform: scale(1.05);
     }
-    .btn-input-modern.btn-has-content { background: #15803d; }
-    .btn-input-modern:hover { transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .btn-input-modern.btn-has-content:hover { background: #166534; }
 
-    .icon-circle { width: 24px; height: 24px; background: rgba(255,255,255,0.15); border-radius: 6px; display: grid; place-items: center; font-size: 10px; }
+    /* ── Tombol Kelola Teal ── */
+    .btn-manage-teal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--spekta-teal) 0%, var(--spekta-teal-dark) 100%);
+        color: var(--spekta-white);
+        padding: 8px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        font-weight: 800;
+        font-size: 11px;
+        box-shadow: 0 3px 10px rgba(46, 168, 171, 0.2);
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+        min-width: 130px;
+    }
 
+    .btn-manage-teal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-manage-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 168, 171, 0.35);
+    }
+
+    .btn-manage-teal:hover::before {
+        left: 100%;
+    }
+
+    .btn-manage-teal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(46, 168, 171, 0.2);
+    }
+
+    .btn-manage-teal.btn-has-content {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    .btn-manage-teal.btn-has-content:hover {
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    }
+
+    /* ── Empty State ── */
     .cp-empty-state {
         padding: 40px;
         text-align: center;
         color: var(--text-muted);
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 8px;
     }
-    .cp-empty-state i { font-size: 20px; color: var(--spekta-gray); }
+
+    .cp-empty-state strong {
+        display: block;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
 
     .text-center { text-align: center; }
     .text-right { text-align: right; }
 
-    @media (max-width: 1100px) {
-        .cp-table-modern th:nth-child(3), .cp-table-modern td:nth-child(3) { display: none; }
+    @media (max-width: 768px) {
+        .cp-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .cp-table-modern {
+            min-width: 500px;
+        }
+
+        .cp-table-modern th,
+        .cp-table-modern td {
+            padding: 10px 12px;
+            font-size: 11px;
+        }
+
+        .btn-manage-teal {
+            min-width: 100px;
+            padding: 6px 14px;
+            font-size: 10px;
+        }
+
+        .subject-tag-teal {
+            font-size: 10px;
+            padding: 4px 10px;
+        }
+
+        .program-info strong {
+            font-size: 11px;
+        }
+
+        .contribution-info {
+            min-width: 100px;
+            padding: 6px 10px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .cp-stat-card {
+            padding: 14px 16px;
+        }
+
+        .cp-stat-info h2 {
+            font-size: 20px;
+        }
+
+        .cp-main-card {
+            padding: 14px;
+        }
+
+        .cp-table-modern th,
+        .cp-table-modern td {
+            padding: 8px 10px;
+            font-size: 10px;
+        }
+
+        .btn-manage-teal {
+            min-width: 80px;
+            padding: 5px 10px;
+            font-size: 9px;
+        }
+
+        .progress-container-flex {
+            flex-direction: column;
+            gap: 6px;
+        }
     }
 </style>
 @endsection

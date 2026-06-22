@@ -74,15 +74,31 @@ class PracticeQuestionController extends Controller
         $class = ClassModel::findOrFail($class_id);
         $goUrl = env('GO_PRACTICE_URL', 'http://localhost:9003');
 
-        // Fetch all practice questions
-        $response = Http::timeout(5)->get("$goUrl/api/tryouts", [
-            'class_id' => $class_id,
-            '_' => time()
-        ]);
-
         $allQuestions = [];
-        if ($response->successful()) {
-            $allQuestions = $response->json() ?? [];
+        $serviceError = false;
+
+        try {
+            // Fetch all practice questions with timeout
+            $response = Http::timeout(5)->get("$goUrl/api/tryouts", [
+                'class_id' => $class_id,
+                '_' => time()
+            ]);
+
+            if ($response->successful()) {
+                $allQuestions = $response->json() ?? [];
+            } else {
+                $serviceError = true;
+                Log::warning('Practice service returned error', [
+                    'status' => $response->status(),
+                    'class_id' => $class_id
+                ]);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $serviceError = true;
+            Log::error('Practice service connection failed: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            $serviceError = true;
+            Log::error('Practice service error: ' . $e->getMessage());
         }
 
         // Filter by subject
@@ -109,9 +125,10 @@ class PracticeQuestionController extends Controller
         });
 
         return view('pengajar.Latihan.pilih', [
-            'class'        => $class,
-            'subject_name' => $subject_name,
-            'practices'    => $practiceList,
+            'class'         => $class,
+            'subject_name'  => $subject_name,
+            'practices'     => $practiceList,
+            'serviceError'  => $serviceError,
         ]);
     }
 
@@ -170,9 +187,16 @@ class PracticeQuestionController extends Controller
             if ($response->successful()) {
                 return back()->with('success', "Berhasil! $rowIndex soal latihan minggu ke-{$request->week} telah disimpan.");
             } else {
+                Log::error('Failed to save practice questions', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
                 return back()->with('error', 'Gagal menyimpan ke microservice.');
             }
 
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error("Koneksi ke Go Practice Service terputus: " . $e->getMessage());
+            return back()->with('error', 'Gagal terhubung ke microservice Practice. Pastikan service berjalan.');
         } catch (\Exception $e) {
             Log::error("Koneksi ke Go Practice Service terputus: " . $e->getMessage());
             return back()->with('error', 'Gagal terhubung ke microservice Practice.');
@@ -181,7 +205,6 @@ class PracticeQuestionController extends Controller
 
     /**
      * Delete all questions for a specific week
-     * ✅ PARAMETER SEKARANG KONSISTEN: subject_name
      */
     public function destroyByWeek($class_id, $subject_name, $week)
     {
@@ -244,14 +267,34 @@ class PracticeQuestionController extends Controller
         }
 
         $goUrl = env('GO_PRACTICE_URL', 'http://localhost:9003');
-        $response = Http::timeout(5)->get("$goUrl/api/tryouts", [
-            'class_id' => $class_id,
-            '_' => time()
-        ]);
+        $allQuestions = [];
+        $serviceError = false;
+
+        try {
+            $response = Http::timeout(5)->get("$goUrl/api/tryouts", [
+                'class_id' => $class_id,
+                '_' => time()
+            ]);
+
+            if ($response->successful()) {
+                $allQuestions = $response->json() ?? [];
+            } else {
+                $serviceError = true;
+                Log::warning('Practice service returned error', [
+                    'status' => $response->status(),
+                    'class_id' => $class_id
+                ]);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $serviceError = true;
+            Log::error('Practice service connection failed: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            $serviceError = true;
+            Log::error('Practice service error: ' . $e->getMessage());
+        }
 
         $questions = [];
-        if ($response->successful()) {
-            $allQuestions = $response->json() ?? [];
+        if (!$serviceError && !empty($allQuestions)) {
             $questions = array_filter($allQuestions, function($q) use ($subject_name, $week) {
                 return isset($q['subject']) && $q['subject'] == $subject_name && $q['week'] == (int)$week;
             });
@@ -260,6 +303,6 @@ class PracticeQuestionController extends Controller
 
         $class = ClassModel::findOrFail($class_id);
 
-        return view('pengajar.Latihan.questions', compact('class', 'subject_name', 'week', 'questions'));
+        return view('pengajar.Latihan.questions', compact('class', 'subject_name', 'week', 'questions', 'serviceError'));
     }
 }

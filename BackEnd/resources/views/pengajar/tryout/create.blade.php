@@ -5,16 +5,15 @@
 @section('content')
 <div class="cp-page">
 
-    {{-- ── 1. HEADER MINIMALIS MODERN ── --}}
+    {{-- ── 1. HEADER ── --}}
     <section class="cp-header">
         <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">TRYOUT QUESTION BUILDER</span>
             <h1>Input Soal: <span style="color: var(--spekta-teal);">{{ $subjectName }}</span></h1>
             <p>Program: {{ $classModel->program_name }} (ID Kelas: #{{ $classId }})</p>
         </div>
         <div class="cp-header-actions">
             <a href="{{ route('pengajar.tryout.index') }}" class="cp-secondary-btn">
-                <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+                Kembali ke Dashboard
             </a>
         </div>
     </section>
@@ -22,29 +21,26 @@
     {{-- ALERT NOTIFIKASI --}}
     @if(session('success'))
         <div class="tm-alert-modern success">
-            <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if(session('error'))
         <div class="tm-alert-modern error">
-            <i class="fa-solid fa-circle-xmark"></i>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if(session('warning'))
         <div class="tm-alert-modern warning">
-            <i class="fa-solid fa-triangle-exclamation"></i>
             <span>{{ session('warning') }}</span>
         </div>
     @endif
 
     {{-- ── 2. BOX IMPORT CSV ── --}}
-    <section class="cp-main-card mb-4" style="border: 2px dashed var(--spekta-red); background: var(--spekta-red-light); margin-bottom: 24px; border-radius: 16px; padding: 20px;">
+    <section class="cp-main-card mb-4" style="border: 2px solid var(--border-soft); background: var(--spekta-white); margin-bottom: 24px; border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.01);">
         <div class="card-header" style="margin-bottom: 14px;">
-            <h2 style="color: var(--spekta-red-dark); font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0 0 4px 0;"><i class="fa-solid fa-file-csv"></i> Import Soal via CSV</h2>
+            <h2 style="color: var(--text-main); font-size: 15px; font-weight: 800; margin: 0 0 4px 0;">Import Soal via CSV</h2>
             <p style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin: 0;">Gunakan fitur ini untuk mengunggah soal dalam jumlah banyak sekaligus.</p>
         </div>
 
@@ -55,10 +51,10 @@
 
             <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 200px;">
-                    <input type="file" name="file_csv" class="tm-input" accept=".csv" required style="padding: 9px; border: 1px solid var(--border-soft); background: var(--spekta-white);">
+                    <input type="file" name="file_csv" class="tm-input" accept=".csv" required style="padding: 9px; border: 1px solid var(--border-soft); background: var(--spekta-gray-light);">
                 </div>
-                <button type="submit" class="cp-primary-btn" style="background: #1f2937; height: 38px; border-radius: 10px; color: white; padding: 0 20px; border: none; cursor: pointer; font-weight: 800; transition: 0.2s; font-size: 12px;">
-                    <i class="fa-solid fa-upload"></i> MULAI IMPORT
+                <button type="submit" class="cp-submit-teal">
+                    MULAI IMPORT
                 </button>
             </div>
             <small style="display: block; margin-top: 8px; color: var(--text-muted); font-size: 10px; font-weight: 700;">*Pastikan urutan kolom: Mata Pelajaran, Pertanyaan, Opsi A, B, C, D, E, Kunci, Pembahasan.</small>
@@ -68,7 +64,7 @@
     {{-- ── 3. MAIN WORKSPACE GRID ── --}}
     <div class="tm-grid-layout">
 
-        {{-- KOLOM KIRI: FORM INPUT SOAL (MANUAL) --}}
+        {{-- KOLOM KIRI: FORM INPUT SOAL --}}
         <section class="cp-main-card">
             <div class="card-header" style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--spekta-gray-light);">
                 <h2 id="form-title" style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">Tambah Soal Baru (Manual)</h2>
@@ -77,7 +73,6 @@
 
             <form action="{{ route('pengajar.tryout.store') }}" method="POST" id="soalForm" class="sc-form">
                 @csrf
-                {{-- ID Hidden untuk proses Update --}}
                 <input type="hidden" name="draft_id" id="draft_id" value="">
                 <input type="hidden" name="class_id" value="{{ $classId }}">
                 <input type="hidden" name="subject_name" value="{{ $subjectName }}">
@@ -113,8 +108,8 @@
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="submit" id="btn-submit" class="cp-primary-btn" style="flex: 2; background: linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 13px; box-shadow: 0 4px 10px rgba(229,57,53,0.15);">
-                        <i class="fa-solid fa-paper-plane"></i> <span id="btn-text">Kirim Soal ke Admin</span>
+                    <button type="submit" id="btn-submit" class="btn-submit-teal">
+                        <span id="btn-text">Kirim Soal ke Admin</span>
                     </button>
 
                     <button type="button" id="btn-cancel" onclick="cancelEdit()" style="display: none; flex: 1; background: var(--spekta-gray); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
@@ -137,17 +132,15 @@
                         <div class="soal-header">
                             <span class="soal-number">#{{ count($existingSoal) - $index }}</span>
                             <div style="display: flex; gap: 8px;">
-                                {{-- Tombol Edit --}}
                                 <button type="button" onclick='editSoal(@json($soal))' class="btn-action-edit" title="Edit Soal">
-                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    Edit
                                 </button>
 
-                                {{-- Tombol Hapus --}}
                                 <form action="{{ route('pengajar.tryout.destroy_draft', $soal['id'] ?? $soal->id) }}" method="POST" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-action-delete-item" title="Hapus Draf" onclick="return confirm('Apakah Anda yakin ingin menghapus draf soal ini?')">
-                                        <i class="fa-solid fa-trash-can"></i>
+                                        Hapus
                                     </button>
                                 </form>
                             </div>
@@ -171,7 +164,6 @@
                     </div>
                 @empty
                     <div class="empty-state">
-                        <i class="fa-solid fa-file-circle-minus"></i>
                         <strong>Belum ada soal dikirim.</strong>
                         <span>Silakan input manual atau import CSV.</span>
                     </div>
@@ -181,17 +173,14 @@
     </div>
 </div>
 
-{{-- SCRIPT LOGIKA EDIT --}}
 <script>
     function editSoal(data) {
-        // 1. Ganti Tampilan Form ke Mode Edit
         document.getElementById('form-title').innerText = "Edit Draf Soal #" + (data.id || data.draft_id);
         document.getElementById('form-subtitle').innerText = "Pastikan perubahan Anda sudah benar sebelum menekan tombol perbarui.";
         document.getElementById('btn-text').innerText = "Perbarui Soal Sekarang";
         document.getElementById('btn-cancel').style.display = "block";
-        document.getElementById('btn-submit').style.background = "#d97706"; // Oranye
+        document.getElementById('btn-submit').style.background = "linear-gradient(135deg, #d97706 0%, #b45309 100%)";
 
-        // 2. Isi Input dengan Data Terpilih
         document.getElementById('draft_id').value = data.id || data.draft_id || '';
         document.getElementById('question').value = data.question || '';
         document.getElementById('option_a').value = data.option_a || '';
@@ -202,7 +191,6 @@
         document.getElementById('correct_answer').value = data.correct_answer || 'A';
         document.getElementById('explanation').value = data.explanation || '';
 
-        // 3. Fokus ke Form (Scroll ke atas)
         window.scrollTo({ top: 150, behavior: 'smooth' });
     }
 
@@ -221,16 +209,29 @@
         document.getElementById('form-subtitle').innerText = "Isi detail pertanyaan dan pilihan jawaban di bawah ini.";
         document.getElementById('btn-text').innerText = "Kirim Soal ke Admin";
         document.getElementById('btn-cancel').style.display = "none";
-        document.getElementById('btn-submit').style.background = "linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%)";
+        document.getElementById('btn-submit').style.background = "linear-gradient(135deg, var(--spekta-teal) 0%, var(--spekta-teal-dark) 100%)";
     }
 </script>
 
-{{-- STYLING PREMIUM --}}
 <style>
     .cp-page { padding: 10px; font-family: 'Montserrat', sans-serif; animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Header Minimalis */
+    :root {
+        --spekta-red-dark: #c5352c;
+        --spekta-red: #e53935;
+        --spekta-teal: #2ea8ab;
+        --spekta-teal-dark: #1e878a;
+        --spekta-teal-light: rgba(46, 168, 171, 0.12);
+        --spekta-red-light: rgba(229, 57, 53, 0.06);
+        --spekta-gray: #9e9e9e;
+        --spekta-gray-light: #f3f4f6;
+        --spekta-white: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border-soft: #e5e7eb;
+    }
+
     .cp-header {
         display: flex;
         justify-content: space-between;
@@ -240,18 +241,7 @@
         border-bottom: 1px solid var(--border-soft);
         padding-bottom: 20px;
     }
-    .cp-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-    }
+
     .cp-header h1 {
         margin: 0 0 6px;
         color: var(--text-main);
@@ -266,6 +256,7 @@
         font-size: 13px;
         font-weight: 600;
     }
+
     .cp-secondary-btn {
         display: inline-flex;
         align-items: center;
@@ -286,6 +277,33 @@
         border-color: var(--spekta-gray);
     }
 
+    /* Alerts */
+    .tm-alert-modern {
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .tm-alert-modern.success {
+        background: #e6f7ed;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .tm-alert-modern.error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .tm-alert-modern.warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
     /* Layout Grid */
     .tm-grid-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
     .cp-main-card { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
@@ -301,32 +319,193 @@
     /* Options Layout */
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+    /* ── TOMBOL SUBMIT TEAL ── */
+    .btn-submit-teal {
+        flex: 2;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--spekta-teal) 0%, var(--spekta-teal-dark) 100%);
+        color: var(--spekta-white);
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        font-size: 13px;
+        box-shadow: 0 4px 12px rgba(46, 168, 171, 0.25);
+        font-family: inherit;
+        letter-spacing: 0.04em;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit-teal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 168, 171, 0.35);
+    }
+
+    .btn-submit-teal:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit-teal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(46, 168, 171, 0.2);
+    }
+
+    /* ── TOMBOL IMPORT TEAL ── */
+    .cp-submit-teal {
+        height: 42px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--spekta-teal) 0%, var(--spekta-teal-dark) 100%);
+        color: var(--spekta-white);
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        cursor: pointer;
+        font-family: inherit;
+        box-shadow: 0 4px 12px rgba(46, 168, 171, 0.25);
+        transition: all 0.25s ease;
+        padding: 0 24px;
+        letter-spacing: 0.04em;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cp-submit-teal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .cp-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 168, 171, 0.35);
+    }
+
+    .cp-submit-teal:hover::before {
+        left: 100%;
+    }
+
+    .cp-submit-teal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(46, 168, 171, 0.2);
+    }
+
     /* List Soal Terupload */
     .soal-list-scroll { max-height: 700px; overflow-y: auto; padding-right: 8px; }
-    .soal-item { padding: 16px; background: var(--spekta-gray-light); border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-soft); transition: 0.25s; }
-    .soal-item:hover { border-color: var(--spekta-gray); background: var(--spekta-white); box-shadow: 0 4px 12px rgba(0,0,0,0.02); transform: translateY(-2px); }
-    .soal-header { display: flex; justify-content: space-between; align-items: center; }
-    .soal-number { font-weight: 900; color: var(--spekta-red); font-size: 11px; background: var(--spekta-red-light); padding: 3px 8px; border-radius: 6px; }
+    .soal-list-scroll::-webkit-scrollbar { width: 4px; }
+    .soal-list-scroll::-webkit-scrollbar-track { background: var(--spekta-gray-light); }
+    .soal-list-scroll::-webkit-scrollbar-thumb { background: var(--spekta-gray); border-radius: 10px; }
 
-    .btn-action-edit, .btn-action-delete-item {
-        border: none; cursor: pointer; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s;
+    .soal-item {
+        padding: 16px;
+        background: var(--spekta-gray-light);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border-soft);
+        transition: 0.25s;
     }
-    .btn-action-edit { background: #e0f2fe; color: #0369a1; }
-    .btn-action-edit:hover { background: #bae6fd; color: #02507d; }
-    .btn-action-delete-item { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .btn-action-delete-item:hover { background: #fecaca; color: #991b1b; }
+    .soal-item:hover {
+        border-color: var(--spekta-gray);
+        background: var(--spekta-white);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        transform: translateY(-2px);
+    }
 
-    .soal-preview { font-size: 12px; color: var(--text-main); margin: 10px 0; font-weight: 700; line-height: 1.5; }
-    .soal-footer { display: flex; justify-content: space-between; align-items: center; }
-    .key-badge { background: #e6f7ed; color: #15803d; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; }
-    .date-text { color: var(--text-muted); font-size: 10px; font-weight: 600; }
+    .soal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .soal-number {
+        font-weight: 900;
+        color: var(--spekta-red);
+        font-size: 11px;
+        background: var(--spekta-red-light);
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
 
-    .tm-alert-modern { padding: 12px 16px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 13px; }
-    .tm-alert-modern.success { background: #e6f7ed; color: #15803d; border-left: 5px solid #22c55e; }
-    .tm-alert-modern.error { background: #fee2e2; color: #b91c1c; border-left: 5px solid #ef4444; }
-    .tm-alert-modern.warning { background: #fef3c7; color: #92400e; border-left: 5px solid #f59e0b; }
+    .btn-action-edit {
+        border: none;
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        transition: 0.2s;
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+    .btn-action-edit:hover {
+        background: #bae6fd;
+        color: #02507d;
+    }
 
-    /* Empty State */
+    .btn-action-delete-item {
+        border: none;
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        transition: 0.2s;
+        background: var(--spekta-red-light);
+        color: var(--spekta-red);
+    }
+    .btn-action-delete-item:hover {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    .soal-preview {
+        font-size: 12px;
+        color: var(--text-main);
+        margin: 10px 0;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
+    .soal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .key-badge {
+        background: #e6f7ed;
+        color: #15803d;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .date-text {
+        color: var(--text-muted);
+        font-size: 10px;
+        font-weight: 600;
+    }
+
     .empty-state {
         text-align: center;
         padding: 48px;
@@ -338,19 +517,38 @@
         align-items: center;
         gap: 6px;
     }
-    .empty-state i {
-        font-size: 24px;
-        color: var(--spekta-gray);
+    .empty-state strong {
+        display: block;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 800;
         margin-bottom: 4px;
     }
-
-    .soal-list-scroll::-webkit-scrollbar { width: 4px; }
-    .soal-list-scroll::-webkit-scrollbar-track { background: var(--spekta-gray-light); }
-    .soal-list-scroll::-webkit-scrollbar-thumb { background: var(--spekta-gray); border-radius: 10px; }
 
     @media (max-width: 1000px) {
         .tm-grid-layout { grid-template-columns: 1fr; }
         .options-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+        .cp-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .cp-submit-teal {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-submit-teal {
+            width: 100%;
+        }
+
+        .soal-list-scroll {
+            max-height: 400px;
+        }
     }
 </style>
 @endsection

@@ -1,30 +1,28 @@
-@extends('layouts.spekta')
+<?php $__env->startSection('title', 'Edit Absensi'); ?>
 
-@section('title', 'Edit Absensi')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="abs-page">
 
-    {{-- ── 1. HEADER MINIMALIS ── --}}
+    
     <section class="abs-header">
         <div class="abs-header-left">
-            <a href="{{ route('pengajar.absensi.recap', [$class->class_id, $subject, $week]) }}" class="abs-back-btn">
+            <a href="<?php echo e(route('pengajar.absensi.recap', [$class->class_id, $subject, $week])); ?>" class="abs-back-btn">
                 Kembali
             </a>
-            <h1>Edit {{ $subject }}</h1>
-            <p>{{ $class->program_name }} • Minggu ke-{{ $week }}</p>
+            <h1>Edit <?php echo e($subject); ?></h1>
+            <p><?php echo e($class->program_name); ?> • Minggu ke-<?php echo e($week); ?></p>
         </div>
 
         <div class="abs-date-info">
             <span>Waktu Edit</span>
-            <strong>{{ date('d M Y') }}</strong>
+            <strong><?php echo e(date('d M Y')); ?></strong>
         </div>
     </section>
 
-    {{-- ── 2. EDIT PANEL ── --}}
-    <form action="{{ route('pengajar.absensi.update', [$class->class_id, $subject, $week]) }}" method="POST" class="abs-input-panel">
-        @csrf
-        @method('PUT')
+    
+    <form action="<?php echo e(route('pengajar.absensi.update', [$class->class_id, $subject, $week])); ?>" method="POST" class="abs-input-panel">
+        <?php echo csrf_field(); ?>
+        <?php echo method_field('PUT'); ?>
 
         <div class="abs-input-head">
             <div>
@@ -39,66 +37,68 @@
             </div>
         </div>
 
-        @if($siswas->count() > 0)
+        <?php if($siswas->count() > 0): ?>
             <div class="abs-student-list">
-                @foreach($siswas as $index => $s)
+                <?php $__currentLoopData = $siswas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="abs-student-row">
                         <div class="abs-student-number">
-                            {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}
+                            <?php echo e(str_pad($index + 1, 2, '0', STR_PAD_LEFT)); ?>
+
                         </div>
 
                         <div class="abs-student-info">
-                            <strong>{{ $s->user->name }}</strong>
+                            <strong><?php echo e($s->user->name); ?></strong>
                             <span>Siswa Aktif</span>
                         </div>
 
                         <div class="abs-radio-group">
                             <label>
                                 <input type="radio"
-                                        name="status[{{ $s->user->usersID }}]"
+                                        name="status[<?php echo e($s->user->usersID); ?>]"
                                         value="h"
-                                        {{ ($existingAttendance[$s->user->usersID] ?? null) === 'h' ? 'checked' : '' }}
+                                        <?php echo e(($existingAttendance[$s->user->usersID] ?? null) === 'h' ? 'checked' : ''); ?>
+
                                         required>
                                 <span class="hadir">Hadir</span>
                             </label>
 
                             <label>
                                 <input type="radio"
-                                        name="status[{{ $s->user->usersID }}]"
+                                        name="status[<?php echo e($s->user->usersID); ?>]"
                                         value="i"
-                                        {{ ($existingAttendance[$s->user->usersID] ?? null) === 'i' ? 'checked' : '' }}>
+                                        <?php echo e(($existingAttendance[$s->user->usersID] ?? null) === 'i' ? 'checked' : ''); ?>>
                                 <span class="izin">Izin</span>
                             </label>
 
                             <label>
                                 <input type="radio"
-                                        name="status[{{ $s->user->usersID }}]"
+                                        name="status[<?php echo e($s->user->usersID); ?>]"
                                         value="a"
-                                        {{ ($existingAttendance[$s->user->usersID] ?? null) === 'a' ? 'checked' : '' }}>
+                                        <?php echo e(($existingAttendance[$s->user->usersID] ?? null) === 'a' ? 'checked' : ''); ?>>
                                 <span class="alpa">Alpa</span>
                             </label>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
 
             <div class="abs-submit-bar">
                 <div class="submit-info-text">
-                    <strong>{{ $siswas->count() }}</strong>
-                    <span>Siswa diproses untuk minggu ke-{{ $week }}</span>
+                    <strong><?php echo e($siswas->count()); ?></strong>
+                    <span>Siswa diproses untuk minggu ke-<?php echo e($week); ?></span>
                 </div>
 
                 <button type="submit" class="btn-submit-teal">
                     Perbarui Absensi
                 </button>
             </div>
-        @else
+        <?php else: ?>
             <div class="abs-empty">
                 <div class="abs-empty-icon"><i class="fa-solid fa-user-slash"></i></div>
                 <strong>Belum ada siswa aktif di kelas ini.</strong>
                 <span>Absensi dapat dilakukan setelah siswa aktif tersedia pada program kelas ini.</span>
             </div>
-        @endif
+        <?php endif; ?>
     </form>
 
 </div>
@@ -312,4 +312,6 @@
         }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/pengajar/absensi/edit.blade.php ENDPATH**/ ?>

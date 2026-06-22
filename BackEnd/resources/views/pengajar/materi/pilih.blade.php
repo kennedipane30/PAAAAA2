@@ -8,13 +8,12 @@
     {{-- ── 1. HEADER MINIMALIS DENGAN KAPSUL BREADCRUMB ── --}}
     <section class="cp-header">
         <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">Weekly Material Manager</span>
             <h1>Kelola Materi: <span style="color: var(--spekta-teal);">{{ $subject_name }}</span></h1>
-            <p>Kelas: {{ $class->program_name ?? 'N/A' }} • Pilih minggu, isi judul, dan unggah modul pembelajaran.</p>
+
         </div>
         <div class="cp-header-actions">
             <a href="{{ route('pengajar.materi.index') }}" class="cp-secondary-btn">
-                <i class="fa-solid fa-arrow-left"></i> Kembali ke List
+                Kembali ke List
             </a>
         </div>
     </section>
@@ -22,22 +21,19 @@
     {{-- ALERT NOTIFIKASI --}}
     @if(session('success'))
         <div class="cp-alert success">
-            <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if(session('error'))
         <div class="cp-alert error">
-            <i class="fa-solid fa-circle-exclamation"></i>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if(isset($serviceError) && $serviceError)
     <div class="cp-alert warning">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>⚠️ Server materi sedang bermasalah. Data mungkin tidak dapat dimuat. Silakan coba lagi nanti.</span>
+        <span>Server materi sedang bermasalah. Data mungkin tidak dapat dimuat. Silakan coba lagi nanti.</span>
     </div>
 @endif
 
@@ -52,11 +48,9 @@
         <form action="{{ route('pengajar.materi.store', $class->class_id) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <!-- material_name dikirim agar subject_name di Go tidak kosong -->
             <input type="hidden" name="material_name" value="{{ $subject_name }}">
 
             <div class="cp-form-grid">
-                <!-- Minggu Ke -->
                 <div class="cp-input-group">
                     <label>Minggu Ke</label>
                     <div class="cp-input-wrap">
@@ -68,7 +62,6 @@
                     </div>
                 </div>
 
-                <!-- Judul Materi -->
                 <div class="cp-input-group">
                     <label>Judul Materi</label>
                     <div class="cp-input-wrap">
@@ -76,7 +69,6 @@
                     </div>
                 </div>
 
-                <!-- Upload PDF -->
                 <div class="cp-input-group">
                     <label>Upload PDF (Opsional saat ubah judul)</label>
                     <div class="cp-input-wrap file-wrap">
@@ -84,10 +76,9 @@
                     </div>
                 </div>
 
-                <!-- Tombol Submit -->
                 <div class="cp-action-wrap">
-                    <button type="submit" class="cp-btn-submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan
+                    <button type="submit" class="cp-btn-submit-teal">
+                        Simpan
                     </button>
                 </div>
             </div>
@@ -115,12 +106,10 @@
                 <tbody>
                     @forelse($materis as $item)
                     <tr>
-                        {{-- Minggu --}}
                         <td>
                             <span class="badge-week">MG-{{ $item['week'] ?? 'N/A' }}</span>
                         </td>
 
-                        {{-- Judul Materi --}}
                         <td>
                             <div class="materi-info">
                                 <strong>{{ $item['title'] ?? 'Untitled' }}</strong>
@@ -128,18 +117,16 @@
                             </div>
                         </td>
 
-                        {{-- Status File (Pill Glowing Green) --}}
                         <td>
                             @if(!empty($item['file_path']))
                                 <a target="_blank" href="{{ $item['file_path'] }}" class="badge-file">
-                                    <i class="fa-solid fa-file-pdf"></i> PDF Tersedia
+                                    PDF Tersedia
                                 </a>
                             @else
                                 <span class="badge-empty">Tanpa File</span>
                             @endif
                         </td>
 
-                        {{-- Kolom Aksi Sejajar Tengah --}}
                         <td>
                             <div class="action-group">
                                 @if(!empty($item['file_path']))
@@ -166,7 +153,6 @@
                         <tr>
                             <td colspan="4">
                                 <div class="cp-empty-state">
-                                    <div class="cp-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
                                     <strong>Belum ada materi pembelajaran</strong>
                                     <span>Silakan unggah draf file PDF materi pertama Anda melalui form di atas.</span>
                                 </div>
@@ -179,14 +165,12 @@
     </section>
 </div>
 
-{{-- SCRIPT LOGIKA FILL EDIT FORM --}}
 <script>
     function fillEditForm(title, week) {
         document.getElementById('input-title').value = title;
         document.getElementById('input-week').value = week;
         document.getElementById('form-title').innerText = "Edit Materi Minggu " + week;
 
-        // Berikan visual feedback bahwa user sedang mengedit (Smooth Scroll)
         window.scrollTo({ top: 120, behavior: 'smooth' });
         document.getElementById('input-title').focus();
     }
@@ -197,7 +181,8 @@
         --spekta-red-dark: #c5352c;
         --spekta-red: #e53935;
         --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal-dark: #1e878a;
+        --spekta-teal-light: rgba(46, 168, 171, 0.12);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
@@ -207,7 +192,6 @@
         --border-soft: #e5e7eb;
     }
 
-    /* BASE LAYOUT */
     .cp-page {
         padding: 10px;
         font-family: 'Montserrat', sans-serif;
@@ -220,7 +204,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Header Minimalis */
     .cp-header {
         display: flex;
         justify-content: space-between;
@@ -231,27 +214,12 @@
         padding-bottom: 20px;
     }
 
-
-
-
     .cp-alert.warning {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
-}
-
-    .cp-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
     }
+
     .cp-header h1 {
         margin: 0 0 6px;
         color: var(--text-main);
@@ -266,6 +234,7 @@
         font-size: 13px;
         font-weight: 600;
     }
+
     .cp-secondary-btn {
         display: inline-flex;
         align-items: center;
@@ -286,7 +255,6 @@
         border-color: var(--spekta-gray);
     }
 
-    /* ALERTS */
     .cp-alert {
         display: flex;
         align-items: center;
@@ -300,7 +268,6 @@
     .cp-alert.success { background: #e6f7ed; color: #15803d; border: 1px solid #bbf7d0; }
     .cp-alert.error { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
 
-    /* CARDS */
     .cp-card {
         background: var(--spekta-white);
         padding: 20px;
@@ -327,7 +294,6 @@
         font-weight: 600;
     }
 
-    /* FORM STYLES */
     .cp-form-grid {
         display: grid;
         grid-template-columns: 1fr 2fr 2.5fr auto;
@@ -372,11 +338,13 @@
         align-items: center;
         height: 40px;
     }
-    .cp-btn-submit {
+
+    /* ── TOMBOL SIMPAN TEAL ── */
+    .cp-btn-submit-teal {
         height: 100%;
-        padding: 0 20px;
+        padding: 0 24px;
         border: none;
-        background: linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%);
+        background: linear-gradient(135deg, var(--spekta-teal) 0%, var(--spekta-teal-dark) 100%);
         color: var(--spekta-white);
         font-size: 12px;
         font-weight: 800;
@@ -384,16 +352,41 @@
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 10px rgba(229, 57, 53, 0.15);
-    }
-    .cp-btn-submit:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 15px rgba(229, 57, 53, 0.25);
+        gap: 8px;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(46, 168, 171, 0.25);
+        font-family: inherit;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
     }
 
-    /* TABLE STYLES */
+    .cp-btn-submit-teal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .cp-btn-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 168, 171, 0.35);
+    }
+
+    .cp-btn-submit-teal:hover::before {
+        left: 100%;
+    }
+
+    .cp-btn-submit-teal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(46, 168, 171, 0.2);
+    }
+
     .table-responsive { overflow-x: auto; }
     .cp-table {
         width: 100%;
@@ -419,7 +412,6 @@
     .cp-table tr:last-child td { border-bottom: none; }
     .cp-table tr:hover { background: #fafbfc; }
 
-    /* BADGES & TYPOGRAPHY */
     .badge-week {
         padding: 4px 10px;
         background: var(--spekta-gray-light);
@@ -462,7 +454,6 @@
         font-weight: 600;
     }
 
-    /* ACTIONS (TABLE) */
     .action-group {
         display: flex;
         justify-content: flex-end;
@@ -490,7 +481,6 @@
     .red { background: var(--spekta-red-light); color: var(--spekta-red); }
     .red:hover { background: #fecaca; }
 
-    /* EMPTY STATE */
     .cp-empty-state {
         text-align: center;
         padding: 40px;
@@ -502,13 +492,14 @@
         align-items: center;
         gap: 8px;
     }
-    .cp-empty-state i {
-        font-size: 20px;
-        color: var(--spekta-gray);
+    .cp-empty-state strong {
+        display: block;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 800;
         margin-bottom: 4px;
     }
 
-    /* RESPONSIVE */
     @media(max-width: 1024px){
         .cp-form-grid {
             grid-template-columns: 1fr 1fr;
@@ -522,7 +513,11 @@
     @media(max-width: 640px){
         .cp-card { padding: 15px; }
         .cp-form-grid { grid-template-columns: 1fr; }
-        .cp-btn-submit { width: 100%; justify-content: center;}
+        .cp-btn-submit-teal {
+            width: 100%;
+            justify-content: center;
+            height: 42px;
+        }
     }
 </style>
 @endsection
