@@ -4,7 +4,6 @@
 
 @section('content')
 @php
-    // Kalkulasi dinamis total draf soal yang masuk dari seluruh kelas pengajar
     $totalDraftsCount = collect($classes)->sum(function($c) use ($draftStatus) {
         return $draftStatus[$c->class_id]->total ?? 0;
     });
@@ -12,10 +11,9 @@
 
 <div class="cp-page">
 
-    {{-- ── 1. HEADER MINIMALIS MODERN (BERSIH & ELEGAN TANPA TOMBOL MANUAL) ── --}}
-    <section class="cp-header">
-        <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">Admin Tryout Center</span>
+    {{-- ── WELCOME CARD ── --}}
+    <section class="welcome-card">
+        <div class="welcome-text">
             <h1>Manajemen Paket TO</h1>
             <p>Kurasi setoran soal dari pengajar dan publikasikan menjadi paket Tryout resmi untuk aplikasi mobile siswa.</p>
         </div>
@@ -24,7 +22,6 @@
     {{-- SYSTEM ALERTS --}}
     @if(session('success'))
         <div class="tm-alert-modern success">
-            <i class="fa-solid fa-circle-check"></i>
             <div>
                 <strong>OPERASI BERHASIL</strong>
                 <p>{{ session('success') }}</p>
@@ -34,7 +31,6 @@
 
     @if(session('error'))
         <div class="tm-alert-modern error">
-            <i class="fa-solid fa-circle-xmark"></i>
             <div>
                 <strong>OPERASI GAGAL</strong>
                 <p>{{ session('error') }}</p>
@@ -42,11 +38,9 @@
         </div>
     @endif
 
-    {{-- ── 2. STATS SUMMARY GRID (3 KOLOM SEIMBANG) ── --}}
+    {{-- ── STATS SUMMARY GRID ── --}}
     <section class="cp-stats">
-        <!-- Paket Live -->
         <div class="cp-stat-card card-red">
-            <div class="cp-stat-icon red"><i class="fa-solid fa-fire"></i></div>
             <div class="cp-stat-info">
                 <p>Paket TO Live</p>
                 <h2>{{ count($activePackages) }} <span>Paket</span></h2>
@@ -56,18 +50,14 @@
             @endif
         </div>
 
-        <!-- Antrean Setoran -->
         <div class="cp-stat-card card-teal">
-            <div class="cp-stat-icon teal"><i class="fa-solid fa-hourglass-half"></i></div>
             <div class="cp-stat-info">
                 <p>Antrean Setoran</p>
                 <h2>{{ number_format($totalDraftsCount) }} <span>Soal</span></h2>
             </div>
         </div>
 
-        <!-- Total Program Kelas -->
-        <div class="cp-stat-card card-gray">
-            <div class="cp-stat-icon gray"><i class="fa-solid fa-layer-group"></i></div>
+        <div class="cp-stat-card card-blue">
             <div class="cp-stat-info">
                 <p>Target Program</p>
                 <h2>{{ count($classes) }} <span>Kelas</span></h2>
@@ -75,18 +65,14 @@
         </div>
     </section>
 
-    {{-- ── 3. MAIN WORKSPACE GRID ── --}}
+    {{-- ── MAIN WORKSPACE GRID ── --}}
     <div class="tm-grid-layout">
 
-        {{-- PANEL KIRI: MONITORING DRAF GURU --}}
         <section class="cp-main-card">
             <div class="card-header-flex">
-                <div class="title-with-icon">
-                    <div class="icon-box red"><i class="fa-solid fa-inbox"></i></div>
-                    <div>
-                        <h2>Setoran Soal Pengajar</h2>
-                        <p>Draf soal masuk yang menunggu antrean publikasi.</p>
-                    </div>
+                <div>
+                    <h2>Setoran Soal Pengajar</h2>
+                    <p>Draf soal masuk yang menunggu antrean publikasi.</p>
                 </div>
             </div>
 
@@ -107,9 +93,6 @@
                             <tr>
                                 <td>
                                     <div class="program-info">
-                                        <div class="program-icon-box">
-                                            <i class="fa-solid fa-school-flag"></i>
-                                        </div>
                                         <div>
                                             <strong>{{ $c->program_name }}</strong>
                                             <small>ID Kelas: #{{ $c->class_id }}</small>
@@ -119,10 +102,6 @@
                                 <td>
                                     @if($totalSoal > 0)
                                         <span class="badge-status success">
-                                            <span class="cp-dot-wrapper">
-                                                <i class="cp-dot"></i>
-                                                <i class="cp-dot-pulse"></i>
-                                            </span>
                                             {{ $totalSoal }} Soal Baru
                                         </span>
                                     @else
@@ -132,14 +111,11 @@
                                 <td class="text-right">
                                     <div class="action-group-end">
                                         @if($totalSoal > 0)
-                                            <a href="{{ route('admin.tryout.export_draft', $c->class_id) }}" class="btn-icon-sm green-soft" title="Download CSV">
-                                                <i class="fa-solid fa-file-csv"></i>
-                                            </a>
+                                            <a href="{{ route('admin.tryout.export_draft', $c->class_id) }}" class="btn-icon-sm green-soft">CSV</a>
                                         @endif
 
-                                        <a href="{{ route('admin.tryout.review', $c->class_id) }}" class="btn-review-main">
-                                            <span>Review</span>
-                                            <i class="fa-solid fa-arrow-right"></i>
+                                        <a href="{{ route('admin.tryout.review', $c->class_id) }}" class="btn-review-teal">
+                                            Review
                                         </a>
                                     </div>
                                 </td>
@@ -150,24 +126,17 @@
             </div>
         </section>
 
-        {{-- PANEL KANAN: PAKET YANG SUDAH TERBIT --}}
         <section class="cp-main-card">
             <div class="card-header-flex">
-                <div class="title-with-icon">
-                    <div class="icon-box blue"><i class="fa-solid fa-paper-plane"></i></div>
-                    <div>
-                        <h2>Paket TO Terbit</h2>
-                        <p>Katalog paket yang sudah aktif di aplikasi siswa.</p>
-                    </div>
+                <div>
+                    <h2>Paket TO Terbit</h2>
+                    <p>Katalog paket yang sudah aktif di aplikasi siswa.</p>
                 </div>
             </div>
 
             <div class="active-list">
                 @forelse($activePackages as $pkg)
                     <div class="package-item-card">
-                        <div class="pkg-icon">
-                            <i class="fa-solid {{ $pkg->total_questions > 0 ? 'fa-stopwatch-20' : 'fa-file-lines' }}"></i>
-                        </div>
                         <div class="pkg-info">
                             <strong>{{ $pkg->title }}</strong>
                             <span>{{ $pkg->class_name }} • {{ $pkg->total_questions }} Soal • {{ $pkg->duration }} menit</span>
@@ -176,14 +145,11 @@
                         <form action="{{ route('admin.tryout.destroy_package', $pkg->tryout_id) }}" method="POST" onsubmit="return confirm('Hapus paket ini dari HP siswa?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn-del-pkg" title="Hapus Paket">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <button type="submit" class="btn-del-pkg" title="Hapus Paket">Hapus</button>
                         </form>
                     </div>
                 @empty
                     <div class="empty-state-lite">
-                        <i class="fa-solid fa-ghost"></i>
                         <p>Belum ada paket dipublikasikan.</p>
                         <small>Publish paket tryout dari draf yang tersedia.</small>
                     </div>
@@ -197,9 +163,12 @@
     :root {
         --spekta-red-dark: #c5352c;
         --spekta-red: #e53935;
-        --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
+        --spekta-blue: #2563eb;
+        --spekta-blue-dark: #1d4ed8;
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
         --spekta-white: #ffffff;
@@ -211,117 +180,192 @@
     .cp-page { padding: 10px; font-family: 'Montserrat', sans-serif; animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ── Header ── */
-    .cp-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
         margin-bottom: 24px;
-        gap: 20px;
-        border-bottom: 1px solid var(--border-soft);
-        padding-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
     }
-    .cp-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
+
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
     }
-    .cp-header h1 {
+
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-text h1 {
         margin: 0 0 6px;
-        color: var(--text-main);
-        font-size: 24px;
-        font-weight: 900;
+        font-size: 20px;
+        font-weight: 800;
         letter-spacing: -0.02em;
+        color: #111827;
     }
-    .cp-header p {
+
+    .welcome-text p {
         margin: 0;
-        color: var(--text-muted);
         font-size: 13px;
-        font-weight: 600;
+        color: #6b7280;
+        font-weight: 500;
     }
 
-    /* Alerts */
-    .tm-alert-modern { padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 15px; font-weight: 800; border-left: 6px solid; font-size: 13px; }
-    .tm-alert-modern.success { background: #e6f7ed; color: #15803d; border-color: #22c55e; }
-    .tm-alert-modern.error { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
-    .tm-alert-modern i { font-size: 20px; }
-    .tm-alert-modern p { margin: 2px 0 0; font-size: 12px; opacity: 0.9; font-weight: 600; }
+    /* ── ALERTS ── */
+    .tm-alert-modern {
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-weight: 700;
+        border-left: 6px solid;
+        font-size: 13px;
+    }
+    .tm-alert-modern.success {
+        background: #e6f7ed;
+        color: #15803d;
+        border-color: #22c55e;
+    }
+    .tm-alert-modern.error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #ef4444;
+    }
+    .tm-alert-modern p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        opacity: 0.9;
+        font-weight: 500;
+    }
 
-    /* Stats Grid */
+    /* ── STATS ── */
     .cp-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 24px;
     }
-    .cp-stat-card {
-        background: var(--spekta-white);
-        border-radius: 14px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        border: 1px solid var(--border-soft);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
-        transition: all 0.25s ease;
-        position: relative;
-    }
-    .cp-stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.03);
-    }
-    .cp-stat-card.card-red:hover { border-color: var(--spekta-red); }
-    .cp-stat-card.card-teal:hover { border-color: var(--spekta-teal); }
-    .cp-stat-card.card-gray:hover { border-color: var(--spekta-gray); }
 
-    .cp-stat-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        font-size: 16px;
+    .cp-stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+        overflow: hidden;
     }
-    .cp-stat-icon.red { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .cp-stat-icon.teal { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .cp-stat-icon.gray { background: var(--spekta-gray-light); color: var(--text-muted); }
+
+    .cp-stat-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .cp-stat-card.card-red {
+        background: linear-gradient(135deg, #e53935 0%, #c5352c 100%);
+        box-shadow: 0 4px 15px rgba(229, 57, 53, 0.3);
+    }
+    .cp-stat-card.card-red:hover {
+        box-shadow: 0 8px 30px rgba(229, 57, 53, 0.4);
+    }
+
+    .cp-stat-card.card-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    }
+    .cp-stat-card.card-teal:hover {
+        box-shadow: 0 8px 30px rgba(20, 184, 166, 0.4);
+    }
+
+    .cp-stat-card.card-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .cp-stat-card.card-blue:hover {
+        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .cp-stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+    }
+
+    .cp-stat-card::before {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -20%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+
+    .cp-stat-info {
+        position: relative;
+        z-index: 1;
+    }
 
     .cp-stat-info p {
         margin: 0 0 4px;
         font-size: 10px;
-        font-weight: 800;
-        color: var(--text-muted);
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.9);
     }
+
     .cp-stat-info h2 {
         margin: 0;
         font-size: 24px;
         font-weight: 800;
-        color: var(--text-main);
-        line-height: 1;
+        color: #ffffff;
+        line-height: 1.2;
         display: flex;
         align-items: baseline;
         gap: 4px;
     }
+
     .cp-stat-info h2 span {
         font-size: 12px;
         font-weight: 600;
-        color: var(--text-muted);
+        opacity: 0.8;
+        color: rgba(255, 255, 255, 0.85);
     }
 
     .cp-pulse-dot {
         position: absolute;
-        top: 14px; right: 14px;
-        width: 6px; height: 6px;
-        background: var(--spekta-red);
+        top: 14px;
+        right: 14px;
+        width: 6px;
+        height: 6px;
+        background: #e53935;
         border-radius: 50%;
         box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7);
         animation: pulseRed 1.5s infinite;
@@ -332,77 +376,265 @@
         100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
     }
 
-    /* Layout Panel */
-    .tm-grid-layout { display: grid; grid-template-columns: 1.35fr 1fr; gap: 24px; }
-    .cp-main-card { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
+    /* ── GRID ── */
+    .tm-grid-layout {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 24px;
+    }
 
-    .title-with-icon { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-    .icon-box { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
-    .icon-box.red { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .icon-box.blue { background: var(--spekta-teal-light); color: var(--spekta-teal); }
+    .cp-main-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
 
-    .card-header-flex h2 { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0; }
-    .card-header-flex p { font-size: 11px; color: var(--text-muted); margin: 0; font-weight: 600; }
+    .card-header-flex h2 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 4px;
+    }
 
-    /* Table Design */
-    .cp-table-modern { width: 100%; border-collapse: collapse; }
-    .cp-table-modern th { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; padding: 12px 14px; border-bottom: 2px solid var(--spekta-gray-light); letter-spacing: 0.05em; }
-    .cp-table-modern td { padding: 14px; border-bottom: 1px solid var(--spekta-gray-light); vertical-align: middle; }
-    .cp-table-modern tbody tr:last-child td { border-bottom: none; }
-    .cp-table-modern tbody tr:hover { background: #fafbfc; }
+    .card-header-flex p {
+        font-size: 11px;
+        color: #6b7280;
+        margin: 0;
+        font-weight: 500;
+    }
 
-    .program-info { display: flex; align-items: center; gap: 10px; }
-    .program-icon-box { width: 34px; height: 34px; background: var(--spekta-gray-light); border-radius: 8px; display: grid; place-items: center; font-size: 14px; color: var(--text-muted); border: 1px solid var(--border-soft); }
-    .program-info strong { display: block; font-size: 13px; font-weight: 800; color: var(--text-main); }
-    .program-info small { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+    /* ── TABLE ── */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .cp-table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .cp-table-modern th {
+        font-size: 9px;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        padding: 10px 14px;
+        border-bottom: 2px solid #f3f4f6;
+        letter-spacing: 0.08em;
+    }
+
+    .cp-table-modern td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .cp-table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cp-table-modern tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .program-info strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .program-info small {
+        font-size: 10px;
+        color: #6b7280;
+        font-weight: 500;
+        display: block;
+        margin-top: 2px;
+    }
 
     .badge-status {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
         height: 22px;
-        padding: 0 8px;
+        padding: 0 10px;
         border-radius: 6px;
         font-size: 10px;
-        font-weight: 800;
+        font-weight: 600;
         white-space: nowrap;
     }
-    .badge-status .cp-dot-wrapper { position: relative; width: 5px; height: 5px; display: inline-block; }
-    .badge-status .cp-dot { width: 5px; height: 5px; border-radius: 99px; background: currentColor; display: block; position: absolute; left: 0; top: 0; }
-    .badge-status .cp-dot-pulse { width: 5px; height: 5px; border-radius: 99px; background: currentColor; display: block; position: absolute; left: 0; top: 0; opacity: 0.4; transform: scale(1); animation: dotGlow 1.8s infinite ease-in-out; }
-    @keyframes dotGlow { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.2); opacity: 0; } }
 
-    .badge-status.success { background: #e6f7ed; color: #15803d; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.1); }
-    .badge-status.empty { background: var(--spekta-gray-light); color: var(--text-muted); }
-
-    .action-group-end { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-    .btn-icon-sm { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; transition: 0.2s; text-decoration: none; }
-    .btn-icon-sm.green-soft { background: #e6f7ed; color: #15803d; border: 1px solid #bbf7d0; }
-    .btn-icon-sm:hover { transform: translateY(-1px); filter: brightness(0.95); }
-
-    .btn-review-main {
-        background: #1f2937; color: white; padding: 6px 14px; border-radius: 8px;
-        font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none;
+    .badge-status.success {
+        background: #e6f7ed;
+        color: #15803d;
     }
-    .btn-review-main:hover { background: var(--spekta-red); box-shadow: 0 4px 10px rgba(229, 57, 53, 0.2); }
 
-    .package-item-card { display: flex; align-items: center; gap: 12px; background: var(--spekta-gray-light); padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-soft); transition: 0.2s; }
-    .package-item-card:hover { border-color: var(--spekta-gray); background: white; transform: translateY(-1.5px); }
-    .pkg-icon { width: 36px; height: 36px; background: white; color: #0269a1; border-radius: 8px; display: grid; place-items: center; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid var(--border-soft); }
-    .pkg-info { flex: 1; }
-    .pkg-info strong { display: block; font-size: 13px; color: var(--text-main); }
-    .pkg-info span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-    .pkg-info .pkg-id { font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; }
-    .btn-del-pkg { background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 12px; transition: 0.2s; padding: 6px; display: inline-flex; align-items: center; justify-content: center; }
-    .btn-del-pkg:hover { color: var(--spekta-red); }
+    .badge-status.empty {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
 
-    .empty-state-lite { text-align: center; padding: 30px; color: var(--text-muted); font-weight: 600; }
-    .empty-state-lite i { font-size: 24px; margin-bottom: 8px; display: block; color: var(--spekta-gray); }
-    .empty-state-lite small { font-size: 11px; display: block; margin-top: 4px; }
-    .text-right { text-align: right; }
+    .action-group-end {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: flex-end;
+    }
 
+    .btn-icon-sm {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: #e6f7ed;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+
+    .btn-icon-sm:hover {
+        background: #15803d;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    /* ── TOMBOL REVIEW TEAL ── */
+    .btn-review-teal {
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 3px 10px rgba(20, 184, 166, 0.2);
+    }
+
+    .btn-review-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+    }
+
+    /* ── PACKAGE LIST ── */
+    .package-item-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #f9fafb;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .package-item-card:hover {
+        border-color: #14b8a6;
+        background: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .pkg-info {
+        flex: 1;
+    }
+
+    .pkg-info strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .pkg-info span {
+        font-size: 11px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .pkg-info .pkg-id {
+        font-size: 9px;
+        color: #94a3b8;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .btn-del-pkg {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-del-pkg:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .empty-state-lite {
+        text-align: center;
+        padding: 30px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .empty-state-lite p {
+        margin: 0 0 4px;
+        font-size: 13px;
+    }
+
+    .empty-state-lite small {
+        font-size: 11px;
+        color: #9ca3af;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 1100px) {
-        .tm-grid-layout { grid-template-columns: 1fr; }
+        .tm-grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .welcome-card {
+            padding: 20px;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
+        .cp-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .cp-main-card {
+            padding: 16px;
+        }
+
+        .package-item-card {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
     }
 </style>
 @endsection

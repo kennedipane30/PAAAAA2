@@ -3,36 +3,25 @@
 
 <?php $__env->startSection('content'); ?>
 <div class="sc-page">
-    <section class="sc-header">
-        <div class="sc-header-title">
-            <nav class="sc-breadcrumb">
-                <a href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a>
-                <i class="fa-solid fa-chevron-right"></i>
-                <a href="<?php echo e(route('admin.jadwal.index')); ?>">Manajemen Akademik</a>
-                <i class="fa-solid fa-chevron-right"></i>
-                <span>Edit Jadwal</span>
-            </nav>
-            <div class="sc-title-wrapper">
-                <h1>Edit Jadwal Pembelajaran</h1>
-                <span class="sc-badge-live">
-                    <span class="dot-pulse"></span> Terkoneksi Matrix
-                </span>
-            </div>
+
+    
+    <section class="welcome-card">
+        <div class="welcome-text">
+            <h1>Edit Jadwal Pembelajaran</h1>
             <p>Perbarui informasi jadwal yang telah dipublikasikan.</p>
         </div>
     </section>
 
     <?php if(session('error')): ?>
         <div class="sc-alert error">
-            <i class="fa-solid fa-circle-exclamation"></i>
             <span><?php echo e(session('error')); ?></span>
         </div>
     <?php endif; ?>
 
+    
     <section class="sc-top-grid">
         <div class="sc-panel sc-form-panel">
             <div class="sc-panel-heading">
-                <div class="sc-heading-icon"><i class="fa-solid fa-pen-to-square"></i></div>
                 <h2>Edit Jadwal</h2>
             </div>
 
@@ -98,11 +87,11 @@
                 </div>
 
                 <div class="sc-form-actions">
-                    <a href="<?php echo e(route('admin.jadwal.index')); ?>" class="sc-btn sc-btn-secondary">
-                        <i class="fa-solid fa-arrow-left"></i> Batal
+                    <a href="<?php echo e(route('admin.jadwal.index')); ?>" class="sc-btn-secondary">
+                        Batal
                     </a>
-                    <button type="submit" class="sc-submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+                    <button type="submit" class="sc-submit-teal">
+                        Simpan Perubahan
                     </button>
                 </div>
             </form>
@@ -111,49 +100,264 @@
 </div>
 
 <style>
-    .sc-page { font-family: 'Montserrat', sans-serif; padding: 10px; animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    :root {
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
+        --spekta-red-light: rgba(229, 57, 53, 0.06);
+        --spekta-gray-light: #f3f4f6;
+        --spekta-white: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border-soft: #e5e7eb;
+    }
 
-    .sc-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; }
-    .sc-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.02em; }
-    .sc-breadcrumb a { color: #2ea8ab; text-decoration: none; }
-    .sc-breadcrumb i { font-size: 8px; color: #9e9e9e; }
-    .sc-title-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
-    .sc-header h1 { font-size: 24px; font-weight: 900; color: #1f2937; margin: 0; letter-spacing: -0.02em; }
-    .sc-badge-live { background: #f3f4f6; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; color: #6b7280; display: flex; align-items: center; gap: 6px; border: 1px solid #e5e7eb; }
-    .dot-pulse { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-    .sc-header p { margin: 0; color: #6b7280; font-size: 13px; font-weight: 600; }
+    .sc-page {
+        font-family: 'Montserrat', sans-serif;
+        padding: 10px;
+        animation: fadeIn 0.4s ease-out;
+    }
 
-    .sc-alert { display: flex; gap: 10px; align-items: center; padding: 12px 18px; border-radius: 12px; margin-bottom: 24px; font-weight: 800; font-size: 13px; }
-    .sc-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-    .sc-top-grid { display: block; margin-bottom: 24px; }
-    .sc-panel { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
-    .sc-panel-heading { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
-    .sc-heading-icon { width: 38px; height: 38px; background: rgba(229, 57, 53, 0.06); color: #e53935; display: grid; place-items: center; border-radius: 10px; font-size: 16px; }
-    .sc-panel-heading h2 { margin: 0; font-size: 15px; font-weight: 800; }
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
+    }
 
-    .sc-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .sc-input-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
-    .sc-input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-    .sc-input-group label { font-size: 10px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.02em; }
-    .sc-input-group input, .sc-input-group select { padding: 11px; border-radius: 10px; border: 1px solid #e5e7eb; background: #f3f4f6; font-weight: 600; outline: none; transition: all 0.25s; font-family: inherit; font-size: 12px; }
-    .sc-input-group input:focus, .sc-input-group select:focus { border-color: #2ea8ab; background: #ffffff; box-shadow: 0 0 0 3px rgba(46, 168, 171, 0.12); }
-    .sc-input-readonly { background: #f9fafb !important; border-color: #e5e7eb !important; color: #6b7280 !important; cursor: not-allowed; box-shadow: none !important; }
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
+    }
 
-    .sc-form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px; }
-    .sc-btn { padding: 12px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; transition: 0.2s; }
-    .sc-btn-secondary { background: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; }
-    .sc-btn-secondary:hover { background: #e5e7eb; }
-    .sc-submit { background: linear-gradient(135deg, #e53935 0%, #c5352c 100%); color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(229, 57, 53, 0.2); transition: 0.2s; display: inline-flex; gap: 8px; align-items: center; font-family: inherit; font-size: 13px; }
-    .sc-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(229, 57, 53, 0.3); }
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
 
+    .welcome-text h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #111827;
+    }
+
+    .welcome-text p {
+        margin: 0;
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* ── ALERT ── */
+    .sc-alert {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 18px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .sc-alert.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    /* ── FORM PANEL ── */
+    .sc-top-grid {
+        display: block;
+        margin-bottom: 24px;
+    }
+
+    .sc-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .sc-panel-heading {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sc-panel-heading h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    /* ── FORM ── */
+    .sc-input-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .sc-input-row.three-col {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .sc-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .sc-input-group label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .sc-input-group input,
+    .sc-input-group select {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f9fafb;
+        font-weight: 500;
+        font-size: 12px;
+        color: #111827;
+        outline: none;
+        transition: all 0.25s ease;
+        font-family: inherit;
+    }
+
+    .sc-input-group input:focus,
+    .sc-input-group select:focus {
+        background: #ffffff;
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
+    }
+
+    .sc-input-readonly {
+        background: #f9fafb !important;
+        border-color: #e5e7eb !important;
+        color: #6b7280 !important;
+        cursor: not-allowed;
+    }
+
+    /* ── FORM ACTIONS ── */
+    .sc-form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 8px;
+        padding-top: 18px;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .sc-btn-secondary {
+        padding: 0 22px;
+        height: 44px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
+    }
+
+    .sc-btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    /* ── TOMBOL SIMPAN TEAL ── */
+    .sc-submit-teal {
+        height: 44px;
+        padding: 0 28px;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.25);
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 0.02em;
+    }
+
+    .sc-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
+    }
+
+    .sc-submit-teal:active {
+        transform: scale(0.97);
+    }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-        .sc-input-row, .sc-input-row.three-col { grid-template-columns: 1fr; }
-        .sc-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-        .sc-form-actions { flex-direction: column; }
-        .sc-form-actions .sc-btn, .sc-form-actions .sc-submit { justify-content: center; }
+        .welcome-card {
+            padding: 20px;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
+        .sc-panel {
+            padding: 16px;
+        }
+
+        .sc-input-row,
+        .sc-input-row.three-col {
+            grid-template-columns: 1fr;
+        }
+
+        .sc-form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .sc-btn-secondary,
+        .sc-submit-teal {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 

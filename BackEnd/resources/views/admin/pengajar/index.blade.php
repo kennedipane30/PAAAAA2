@@ -6,17 +6,15 @@
 @section('content')
 <div class="tp-page">
 
-    {{-- ── 1. HEADER (STYLISH CAPSULE & ASIMETRIS) ── --}}
-    <section class="tp-header">
-        <div class="tp-header-left">
-            <span class="tp-breadcrumb-capsule">Manajemen Akademik</span>
+    {{-- ── 1. WELCOME CARD (Container Personal) ── --}}
+    <section class="welcome-card">
+        <div class="welcome-text">
             <h1>Manajemen Pengajar</h1>
             <p>Kelola data pengajar Spekta Academy secara efisien.</p>
         </div>
-        <div class="tp-header-actions">
-            <a href="{{ route('admin.manajemen-pengajar.create') }}" class="tp-btn-primary">
-                <i class="fa-solid fa-plus"></i>
-                <span>Tambah Pengajar</span>
+        <div class="welcome-action">
+            <a href="{{ route('admin.manajemen-pengajar.create') }}" class="tp-btn-primary-teal">
+                Tambah Pengajar
             </a>
         </div>
     </section>
@@ -24,24 +22,20 @@
     {{-- Alert Success --}}
     @if(session('success'))
         <div class="tp-alert success">
-            <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
-    {{-- ── 2. MAIN PANEL (TABEL & KONTROL BARIS GABUNGAN) ── --}}
+    {{-- ── 2. MAIN PANEL ── --}}
     <section class="tp-main-grid">
 
         <div class="tp-table-panel">
 
-            {{-- Top Control Bar (Total & Search Sebaris - Desain Sangat Sleek & Rapi) --}}
+            {{-- Top Control Bar --}}
             <div class="tp-table-top-bar">
 
-                {{-- Total Pengajar Info (Dengan Aksen Teal Segar) --}}
+                {{-- Total Pengajar Info --}}
                 <div class="tp-total-stat">
-                    <div class="tp-total-icon">
-                        <i class="fa-solid fa-user-group"></i>
-                    </div>
                     <div class="tp-total-info">
                         <span class="tp-total-label">Total Pengajar</span>
                         <div class="tp-total-val-wrap">
@@ -51,10 +45,9 @@
                     </div>
                 </div>
 
-                {{-- Toolbar / Search (Desain Glowing Focus) --}}
+                {{-- Toolbar / Search --}}
                 <form method="GET" action="{{ route('admin.manajemen-pengajar.index') }}" class="tp-toolbar">
                     <div class="tp-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
                         <input
                             type="text"
                             name="search"
@@ -63,14 +56,14 @@
                         >
                     </div>
 
-                    <button type="submit" class="tp-btn-search">
-                        <i class="fa-solid fa-magnifying-glass"></i> Cari
+                    <button type="submit" class="tp-btn-search-teal">
+                        Cari
                     </button>
                 </form>
 
             </div>
 
-            {{-- Table (Perbaikan Presisi Perataan Elemen Sejajar Tengah) --}}
+            {{-- Table --}}
             <div class="tp-table-wrap">
                 <table class="tp-table">
                     <thead>
@@ -129,21 +122,14 @@
                                     @endif
                                 </td>
 
-                                {{-- Status (Desain Dot Pulsing Rata Tengah Sempurna) --}}
+                                {{-- Status --}}
                                 <td>
                                     @if($teacher->is_verified)
                                         <span class="tp-status active">
-                                            <span class="tp-dot-wrapper">
-                                                <i class="tp-dot"></i>
-                                                <i class="tp-dot-pulse"></i>
-                                            </span>
                                             AKTIF
                                         </span>
                                     @else
                                         <span class="tp-status inactive">
-                                            <span class="tp-dot-wrapper">
-                                                <i class="tp-dot"></i>
-                                            </span>
                                             NONAKTIF
                                         </span>
                                     @endif
@@ -160,21 +146,21 @@
 
                                 {{-- Tanggal --}}
                                 <td class="tp-date">
-                                    <i class="fa-regular fa-clock"></i> {{ $teacher->created_at?->translatedFormat('d M Y') ?? '-' }}
+                                    {{ $teacher->created_at?->translatedFormat('d M Y') ?? '-' }}
                                 </td>
 
-                                {{-- Aksi (RATA TENGAH PRESISI) --}}
+                                {{-- Aksi --}}
                                 <td>
                                     <div class="tp-actions">
                                         <a href="{{ route('admin.manajemen-pengajar.edit', $teacher->usersID) }}" class="tp-act edit" title="Edit">
-                                            <i class="fa-solid fa-pen"></i>
+                                            Edit
                                         </a>
 
                                         <form action="{{ route('admin.manajemen-pengajar.destroy', $teacher->usersID) }}" method="POST" onsubmit="return confirm('Hapus akun pengajar ini?')" style="display: inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="tp-act delete" title="Hapus">
-                                                <i class="fa-solid fa-trash"></i>
+                                                Hapus
                                             </button>
                                         </form>
                                     </div>
@@ -184,9 +170,6 @@
                             <tr>
                                 <td colspan="6">
                                     <div class="tp-empty">
-                                        <div class="tp-empty-icon">
-                                            <i class="fa-solid fa-user-slash"></i>
-                                        </div>
                                         <strong>Belum ada data pengajar</strong>
                                         <span>Tambahkan akun pengajar melalui tombol Tambah Pengajar.</span>
                                     </div>
@@ -208,11 +191,9 @@
                 @if(method_exists($teachers, 'hasPages') && $teachers->hasPages())
                     <div class="tp-pages">
                         @if($teachers->onFirstPage())
-                            <span class="tp-page-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
+                            <span class="tp-page-btn disabled">‹</span>
                         @else
-                            <a href="{{ $teachers->previousPageUrl() }}" class="tp-page-btn">
-                                <i class="fa-solid fa-chevron-left"></i>
-                            </a>
+                            <a href="{{ $teachers->previousPageUrl() }}" class="tp-page-btn">‹</a>
                         @endif
 
                         @foreach(range(1, $teachers->lastPage()) as $page)
@@ -227,11 +208,9 @@
                         @endforeach
 
                         @if($teachers->hasMorePages())
-                            <a href="{{ $teachers->nextPageUrl() }}" class="tp-page-btn">
-                                <i class="fa-solid fa-chevron-right"></i>
-                            </a>
+                            <a href="{{ $teachers->nextPageUrl() }}" class="tp-page-btn">›</a>
                         @else
-                            <span class="tp-page-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
+                            <span class="tp-page-btn disabled">›</span>
                         @endif
                     </div>
                 @endif
@@ -257,70 +236,92 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header ───────────────────────────────────────────────── */
-.tp-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
+/* ── WELCOME CARD (Container Personal) ── */
+.welcome-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid #14b8a6;
+    border-radius: 16px;
+    padding: 24px 30px;
     margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    position: relative;
+    overflow: hidden;
 }
 
-.tp-breadcrumb-capsule {
-    display: inline-block;
-    background: rgba(229, 57, 53, 0.08);
-    color: #c5352c;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 6px;
-    margin-bottom: 8px;
+.welcome-card::after {
+    content: "";
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    right: -60px;
+    top: -60px;
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+    border-radius: 999px;
+    pointer-events: none;
 }
 
-.tp-header h1 {
+.welcome-text {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-text h1 {
     margin: 0 0 6px;
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: -0.03em;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
     color: #111827;
 }
 
-.tp-header p {
+.welcome-text p {
     margin: 0;
-    color: #6b7280;
     font-size: 13px;
-    font-weight: 600;
+    color: #6b7280;
+    font-weight: 500;
 }
 
-.tp-header-actions {
+.welcome-action {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+    gap: 14px;
+    border-left: 1px solid #e5e7eb;
+    padding-left: 24px;
+    min-width: 160px;
 }
 
-.tp-btn-primary {
+/* ── TOMBOL TAMBAH PENGAJAR TEAL ── */
+.tp-btn-primary-teal {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     height: 42px;
-    padding: 0 18px;
-    background: linear-gradient(135deg, #e53935 0%, #c5352c 100%);
+    padding: 0 20px;
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
     color: #fff;
     border-radius: 12px;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
     white-space: nowrap;
-    box-shadow: 0 6px 15px rgba(229, 57, 53, 0.2);
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.25);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
+    letter-spacing: 0.02em;
 }
-.tp-btn-primary:hover {
+.tp-btn-primary-teal:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(229, 57, 53, 0.3);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
     color: #fff;
+}
+.tp-btn-primary-teal:active {
+    transform: scale(0.97);
 }
 
 /* Alert */
@@ -332,7 +333,7 @@
     gap: 10px;
     align-items: center;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
 }
 .tp-alert.success {
     background: #e6f7ed;
@@ -354,14 +355,14 @@
     box-shadow: 0 2px 12px rgba(15,23,42,.01);
 }
 
-/* Top Control Bar (Total + Search Terintegrasi Rapi) */
+/* Top Control Bar */
 .tp-table-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 18px;
-    padding-bottom: 18px;
+    gap: 24px;
+    margin-bottom: 22px;
+    padding-bottom: 20px;
     border-bottom: 1px solid #f3f4f6;
     flex-wrap: wrap;
 }
@@ -371,16 +372,7 @@
     align-items: center;
     gap: 12px;
 }
-.tp-total-icon {
-    width: 42px;
-    height: 42px;
-    background: var(--spekta-teal-light);
-    color: var(--spekta-teal);
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-size: 16px;
-}
+
 .tp-total-info {
     display: flex;
     flex-direction: column;
@@ -399,7 +391,7 @@
     gap: 4px;
 }
 .tp-total-val {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 900;
     color: #111827;
     line-height: 1;
@@ -424,51 +416,55 @@
     flex: 1;
     min-width: 200px;
 }
-.tp-search > i {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9e9e9e;
-    font-size: 12px;
-    pointer-events: none;
-}
 .tp-search input {
     width: 100%;
     height: 40px;
-    padding: 0 14px 0 38px;
+    padding: 0 14px;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background: #f9fafb;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: #1f2937;
     outline: none;
     transition: all 0.2s ease;
 }
 .tp-search input:focus {
     background: #fff;
-    border-color: #2ea8ab;
-    box-shadow: 0 0 0 3px rgba(46, 168, 171, 0.12);
+    border-color: #14b8a6;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+.tp-search input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
 }
 
-.tp-btn-search {
+/* ── TOMBOL CARI TEAL ── */
+.tp-btn-search-teal {
     height: 40px;
-    padding: 0 16px;
-    background: #1f2937;
+    padding: 0 18px;
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
     color: #fff;
     border: none;
     border-radius: 10px;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
-    transition: background .15s;
+    transition: all 0.25s ease;
+    box-shadow: 0 3px 12px rgba(20, 184, 166, 0.2);
+    letter-spacing: 0.02em;
 }
-.tp-btn-search:hover { background: var(--spekta-red); }
+.tp-btn-search-teal:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+}
+.tp-btn-search-teal:active {
+    transform: scale(0.97);
+}
 
 /* table */
 .tp-table-wrap { overflow-x: auto; border-radius: 12px; }
@@ -501,7 +497,7 @@
     font-weight: 600;
     color: #374151;
     border-bottom: 1px solid #f3f4f6;
-    vertical-align: middle; /* Jaminan mutlak semua data vertikal sejajar tengah */
+    vertical-align: middle;
 }
 
 .tp-table tbody tr:last-child td { border-bottom: none; }
@@ -556,25 +552,24 @@
     align-items: center;
     height: 22px;
     padding: 0 8px;
-    background: var(--spekta-teal-light);
-    color: var(--spekta-teal);
+    background: rgba(20, 184, 166, 0.1);
+    color: #0d9488;
     border-radius: 6px;
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
     white-space: nowrap;
 }
 .tp-subject-badge.more {
-    background: var(--spekta-gray-light);
-    color: var(--text-muted);
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
-/* status (Glow style & Pulsing Rata Tengah Sempurna) */
+/* status */
 .tp-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
     height: 22px;
-    padding: 0 8px;
+    padding: 0 10px;
     border-radius: 6px;
     font-size: 9px;
     font-weight: 800;
@@ -583,43 +578,14 @@
     white-space: nowrap;
 }
 
-.tp-dot-wrapper {
-    position: relative;
-    width: 5px;
-    height: 5px;
-    display: inline-block;
+.tp-status.active {
+    background: #e6f7ed;
+    color: #16a34a;
 }
-
-.tp-status .tp-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 99px;
-    background: currentColor;
-    display: block;
-    position: absolute;
-    left: 0; top: 0;
+.tp-status.inactive {
+    background: #fee2e2;
+    color: #dc2626;
 }
-
-.tp-status .tp-dot-pulse {
-    width: 5px;
-    height: 5px;
-    border-radius: 99px;
-    background: currentColor;
-    display: block;
-    position: absolute;
-    left: 0; top: 0;
-    opacity: 0.4;
-    transform: scale(1);
-    animation: pulseGlow 1.8s infinite ease-in-out;
-}
-
-@keyframes pulseGlow {
-    0% { transform: scale(1); opacity: 0.8; }
-    100% { transform: scale(3.2); opacity: 0; }
-}
-
-.tp-status.active     { background: #e6f7ed; color: #16a34a; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.12); }
-.tp-status.inactive   { background: #fee2e2; color: #dc2626; }
 
 /* class badge */
 .tp-class-badge {
@@ -627,11 +593,11 @@
     align-items: center;
     height: 22px;
     padding: 0 8px;
-    background: var(--spekta-gray-light);
+    background: #f3f4f6;
     color: #4b5563;
     border-radius: 6px;
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -639,14 +605,13 @@
 .tp-date {
     color: #6b7280;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
 }
-.tp-date i { color: #9e9e9e; margin-right: 3px; }
 
 /* muted */
 .tp-muted { color: #d1d5db; font-size: 14px; }
 
-/* actions (PERBAIKAN HOVER DAN KESEJAJARAN) */
+/* actions */
 .tp-actions {
     display: flex;
     align-items: center;
@@ -655,14 +620,11 @@
 }
 
 .tp-act {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center; /* Ikon diposisikan pas di tengah button */
+    padding: 4px 12px;
+    border-radius: 6px;
     border: none;
-    font-size: 12px;
+    font-size: 10px;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -679,7 +641,6 @@
 .tp-act.edit:hover {
     background: #bae6fd;
     color: #02507d;
-    box-shadow: 0 4px 10px rgba(3, 105, 161, 0.15);
 }
 
 .tp-act.delete {
@@ -689,22 +650,10 @@
 .tp-act.delete:hover {
     background: #fecaca;
     color: #991b1b;
-    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.15);
 }
 
 /* empty */
 .tp-empty { padding: 36px 18px; text-align: center; }
-.tp-empty-icon {
-    width: 48px;
-    height: 48px;
-    display: grid;
-    place-items: center;
-    margin: 0 auto 12px;
-    background: var(--spekta-red-light);
-    color: var(--spekta-red);
-    border-radius: 99px;
-    font-size: 18px;
-}
 .tp-empty strong { display: block; color: #111827; font-size: 14px; font-weight: 800; margin-bottom: 4px; }
 .tp-empty span { display: block; color: #9e9e9e; font-size: 12px; font-weight: 600; }
 
@@ -732,30 +681,62 @@
     border-radius: 8px;
     color: #6b7280;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
 }
 .tp-page-btn:hover:not(.disabled):not(.active) {
-    border-color: #2ea8ab;
-    color: #2ea8ab;
-    background: rgba(46, 168, 171, 0.04);
+    border-color: #14b8a6;
+    color: #14b8a6;
+    background: rgba(20, 184, 166, 0.04);
 }
 .tp-page-btn.active {
     background: #1f2937;
     color: #fff;
     border-color: #1f2937;
-    box-shadow: 0 3px 8px rgba(31, 41, 55, 0.2);
 }
 .tp-page-btn.disabled { opacity: .4; pointer-events: none; cursor: default; }
 .tp-page-dots { color: #9ca3af; font-size: 12px; }
 
 /* Responsive Layout */
 @media (max-width: 768px) {
-    .tp-header { flex-direction: column; gap: 14px; }
-    .tp-table-top-bar { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .tp-toolbar { width: 100%; max-width: none; }
-    .tp-pagination { flex-direction: column; align-items: flex-start; }
+    .welcome-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .welcome-action {
+        border-left: none;
+        padding-left: 0;
+        min-width: unset;
+        width: 100%;
+    }
+
+    .tp-btn-primary-teal {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tp-table-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .tp-toolbar {
+        width: 100%;
+        max-width: none;
+    }
+
+    .tp-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .welcome-text h1 {
+        font-size: 18px;
+    }
 }
 </style>
 @endsection

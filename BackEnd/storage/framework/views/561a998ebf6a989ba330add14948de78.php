@@ -20,43 +20,41 @@
 <div class="cp-page">
 
     
-    <section class="cp-header">
-        <div>
-            <span class="cp-tagline">SPEKTA DASHBOARD</span>
-            <h1 class="cp-title">Program Kelas</h1>
-            <p class="cp-subtitle">Monitor statistik program, jumlah siswa, dan penugasan pengajar.</p>
+    <section class="welcome-card">
+        <div class="welcome-text">
+            <h1>Program Kelas</h1>
+            <p>Monitor statistik program, jumlah siswa, dan penugasan pengajar.</p>
         </div>
     </section>
 
     
     <section class="cp-stats">
-        <div class="cp-stat-card border-red">
-            <div class="cp-stat-content">
+        <div class="cp-stat-card card-blue">
+            <div class="cp-stat-info">
                 <p>Total Program</p>
                 <h2><?php echo e(number_format($totalClasses)); ?></h2>
             </div>
-            <div class="cp-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
         </div>
-        <div class="cp-stat-card border-green">
-            <div class="cp-stat-content">
+
+        <div class="cp-stat-card card-teal">
+            <div class="cp-stat-info">
                 <p>Total Siswa</p>
                 <h2><?php echo e(number_format($totalStudents)); ?></h2>
             </div>
-            <div class="cp-stat-icon"><i class="fa-solid fa-users"></i></div>
         </div>
-        <div class="cp-stat-card border-blue">
-            <div class="cp-stat-content">
+
+        <div class="cp-stat-card card-orange">
+            <div class="cp-stat-info">
                 <p>Total Pengajar</p>
                 <h2><?php echo e(number_format($totalTeachers)); ?></h2>
             </div>
-            <div class="cp-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
         </div>
-        <div class="cp-stat-card border-purple">
-            <div class="cp-stat-content">
+
+        <div class="cp-stat-card card-purple">
+            <div class="cp-stat-info">
                 <p>Pendaftaran Aktif</p>
                 <h2><?php echo e(number_format($totalEnrollments)); ?></h2>
             </div>
-            <div class="cp-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
         </div>
     </section>
 
@@ -67,10 +65,9 @@
             <p>Detail lengkap per program: jumlah siswa dan pengajar.</p>
         </div>
 
-        <div class="cp-program-list">
+        <div class="cp-program-grid">
             <?php $__empty_1 = true; $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <?php
-                    // Hitung statistik per kelas
                     $studentCount = \App\Models\Enrollment::where('class_id', $class->class_id)
                         ->where('status', 'active')
                         ->count();
@@ -79,7 +76,6 @@
                         ->distinct('user_id')
                         ->count('user_id');
 
-                    // ✅ Ambil gambar dari folder public berdasarkan nama program
                     $imageFile = $programImages[$class->program_name] ?? 'default.png';
                     $imageUrl = asset($imageFile);
                 ?>
@@ -97,17 +93,14 @@
                             <p class="cp-class-desc"><?php echo e(\Illuminate\Support\Str::limit($class->description, 100)); ?></p>
                         </div>
 
-                        
                         <div class="cp-stats-mini">
                             <div class="stat-item">
-                                <i class="fa-solid fa-user-graduate"></i>
                                 <div>
                                     <strong><?php echo e(number_format($studentCount)); ?></strong>
                                     <span>Siswa Aktif</span>
                                 </div>
                             </div>
                             <div class="stat-item">
-                                <i class="fa-solid fa-chalkboard-user"></i>
                                 <div>
                                     <strong><?php echo e(number_format($teacherCount)); ?></strong>
                                     <span>Pengajar</span>
@@ -118,13 +111,11 @@
                 </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="cp-empty-state">
-                    <i class="fa-solid fa-folder-open"></i>
-                    <p>Belum ada program kelas yang dibuat.</p>
+                    <strong>Belum ada program kelas yang dibuat.</strong>
                 </div>
             <?php endif; ?>
         </div>
 
-        
         <?php if(method_exists($classes, 'links')): ?>
         <div class="cp-pagination">
             <?php echo e($classes->links()); ?>
@@ -135,55 +126,429 @@
 </div>
 
 <style>
-    .cp-page { padding: 10px; font-family: 'Inter', sans-serif; background: #f8fafc; min-height: 100vh; }
-    .cp-header { margin-bottom: 30px; }
-    .cp-tagline { color: #d90429; font-weight: 800; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
-    .cp-title { font-size: 28px; font-weight: 900; color: #1e293b; margin: 5px 0; }
-    .cp-subtitle { color: #64748b; font-size: 14px; margin: 0; }
-
-    .cp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-    .cp-stat-card { background: white; padding: 20px 25px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
-    .cp-stat-card.border-red { border-left: 4px solid #d90429; }
-    .cp-stat-card.border-green { border-left: 4px solid #10b981; }
-    .cp-stat-card.border-blue { border-left: 4px solid #3b82f6; }
-    .cp-stat-card.border-purple { border-left: 4px solid #8b5cf6; }
-    .cp-stat-content p { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px; }
-    .cp-stat-content h2 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0; }
-    .cp-stat-icon { font-size: 28px; color: #cbd5e1; }
-
-    .cp-main-panel { background: white; border-radius: 24px; padding: 30px; border: 1px solid #e2e8f0; }
-    .cp-panel-heading { margin-bottom: 25px; }
-    .cp-panel-heading h2 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
-    .cp-panel-heading p { color: #64748b; font-size: 13px; margin: 5px 0 0; }
-
-    .cp-card { display: flex; background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 20px; gap: 25px; margin-bottom: 20px; transition: 0.2s; }
-    .cp-card:hover { border-color: #d9042940; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    .cp-card-img { width: 280px; height: 180px; border-radius: 16px; overflow: hidden; position: relative; flex-shrink: 0; background: #f1f5f9; display: flex; align-items: center; justify-content: center; }
-    .cp-card-img img { width: 100%; height: 100%; object-fit: cover; }
-    .cp-card-img img[src=""] { display: none; }
-    .cp-badge-price { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); color: white; padding: 5px 12px; border-radius: 10px; font-weight: 700; font-size: 12px; backdrop-filter: blur(4px); }
-    .cp-card-content { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-    .cp-card-header { margin-bottom: 5px; }
-    .cp-id { font-size: 11px; color: #94a3b8; font-weight: 600; }
-    .cp-class-name { font-size: 20px; font-weight: 800; color: #1e293b; margin: 4px 0 0; }
-    .cp-class-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin: 8px 0 0; }
-
-    .cp-stats-mini { display: flex; gap: 20px; background: #f8fafc; padding: 12px 16px; border-radius: 14px; }
-    .stat-item { display: flex; align-items: center; gap: 12px; }
-    .stat-item i { font-size: 20px; color: #d90429; }
-    .stat-item strong { font-size: 18px; font-weight: 800; color: #1e293b; display: block; line-height: 1.2; }
-    .stat-item span { font-size: 10px; color: #64748b; font-weight: 600; }
-
-    .cp-pagination { margin-top: 25px; display: flex; justify-content: center; }
-
-    @media (max-width: 1024px) {
-        .cp-stats { grid-template-columns: repeat(2, 1fr); }
-        .cp-card { flex-direction: column; }
-        .cp-card-img { width: 100%; height: 200px; }
-        .cp-stats-mini { flex-wrap: wrap; }
+    :root {
+        --spekta-blue: #2563eb;
+        --spekta-blue-dark: #1d4ed8;
+        --spekta-blue-light: rgba(37, 99, 235, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
+        --spekta-orange: #f59e0b;
+        --spekta-orange-dark: #d97706;
+        --spekta-orange-light: rgba(245, 158, 11, 0.08);
+        --spekta-purple: #8b5cf6;
+        --spekta-purple-dark: #7c3aed;
+        --spekta-purple-light: rgba(139, 92, 246, 0.08);
+        --spekta-gray-light: #f3f4f6;
+        --spekta-white: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border-soft: #e5e7eb;
     }
-    @media (max-width: 640px) {
-        .cp-stats { grid-template-columns: 1fr; }
+
+    .cp-page {
+        padding: 10px;
+        font-family: 'Montserrat', sans-serif;
+        color: var(--text-main);
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
+    }
+
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-text h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #111827;
+    }
+
+    .welcome-text p {
+        margin: 0;
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* ── STATISTIK GLOBAL ── */
+    .cp-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .cp-stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cp-stat-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .cp-stat-card.card-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .cp-stat-card.card-blue:hover {
+        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .cp-stat-card.card-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    }
+    .cp-stat-card.card-teal:hover {
+        box-shadow: 0 8px 30px rgba(20, 184, 166, 0.4);
+    }
+
+    .cp-stat-card.card-orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+    .cp-stat-card.card-orange:hover {
+        box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+    }
+
+    .cp-stat-card.card-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    .cp-stat-card.card-purple:hover {
+        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .cp-stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+    }
+
+    .cp-stat-card::before {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -20%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+
+    .cp-stat-info {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cp-stat-info p {
+        margin: 0 0 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .cp-stat-info h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.2;
+    }
+
+    /* ── MAIN PANEL ── */
+    .cp-main-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .cp-panel-heading {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .cp-panel-heading h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 4px;
+    }
+
+    .cp-panel-heading p {
+        font-size: 12px;
+        color: #6b7280;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* ── PROGRAM GRID (2 KOLOM) ── */
+    .cp-program-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .cp-card {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .cp-card:hover {
+        border-color: #14b8a6;
+        box-shadow: 0 8px 25px rgba(20, 184, 166, 0.08);
+        transform: translateY(-4px);
+    }
+
+    .cp-card-img {
+        width: 100%;
+        height: 140px;
+        overflow: hidden;
+        position: relative;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cp-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .cp-card:hover .cp-card-img img {
+        transform: scale(1.03);
+    }
+
+    .cp-badge-price {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #ffffff;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 10px;
+        backdrop-filter: blur(6px);
+        letter-spacing: 0.02em;
+    }
+
+    .cp-card-content {
+        padding: 16px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+    }
+
+    .cp-card-header {
+        margin-bottom: 2px;
+    }
+
+    .cp-id {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .cp-class-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin: 4px 0 0;
+        line-height: 1.3;
+    }
+
+    .cp-class-desc {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin: 6px 0 0;
+        font-weight: 400;
+    }
+
+    /* ── STATS MINI ── */
+    .cp-stats-mini {
+        display: flex;
+        gap: 20px;
+        background: #f8fafc;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #eef2f6;
+        margin-top: auto;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-item strong {
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+        display: block;
+        line-height: 1.2;
+    }
+
+    .stat-item span {
+        font-size: 10px;
+        color: #6b7280;
+        font-weight: 600;
+        display: block;
+    }
+
+    /* ── EMPTY STATE ── */
+    .cp-empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 48px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 1px dashed #e5e7eb;
+    }
+
+    .cp-empty-state strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    /* ── PAGINATION ── */
+    .cp-pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+        .cp-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .cp-program-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .welcome-card {
+            padding: 20px;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
+        .cp-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .cp-main-panel {
+            padding: 16px;
+        }
+
+        .cp-program-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .cp-card-img {
+            height: 120px;
+        }
+
+        .cp-stats-mini {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .cp-class-name {
+            font-size: 15px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cp-card-img {
+            height: 100px;
+        }
+
+        .cp-card-content {
+            padding: 12px 14px 14px;
+        }
+
+        .cp-stats-mini {
+            padding: 8px 12px;
+        }
+
+        .stat-item strong {
+            font-size: 13px;
+        }
     }
 </style>
 <?php $__env->stopSection(); ?>

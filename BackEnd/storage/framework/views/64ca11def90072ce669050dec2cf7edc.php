@@ -12,56 +12,39 @@
 <div class="sc-page">
 
     
-    <section class="sc-header">
-        <div class="sc-header-title">
-            <nav class="sc-breadcrumb">
-                <a href="#">Dashboard</a>
-                <i class="fa-solid fa-chevron-right"></i>
-                <span>Manajemen Akademik</span>
-            </nav>
-            <div class="sc-title-wrapper">
-                <h1>
-                    <?php if($isAdmin): ?> Atur Waktu Pembelajaran
-                    <?php elseif($isTeacher): ?> Jadwal Mengajar Saya
-                    <?php else: ?> Jadwal Kelas Saya
-                    <?php endif; ?>
-                </h1>
-                <span class="sc-badge-live">
-                    <span class="dot-pulse"></span> Terkoneksi Matrix
-                </span>
-            </div>
+    <section class="welcome-card">
+        <div class="welcome-text">
+            <h1>
+                <?php if($isAdmin): ?> Atur Waktu Pembelajaran
+                <?php elseif($isTeacher): ?> Jadwal Mengajar Saya
+                <?php else: ?> Jadwal Kelas Saya
+                <?php endif; ?>
+            </h1>
             <p>Tentukan hari dan jam belajar berdasarkan penugasan pengajar yang sudah diatur sebelumnya.</p>
         </div>
     </section>
 
     <?php if(session('success')): ?>
         <div class="sc-alert success">
-            <i class="fa-solid fa-circle-check"></i>
             <span><?php echo e(session('success')); ?></span>
         </div>
     <?php endif; ?>
 
     
     <section class="sc-stats">
-        <!-- Total Jadwal -->
         <div class="sc-stat-card card-red">
-            <div class="sc-icon-box red"><i class="fa-regular fa-calendar-days"></i></div>
             <div class="sc-stat-info">
                 <p>Total Jadwal</p>
                 <strong><?php echo e(number_format($totalJadwalBulanIni ?? 0)); ?></strong>
             </div>
         </div>
-        <!-- Hari Ini -->
         <div class="sc-stat-card card-teal">
-            <div class="sc-icon-box teal"><i class="fa-regular fa-clock"></i></div>
             <div class="sc-stat-info">
                 <p>Hari Ini</p>
                 <strong><?php echo e(number_format($jadwalHariIni ?? 0)); ?></strong>
             </div>
         </div>
-        <!-- Selesai -->
         <div class="sc-stat-card card-gray">
-            <div class="sc-icon-box gray"><i class="fa-solid fa-check-double"></i></div>
             <div class="sc-stat-info">
                 <p>Selesai</p>
                 <strong><?php echo e(number_format($jadwalSelesaiTotal ?? 0)); ?></strong>
@@ -74,19 +57,16 @@
     <section class="sc-top-grid">
         <div class="sc-panel sc-form-panel">
             <div class="sc-panel-heading">
-                <div class="sc-heading-icon"><i class="fa-solid fa-calendar-plus"></i></div>
                 <h2>Buat Jadwal Baru</h2>
             </div>
 
             <form action="<?php echo e(route('admin.jadwal.store')); ?>" method="POST" class="sc-form" id="scheduleForm">
                 <?php echo csrf_field(); ?>
 
-                
                 <input type="hidden" name="teacher_id" id="teacherIdHidden">
                 <input type="hidden" name="title" id="autoTitle">
 
                 <div class="sc-input-row">
-                    
                     <div class="sc-input-group">
                         <label>Program</label>
                         <select name="class_id" id="classSelect" required>
@@ -97,7 +77,6 @@
                         </select>
                     </div>
 
-                    
                     <div class="sc-input-group">
                         <label>Mata Pelajaran</label>
                         <select name="subject_id" id="subjectSelect" required disabled>
@@ -106,33 +85,31 @@
                     </div>
                 </div>
 
-                
                 <div class="sc-input-group">
                     <label>Pengajar Terdaftar</label>
                     <input type="text" id="teacherNameDisplay" class="sc-input-readonly" readonly placeholder="Akan terisi otomatis berdasarkan mata pelajaran...">
                 </div>
 
-                
                 <div class="sc-input-row three-col">
                     <div class="sc-input-group">
                         <label>Hari / Tanggal</label>
                         <input type="date" name="date" id="scheduleDate" required min="<?php echo e(date('Y-m-d')); ?>">
-                        <small class="error-msg" id="dateError" style="color: #e53935; font-size: 10px; display: none; margin-top: 4px; font-weight: 700;">Tanggal tidak boleh kurang dari hari ini</small>
+                        <small class="error-msg" id="dateError">Tanggal tidak boleh kurang dari hari ini</small>
                     </div>
                     <div class="sc-input-group">
                         <label>Jam Mulai</label>
                         <input type="time" name="start_time" id="startTime" required>
-                        <small class="error-msg" id="startTimeError" style="color: #e53935; font-size: 10px; display: none; margin-top: 4px; font-weight: 700;">Jam mulai tidak valid</small>
+                        <small class="error-msg" id="startTimeError">Jam mulai tidak valid</small>
                     </div>
                     <div class="sc-input-group">
                         <label>Jam Selesai</label>
                         <input type="time" name="end_time" id="endTime" required>
-                        <small class="error-msg" id="endTimeError" style="color: #e53935; font-size: 10px; display: none; margin-top: 4px; font-weight: 700;">Jam selesai harus setelah jam mulai</small>
+                        <small class="error-msg" id="endTimeError">Jam selesai harus setelah jam mulai</small>
                     </div>
                 </div>
 
-                <button type="submit" class="sc-submit">
-                    <i class="fa-solid fa-paper-plane"></i> Publikasikan Jadwal
+                <button type="submit" class="sc-submit-teal">
+                    Publikasikan Jadwal
                 </button>
             </form>
         </div>
@@ -163,35 +140,32 @@
                         ?>
                         <tr>
                             <td>
-                                <strong><?php echo e($start->translatedFormat('d M Y')); ?></strong><br>
-                                <small style="color: #9e9e9e; font-weight: 600;"><?php echo e($start->format('H:i')); ?> - <?php echo e($end->format('H:i')); ?></small>
+                                <strong><?php echo e($start->translatedFormat('d M Y')); ?></strong>
+                                <small><?php echo e($start->format('H:i')); ?> - <?php echo e($end->format('H:i')); ?></small>
                             </td>
                             <td><?php echo e($row->class->program_name ?? '-'); ?></td>
                             <td><?php echo e($row->subject_name ?? $row->title); ?></td>
                             <td><?php echo e($row->teacher->name ?? '-'); ?></td>
                             <td><span class="sc-status-badge <?php echo e($status); ?>"><?php echo e(ucfirst($status)); ?></span></td>
                             <td>
-                            <td>
                                 <div class="sc-actions-wrap">
                                     <a href="<?php echo e(route('admin.jadwal.edit', $row->schedule_id)); ?>" class="btn-edit">
-                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        Edit
                                     </a>
                                     <form action="<?php echo e(route('admin.jadwal.destroy', $row->schedule_id)); ?>" method="POST" style="display: inline-flex;">
                                         <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn-delete" onclick="return confirm('Hapus jadwal ini?')">
-                                            <i class="fa-solid fa-trash-can"></i>
+                                            Hapus
                                         </button>
                                     </form>
                                 </div>
-                            </td>
                             </td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="6" class="text-center">
                                 <div class="sc-empty-state">
-                                    <i class="fa-regular fa-calendar-times"></i>
-                                    <span>Belum ada jadwal yang diatur.</span>
+                                    <strong>Belum ada jadwal yang diatur.</strong>
                                 </div>
                             </td>
                         </tr>
@@ -203,13 +177,12 @@
 </div>
 
 <style>
-
-
     :root {
         --spekta-red-dark: #c5352c;
         --spekta-red: #e53935;
-        --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
@@ -217,33 +190,6 @@
         --text-main: #1f2937;
         --text-muted: #6b7280;
         --border-soft: #e5e7eb;
-    }
-
-        .sc-actions-wrap {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .btn-edit {
-        color: #2ea8ab;
-        border: none;
-        background: rgba(46, 168, 171, 0.08);
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: 0.2s;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-    }
-    .btn-edit:hover {
-        transform: scale(1.05);
-        background: #a7f3d0;
-        color: #065f46;
     }
 
     .sc-page {
@@ -257,124 +203,346 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Header ── */
-    .sc-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
         margin-bottom: 24px;
-        border-bottom: 1px solid var(--border-soft);
-        padding-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
     }
 
-    .sc-breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-muted);
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
     }
-    .sc-breadcrumb a { color: var(--spekta-teal); text-decoration: none; }
-    .sc-breadcrumb i { font-size: 8px; color: var(--spekta-gray); }
 
-    .sc-title-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 8px;}
-    .sc-header h1 { font-size: 24px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.02em; }
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
 
-    .sc-badge-live {
-        background: var(--spekta-gray-light);
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 10px;
+    .welcome-text h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
         font-weight: 800;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--border-soft);
+        letter-spacing: -0.02em;
+        color: #111827;
     }
 
-    .dot-pulse { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-    .sc-header p { margin: 0; color: var(--text-muted); font-size: 13px; font-weight: 600;}
+    .welcome-text p {
+        margin: 0;
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
 
-    /* Alert */
-    .sc-alert { display: flex; gap: 10px; align-items: center; padding: 12px 18px; border-radius: 12px; margin-bottom: 24px; font-weight: 800; font-size: 13px;}
-    .sc-alert.success { background: #e6f7ed; color: #15803d; border: 1px solid #bbf7d0;}
+    /* ── ALERT ── */
+    .sc-alert {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 18px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .sc-alert.success {
+        background: #e6f7ed;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
 
-    /* ── Stats Cards (Metrik yang Rapi di Atas) ── */
+    /* ── STATS CARDS ── */
     .sc-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 24px;
     }
+
     .sc-stat-card {
-        background: var(--spekta-white);
-        border-radius: 14px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        border: 1px solid var(--border-soft);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
-        transition: all 0.2s ease;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+        overflow: hidden;
     }
+
     .sc-stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.03);
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
-    .sc-stat-card.card-red:hover { border-color: var(--spekta-red); }
-    .sc-stat-card.card-teal:hover { border-color: var(--spekta-teal); }
-    .sc-stat-card.card-gray:hover { border-color: var(--spekta-gray); }
 
-    .sc-icon-box { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
-    .sc-icon-box.red { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .sc-icon-box.teal { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .sc-icon-box.gray { background: var(--spekta-gray-light); color: var(--text-muted); }
-    .sc-stat-info p { margin: 0; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .sc-stat-info strong { font-size: 22px; font-weight: 900; color: var(--text-main); display: block; }
+    .sc-stat-card.card-red {
+        background: linear-gradient(135deg, #e53935 0%, #c5352c 100%);
+        box-shadow: 0 4px 15px rgba(229, 57, 53, 0.3);
+    }
+    .sc-stat-card.card-red:hover {
+        box-shadow: 0 8px 30px rgba(229, 57, 53, 0.4);
+    }
 
-    /* Form Panel */
-    .sc-top-grid { display: block; margin-bottom: 24px; }
-    .sc-panel { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
+    .sc-stat-card.card-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    }
+    .sc-stat-card.card-teal:hover {
+        box-shadow: 0 8px 30px rgba(20, 184, 166, 0.4);
+    }
 
-    .sc-panel-heading { display: flex; gap: 12px; align-items: center; margin-bottom: 18px;}
-    .sc-heading-icon { width: 38px; height: 38px; background: var(--spekta-red-light); color: var(--spekta-red); display: grid; place-items: center; border-radius: 10px; font-size: 16px;}
-    .sc-panel-heading h2 { margin: 0; font-size: 15px; font-weight: 800;}
+    .sc-stat-card.card-gray {
+        background: linear-gradient(135deg, #9e9e9e 0%, #6b7280 100%);
+        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+    }
+    .sc-stat-card.card-gray:hover {
+        box-shadow: 0 8px 30px rgba(107, 114, 128, 0.4);
+    }
 
-    .sc-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .sc-input-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
-    .sc-input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-    .sc-input-group label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; }
-    .sc-input-group input, .sc-input-group select { padding: 11px; border-radius: 10px; border: 1px solid var(--border-soft); background: var(--spekta-gray-light); font-weight: 600; outline: none; transition: all 0.25s; font-family: inherit; font-size: 12px; }
-    .sc-input-group input:focus, .sc-input-group select:focus { border-color: var(--spekta-teal); background: var(--spekta-white); box-shadow: 0 0 0 3px rgba(46, 168, 171, 0.12); }
+    .sc-stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+    }
 
-    /* Perubahan Read-Only State yang Seimbang & Pasif */
+    .sc-stat-card::before {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -20%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+
+    .sc-stat-info {
+        position: relative;
+        z-index: 1;
+    }
+
+    .sc-stat-info p {
+        margin: 0 0 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .sc-stat-info strong {
+        font-size: 24px;
+        font-weight: 800;
+        color: #ffffff;
+        display: block;
+        line-height: 1.2;
+    }
+
+    /* ── FORM PANEL ── */
+    .sc-top-grid {
+        display: block;
+        margin-bottom: 24px;
+    }
+
+    .sc-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .sc-panel-heading {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sc-panel-heading h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .sc-input-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .sc-input-row.three-col {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .sc-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .sc-input-group label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .sc-input-group input,
+    .sc-input-group select {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f9fafb;
+        font-weight: 500;
+        font-size: 12px;
+        color: #111827;
+        outline: none;
+        transition: all 0.25s ease;
+        font-family: inherit;
+    }
+
+    .sc-input-group input:focus,
+    .sc-input-group select:focus {
+        background: #ffffff;
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
+    }
+
     .sc-input-readonly {
         background: #f9fafb !important;
-        border-color: var(--border-soft) !important;
-        color: var(--text-muted) !important;
+        border-color: #e5e7eb !important;
+        color: #6b7280 !important;
         cursor: not-allowed;
-        box-shadow: none !important;
     }
 
-    .sc-submit { background: linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%); color: var(--spekta-white); border: none; padding: 12px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(229, 57, 53, 0.2); transition: 0.2s; display: inline-flex; gap: 8px; align-items: center; font-family: inherit; font-size: 13px;}
-    .sc-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(229, 57, 53, 0.3); }
+    .error-msg {
+        color: #dc2626;
+        font-size: 10px;
+        font-weight: 600;
+        display: none;
+        margin-top: 2px;
+    }
 
-    /* Table Panel */
-    .sc-table-panel { background: var(--spekta-white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-soft); }
-    .sc-table-wrap { overflow-x: auto;}
-    .sc-table { width: 100%; border-collapse: collapse; min-width: 800px;}
-    .sc-table th { text-align: left; padding: 12px 14px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--spekta-gray-light); font-weight: 800; letter-spacing: 0.05em; }
-    .sc-table td { padding: 14px; border-bottom: 1px solid var(--spekta-gray-light); font-size: 13px; font-weight: 600; color: var(--text-main); vertical-align: middle; }
-    .sc-table tbody tr:last-child td { border-bottom: none; }
-    .sc-table tbody tr:hover { background: #fafbfc; }
+    .error-msg.show {
+        display: block;
+    }
 
-    /* Status Badge alignment */
+    /* ── TOMBOL SUBMIT TEAL ── */
+    .sc-submit-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        margin-top: 8px;
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.25);
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: inherit;
+        letter-spacing: 0.02em;
+    }
+
+    .sc-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
+    }
+
+    .sc-submit-teal:active {
+        transform: scale(0.97);
+    }
+
+    /* ── TABLE ── */
+    .sc-table-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #edf0f4;
+    }
+
+    .sc-table-wrap {
+        overflow-x: auto;
+    }
+
+    .sc-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+
+    .sc-table th {
+        text-align: left;
+        padding: 10px 14px;
+        font-size: 9px;
+        color: #6b7280;
+        text-transform: uppercase;
+        border-bottom: 2px solid #f3f4f6;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .sc-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 12px;
+        font-weight: 500;
+        color: #374151;
+        vertical-align: middle;
+    }
+
+    .sc-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sc-table tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .sc-table td strong {
+        display: block;
+        font-weight: 700;
+        color: #111827;
+        font-size: 12px;
+    }
+
+    .sc-table td small {
+        color: #9ca3af;
+        font-weight: 500;
+        font-size: 11px;
+    }
+
+    /* ── STATUS BADGE ── */
     .sc-status-badge {
         display: inline-flex;
         align-items: center;
@@ -383,59 +551,127 @@
         padding: 0 10px;
         border-radius: 6px;
         font-size: 9px;
-        font-weight: 800;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.04em;
     }
-    .sc-status-badge.ongoing { background: #e6f7ed; color: #15803d; }
-    .sc-status-badge.scheduled { background: #e0f2fe; color: #0269a1; }
-    .sc-status-badge.finished { background: var(--spekta-gray-light); color: var(--text-muted); }
 
+    .sc-status-badge.ongoing {
+        background: #e6f7ed;
+        color: #15803d;
+    }
+    .sc-status-badge.scheduled {
+        background: #e0f2fe;
+        color: #0269a1;
+    }
+    .sc-status-badge.finished {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    /* ── ACTION BUTTONS ── */
     .sc-actions-wrap {
         display: flex;
         align-items: center;
+        gap: 6px;
         justify-content: flex-start;
     }
 
-    .btn-delete {
-        color: var(--spekta-red);
+    .btn-edit {
+        padding: 4px 12px;
+        border-radius: 6px;
         border: none;
-        background: var(--spekta-red-light);
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: 0.2s;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .btn-delete:hover { transform: scale(1.05); background: #fecaca; color: #991b1b; }
-
-    .sc-empty-state {
-        padding: 24px;
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 700;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-    }
-    .sc-empty-state i {
-        font-size: 20px;
-        color: var(--spekta-gray);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: #dbeafe;
+        color: #2563eb;
     }
 
-    .text-center { text-align: center; }
-    .error-msg { display: block; }
+    .btn-edit:hover {
+        background: #3b82f6;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .btn-delete {
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: none;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    /* ── EMPTY STATE ── */
+    .sc-empty-state {
+        padding: 32px;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .sc-empty-state strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+        .sc-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .sc-input-row,
+        .sc-input-row.three-col {
+            grid-template-columns: 1fr;
+        }
+
+        .welcome-card {
+            padding: 20px;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
+        .sc-panel {
+            padding: 16px;
+        }
+    }
 
     @media (max-width: 768px) {
-        .sc-input-row, .sc-input-row.three-col { grid-template-columns: 1fr; }
-        .sc-stats { grid-template-columns: 1fr; }
-        .sc-header { flex-direction: column; align-items: flex-start; gap: 15px;}
+        .sc-table {
+            min-width: 600px;
+        }
+
+        .sc-actions-wrap {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
@@ -448,7 +684,6 @@
         const teacherNameDisplay = document.getElementById('teacherNameDisplay');
         const autoTitle = document.getElementById('autoTitle');
 
-        // Elemen validasi waktu
         const dateInput = document.getElementById('scheduleDate');
         const startTimeInput = document.getElementById('startTime');
         const endTimeInput = document.getElementById('endTime');
@@ -457,7 +692,6 @@
         const endTimeError = document.getElementById('endTimeError');
         const form = document.getElementById('scheduleForm');
 
-        // Set min date untuk input date
         const today = new Date().toISOString().split('T')[0];
         if (dateInput) {
             dateInput.setAttribute('min', today);
@@ -472,10 +706,10 @@
             todayDate.setHours(0, 0, 0, 0);
 
             if (selected < todayDate) {
-                dateError.style.display = 'block';
+                dateError.classList.add('show');
                 return false;
             } else {
-                dateError.style.display = 'none';
+                dateError.classList.remove('show');
                 return true;
             }
         }
@@ -493,10 +727,10 @@
 
             if (isToday && selectedDateTime < now) {
                 startTimeError.textContent = 'Jam mulai tidak boleh kurang dari jam sekarang';
-                startTimeError.style.display = 'block';
+                startTimeError.classList.add('show');
                 return false;
             } else {
-                startTimeError.style.display = 'none';
+                startTimeError.classList.remove('show');
                 return true;
             }
         }
@@ -508,11 +742,10 @@
             if (!startTime || !endTime) return true;
 
             if (endTime <= startTime) {
-                endTimeError.textContent = 'Jam selesai harus setelah jam mulai';
-                endTimeError.style.display = 'block';
+                endTimeError.classList.add('show');
                 return false;
             } else {
-                endTimeError.style.display = 'none';
+                endTimeError.classList.remove('show');
                 return true;
             }
         }
@@ -523,7 +756,7 @@
                 if (dateInput.value === today) {
                     validateStartTime();
                 } else {
-                    startTimeError.style.display = 'none';
+                    startTimeError.classList.remove('show');
                 }
             });
         }
@@ -575,7 +808,7 @@
                                     subjectSelect.innerHTML += `<option value="${sub.subject_id}">${sub.name}</option>`;
                                 });
                             } else {
-                                subjectSelect.innerHTML = '<option value="">Belum ada mapel di Matrix</option>';
+                                subjectSelect.innerHTML = '<option value="">Belum ada mapel</option>';
                             }
                         })
                         .catch(() => {
@@ -604,7 +837,7 @@
                                 teacherNameDisplay.value = data.teacher_name;
                                 teacherIdHidden.value = data.teacher_id;
                             } else {
-                                teacherNameDisplay.value = 'Guru belum ditugaskan di Matrix';
+                                teacherNameDisplay.value = 'Guru belum ditugaskan';
                                 teacherIdHidden.value = '';
                             }
                         })

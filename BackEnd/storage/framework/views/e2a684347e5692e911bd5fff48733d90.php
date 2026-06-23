@@ -1,14 +1,30 @@
-<?php $__env->startSection('title', 'Tambah Banner'); ?>
-<?php $__env->startSection('subtitle', 'Upload banner carousel homepage mobile'); ?>
+<?php $__env->startSection('title', 'Edit Banner'); ?>
+<?php $__env->startSection('subtitle', 'Perbarui banner carousel homepage mobile'); ?>
 
 <?php $__env->startSection('content'); ?>
+<?php
+    $currentImageUrl = $banner->image_url ?? null;
+
+    if (!$currentImageUrl && !empty($banner->image)) {
+        if (\Illuminate\Support\Str::startsWith($banner->image, ['http://', 'https://'])) {
+            $currentImageUrl = $banner->image;
+        } elseif (\Illuminate\Support\Str::startsWith($banner->image, ['storage/'])) {
+            $currentImageUrl = asset($banner->image);
+        } else {
+            $currentImageUrl = asset('storage/' . ltrim($banner->image, '/'));
+        }
+    } elseif ($currentImageUrl && !\Illuminate\Support\Str::startsWith($currentImageUrl, ['http://', 'https://'])) {
+        $currentImageUrl = asset($currentImageUrl);
+    }
+?>
+
 <div class="bn-form-page">
 
     
     <section class="welcome-card">
         <div class="welcome-text">
-            <h1>Tambah Banner</h1>
-            <p>Upload banner baru untuk carousel homepage mobile Spekta Academy.</p>
+            <h1>Edit Banner</h1>
+            <p>Perbarui data banner carousel homepage mobile Spekta Academy.</p>
         </div>
         <div class="welcome-action">
             <a href="<?php echo e(route('admin.banners.index')); ?>" class="back-btn">
@@ -32,54 +48,55 @@
 
     
     <section class="bn-form-grid">
-        <form action="<?php echo e(route('admin.banners.store')); ?>" method="POST" enctype="multipart/form-data" class="bn-form-card">
+        <form action="<?php echo e(route('admin.banners.update', $banner)); ?>" method="POST" enctype="multipart/form-data" class="bn-form-card">
             <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
 
             <div class="bn-card-heading">
                 <div>
                     <h2>Informasi Banner</h2>
-                    <p>Lengkapi informasi banner agar tampil rapi di aplikasi mobile.</p>
+                    <p>Ubah informasi banner sesuai kebutuhan promosi.</p>
                 </div>
             </div>
 
             <div class="bn-input-group">
                 <label>Title</label>
                 <div class="bn-input-wrap">
-                    <input type="text" name="title" value="<?php echo e(old('title')); ?>" placeholder="Contoh: Promo Mei 2026">
+                    <input type="text" name="title" value="<?php echo e(old('title', $banner->title)); ?>" placeholder="Contoh: Promo Mei 2026">
                 </div>
             </div>
 
             <div class="bn-input-group full">
                 <label>Description</label>
                 <div class="bn-input-wrap">
-                    <textarea name="description" rows="4" placeholder="Tulis deskripsi singkat banner..."><?php echo e(old('description')); ?></textarea>
+                    <textarea name="description" rows="4" placeholder="Tulis deskripsi singkat banner..."><?php echo e(old('description', $banner->description)); ?></textarea>
                 </div>
             </div>
 
             <div class="bn-input-group">
-                <label>Image</label>
+                <label>Ganti Image</label>
                 <div class="bn-input-wrap">
-                    <input type="file" name="image" id="bannerImageInput" accept="image/*" required>
+                    <input type="file" name="image" id="bannerImageInput" accept="image/*">
                 </div>
             </div>
 
             <div class="bn-input-group">
                 <label>Link</label>
                 <div class="bn-input-wrap">
-                    <input type="text" name="link" value="<?php echo e(old('link')); ?>" placeholder="/promo atau https://...">
+                    <input type="text" name="link" value="<?php echo e(old('link', $banner->link)); ?>" placeholder="/promo atau https://...">
                 </div>
             </div>
 
             <div class="bn-input-group">
                 <label>Order</label>
                 <div class="bn-input-wrap">
-                    <input type="number" name="order_position" value="<?php echo e(old('order_position', 0)); ?>" min="0">
+                    <input type="number" name="order_position" value="<?php echo e(old('order_position', $banner->order_position)); ?>" min="0">
                 </div>
             </div>
 
             <div class="bn-switch-box">
                 <label class="bn-switch">
-                    <input type="checkbox" name="is_active" value="1" <?php echo e(old('is_active', '1') == '1' ? 'checked' : ''); ?>>
+                    <input type="checkbox" name="is_active" value="1" <?php echo e(old('is_active', $banner->is_active ? '1' : '0') == '1' ? 'checked' : ''); ?>>
                     <span></span>
                 </label>
                 <div>
@@ -90,24 +107,28 @@
 
             <div class="bn-form-actions">
                 <a href="<?php echo e(route('admin.banners.index')); ?>" class="bn-cancel-btn">Batal</a>
-                <button type="submit" class="bn-submit-teal">Simpan Banner</button>
+                <button type="submit" class="bn-submit-teal">Update Banner</button>
             </div>
         </form>
 
         <aside class="bn-preview-card">
             <div class="bn-preview-heading">
                 <h3>Preview Banner</h3>
-                <p>Pratinjau gambar yang akan diunggah.</p>
+                <p>Gambar saat ini atau gambar baru yang dipilih.</p>
             </div>
 
             <div class="bn-preview-image" id="bannerPreviewBox">
-                <div>
-                    <span>Preview gambar akan tampil di sini</span>
-                </div>
+                <?php if($currentImageUrl): ?>
+                    <img src="<?php echo e($currentImageUrl); ?>" alt="<?php echo e($banner->title ?? 'Banner'); ?>">
+                <?php else: ?>
+                    <div>
+                        <span>Tidak ada gambar</span>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="bn-preview-note">
-                <span>Gunakan rasio gambar lebar seperti 16:9 agar banner terlihat maksimal di carousel.</span>
+                <span>Kosongkan input gambar jika tidak ingin mengganti gambar lama.</span>
             </div>
         </aside>
     </section>
@@ -475,7 +496,7 @@
         background: #e5e7eb;
     }
 
-    /* ── TOMBOL SIMPAN TEAL ── */
+    /* ── TOMBOL UPDATE TEAL ── */
     .bn-submit-teal {
         height: 44px;
         padding: 0 28px;
@@ -602,4 +623,4 @@
 </style>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/banners/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/banners/edit.blade.php ENDPATH**/ ?>

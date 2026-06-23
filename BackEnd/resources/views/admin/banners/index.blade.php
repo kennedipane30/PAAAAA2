@@ -13,37 +13,36 @@
 
 <div class="bn-page">
 
-    {{-- ── 1. HEADER (STYLISH CAPSULE & BOLD TITLE) ── --}}
-    <section class="bn-header">
-        <div class="bn-header-text">
-            <span class="bn-kicker">Promosi & Informasi</span>
+    {{-- ── WELCOME CARD ── --}}
+    <section class="welcome-card">
+        <div class="welcome-text">
             <h1>Banner Management</h1>
             <p>Kelola banner carousel untuk homepage mobile Spekta Academy.</p>
+        </div>
+        <div class="welcome-action">
+            <a href="{{ route('admin.banners.create') }}" class="bn-primary-btn-teal">
+                Tambah Banner Baru
+            </a>
         </div>
     </section>
 
     {{-- ALERTS --}}
     @if(session('success'))
         <div class="bn-alert success">
-            <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
-    {{-- ── 2. STATS GRID (KINI BERJUMLAH 3 DAN SEIMBANG) ── --}}
+    {{-- ── STATS GRID ── --}}
     <section class="bn-stats">
-        <!-- Total Banner -->
-        <div class="bn-stat-card card-red">
-            <div class="bn-stat-icon red"><i class="fa-solid fa-images"></i></div>
+        <div class="bn-stat-card card-blue">
             <div class="bn-stat-info">
                 <p>Total Banner</p>
                 <h2>{{ number_format($totalBanners) }}</h2>
             </div>
         </div>
 
-        <!-- Banner Aktif -->
         <div class="bn-stat-card card-teal">
-            <div class="bn-stat-icon teal"><i class="fa-solid fa-circle-check"></i></div>
             <div class="bn-stat-info">
                 <p>Banner Aktif</p>
                 <h2>{{ number_format($activeBanners) }}</h2>
@@ -53,9 +52,7 @@
             @endif
         </div>
 
-        <!-- Banner Nonaktif -->
-        <div class="bn-stat-card card-gray">
-            <div class="bn-stat-icon gray"><i class="fa-solid fa-circle-xmark"></i></div>
+        <div class="bn-stat-card card-orange">
             <div class="bn-stat-info">
                 <p>Nonaktif</p>
                 <h2>{{ number_format($inactiveBanners) }}</h2>
@@ -63,7 +60,7 @@
         </div>
     </section>
 
-    {{-- ── 3. MAIN CONTENT (LIST PANEL) ── --}}
+    {{-- ── MAIN CONTENT ── --}}
     <section class="bn-main-grid">
 
         <div class="bn-list-panel">
@@ -72,14 +69,6 @@
                     <h2>Daftar Banner</h2>
                     <p>Atur banner promosi yang muncul pada aplikasi mobile.</p>
                 </div>
-
-                <!-- Sembunyikan tombol di kanan atas jika data kosong untuk menghindari redundansi -->
-                @if($totalBanners > 0)
-                    <a href="{{ route('admin.banners.create') }}" class="bn-primary-btn">
-                        <i class="fa-solid fa-plus"></i>
-                        Tambah Banner Baru
-                    </a>
-                @endif
             </div>
 
             <div class="bn-banner-list">
@@ -106,7 +95,6 @@
                                 <img src="{{ $imageUrl }}" alt="{{ $banner->title ?? 'Banner' }}">
                             @else
                                 <div class="bn-no-image">
-                                    <i class="fa-solid fa-image"></i>
                                     <span>No Image</span>
                                 </div>
                             @endif
@@ -124,20 +112,9 @@
                                 </div>
 
                                 @if($banner->is_active)
-                                    <span class="bn-status active">
-                                        <span class="bn-dot-wrapper">
-                                            <i class="bn-dot"></i>
-                                            <i class="bn-dot-pulse"></i>
-                                        </span>
-                                        Aktif
-                                    </span>
+                                    <span class="bn-status active">Aktif</span>
                                 @else
-                                    <span class="bn-status inactive">
-                                        <span class="bn-dot-wrapper">
-                                            <i class="bn-dot"></i>
-                                        </span>
-                                        Nonaktif
-                                    </span>
+                                    <span class="bn-status inactive">Nonaktif</span>
                                 @endif
                             </div>
 
@@ -159,28 +136,21 @@
                             </div>
 
                             <div class="bn-actions">
-                                <a href="{{ route('admin.banners.edit', $banner) }}" class="edit">
-                                    <i class="fa-solid fa-pen"></i>
-                                    Edit
-                                </a>
+                                <a href="{{ route('admin.banners.edit', $banner) }}" class="edit">Edit</a>
 
                                 <form action="{{ route('admin.banners.destroy', $banner) }}" method="POST" onsubmit="return confirm('Hapus banner ini secara permanen?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                        Hapus
-                                    </button>
+                                    <button type="submit" class="delete">Hapus</button>
                                 </form>
                             </div>
                         </div>
                     </article>
                 @empty
                     <div class="bn-empty">
-                        <div class="bn-empty-icon"><i class="fa-solid fa-images"></i></div>
                         <strong>Belum ada banner.</strong>
                         <p>Tambahkan banner pertama untuk carousel homepage mobile Anda.</p>
-                        <a href="{{ route('admin.banners.create') }}" class="bn-primary-btn" style="margin-top: 15px;">Tambah Banner Pertama</a>
+                        <a href="{{ route('admin.banners.create') }}" class="bn-primary-btn-teal" style="margin-top: 15px; display: inline-flex;">Tambah Banner Pertama</a>
                     </div>
                 @endforelse
             </div>
@@ -199,9 +169,16 @@
     :root {
         --spekta-red-dark: #c5352c;
         --spekta-red: #e53935;
-        --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
+        --spekta-blue: #2563eb;
+        --spekta-blue-dark: #1d4ed8;
+        --spekta-blue-light: rgba(37, 99, 235, 0.08);
+        --spekta-orange: #f59e0b;
+        --spekta-orange-dark: #d97706;
+        --spekta-orange-light: rgba(245, 158, 11, 0.08);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
         --spekta-white: #ffffff;
@@ -210,7 +187,6 @@
         --border-soft: #e5e7eb;
     }
 
-    /* BASE LAYOUT */
     .bn-page {
         width: 100%;
         font-family: 'Montserrat', sans-serif;
@@ -223,67 +199,98 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* HEADER */
-    .bn-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
         margin-bottom: 24px;
-        gap: 20px;
-        border-bottom: 1px solid var(--border-soft);
-        padding-bottom: 20px;
-    }
-    .bn-kicker {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-    }
-    .bn-header h1 {
-        margin: 0 0 6px;
-        color: var(--text-main);
-        font-size: 24px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
-    .bn-header p {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 13px;
-        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
     }
 
-    /* PRIMARY BUTTON */
-    .bn-primary-btn {
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
+    }
+
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-text h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #111827;
+    }
+
+    .welcome-text p {
+        margin: 0;
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .welcome-action {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-left: 1px solid #e5e7eb;
+        padding-left: 24px;
+        min-width: 160px;
+    }
+
+    /* ── TOMBOL TAMBAH BANNER TEAL ── */
+    .bn-primary-btn-teal {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
-        background: linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%);
-        color: var(--spekta-white);
+        height: 42px;
+        padding: 0 20px;
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff;
         border: none;
         border-radius: 12px;
-        padding: 12px 20px;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
         text-decoration: none;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 6px 15px rgba(229, 57, 53, 0.2);
-        white-space: nowrap;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.25);
         cursor: pointer;
-    }
-    .bn-primary-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 22px rgba(229, 57, 53, 0.3);
-        color: var(--spekta-white);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
     }
 
-    /* ALERTS */
+    .bn-primary-btn-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
+    }
+
+    .bn-primary-btn-teal:active {
+        transform: scale(0.97);
+    }
+
+    /* ── ALERTS ── */
     .bn-alert {
         border-radius: 12px;
         padding: 12px 16px;
@@ -292,152 +299,204 @@
         gap: 10px;
         align-items: center;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
     }
-    .bn-alert.success { background: #e6f7ed; color: #15803d; border: 1px solid #bbf7d0; }
+    .bn-alert.success {
+        background: #e6f7ed;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
 
-    /* STATS SUMMARY GRID (3 KOLOM SEIMBANG) */
+    /* ── STATS ── */
     .bn-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 24px;
     }
-    .bn-stat-card {
-        background: var(--spekta-white);
-        border: 1px solid var(--border-soft);
-        border-radius: 14px;
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
-        transition: all 0.2s ease;
-        position: relative;
-    }
-    .bn-stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.03);
-    }
-    .bn-stat-card.card-red:hover { border-color: var(--spekta-red); }
-    .bn-stat-card.card-teal:hover { border-color: var(--spekta-teal); }
-    .bn-stat-card.card-gray:hover { border-color: var(--spekta-gray); }
 
-    .bn-stat-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        font-size: 16px;
+    .bn-stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+        overflow: hidden;
     }
-    .bn-stat-icon.red { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .bn-stat-icon.teal { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .bn-stat-icon.gray { background: var(--spekta-gray-light); color: var(--text-muted); }
+
+    .bn-stat-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    /* ── WARNA URUTAN SESUAI DASHBOARD (BIRU, TEAL, KUNING) ── */
+    .bn-stat-card.card-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .bn-stat-card.card-blue:hover {
+        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .bn-stat-card.card-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    }
+    .bn-stat-card.card-teal:hover {
+        box-shadow: 0 8px 30px rgba(20, 184, 166, 0.4);
+    }
+
+    .bn-stat-card.card-orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+    .bn-stat-card.card-orange:hover {
+        box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+    }
+
+    .bn-stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+    }
+
+    .bn-stat-card::before {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -20%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+
+    .bn-stat-info {
+        position: relative;
+        z-index: 1;
+    }
 
     .bn-stat-info p {
         margin: 0 0 4px;
         font-size: 10px;
-        font-weight: 800;
-        color: var(--text-muted);
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.9);
     }
+
     .bn-stat-info h2 {
         margin: 0;
         font-size: 24px;
         font-weight: 800;
-        color: var(--text-main);
-        line-height: 1;
+        color: #ffffff;
+        line-height: 1.2;
     }
 
-    /* Indikator denyut untuk banner aktif */
     .bn-pulse-dot {
         position: absolute;
         top: 14px; right: 14px;
         width: 6px; height: 6px;
-        background: var(--spekta-teal);
+        background: #14b8a6;
         border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(46, 168, 171, 0.7);
+        box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7);
         animation: pulseTeal 1.5s infinite;
     }
     @keyframes pulseTeal {
-        0% { box-shadow: 0 0 0 0 rgba(46, 168, 171, 0.7); }
-        70% { box-shadow: 0 0 0 8px rgba(46, 168, 171, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(46, 168, 171, 0); }
+        0% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(20, 184, 166, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
     }
 
-    /* MAIN PANEL */
+    /* ── MAIN PANEL ── */
     .bn-main-grid {
         display: block;
         margin-bottom: 24px;
     }
+
     .bn-list-panel {
-        background: var(--spekta-white);
-        border: 1px solid var(--border-soft);
+        background: #ffffff;
+        border: 1px solid #edf0f4;
         border-radius: 16px;
         padding: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
     }
+
     .bn-panel-heading {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
         padding-bottom: 16px;
-        border-bottom: 1px solid var(--spekta-gray-light);
+        border-bottom: 1px solid #f3f4f6;
         flex-wrap: wrap;
         gap: 15px;
     }
+
     .bn-panel-heading h2 {
         margin: 0 0 4px;
         font-size: 15px;
-        font-weight: 800;
-        color: var(--text-main);
+        font-weight: 700;
+        color: #111827;
     }
+
     .bn-panel-heading p {
         margin: 0;
         font-size: 11px;
-        color: var(--text-muted);
-        font-weight: 600;
+        color: #6b7280;
+        font-weight: 500;
     }
 
-    /* BANNER LIST & CARDS */
+    /* ── BANNER LIST ── */
     .bn-banner-list {
         display: grid;
         gap: 16px;
     }
+
     .bn-banner-card {
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
         gap: 20px;
         padding: 16px;
-        border: 1px solid var(--border-soft);
+        border: 1px solid #e5e7eb;
         border-radius: 12px;
-        background: var(--spekta-white);
+        background: #ffffff;
         transition: all 0.25s ease;
     }
+
     .bn-banner-card:hover {
-        border-color: var(--spekta-gray);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+        border-color: #14b8a6;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.04);
         transform: translateY(-2px);
     }
 
-    /* CARD IMAGE */
+    /* ── IMAGE ── */
     .bn-banner-image {
         height: 150px;
         border-radius: 10px;
         overflow: hidden;
         position: relative;
-        background: var(--spekta-gray-light);
-        border: 1px solid var(--border-soft);
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
     }
+
     .bn-banner-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
     }
+
     .bn-no-image {
         width: 100%;
         height: 100%;
@@ -445,15 +504,11 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        color: var(--text-muted);
+        color: #6b7280;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 600;
     }
-    .bn-no-image i {
-        font-size: 24px;
-        color: var(--spekta-gray);
-        margin-bottom: 6px;
-    }
+
     .bn-image-badge {
         position: absolute;
         top: 10px;
@@ -461,169 +516,217 @@
         padding: 3px 10px;
         border-radius: 6px;
         background: rgba(31, 41, 55, 0.85);
-        color: var(--spekta-white);
+        color: #ffffff;
         font-size: 11px;
-        font-weight: 800;
+        font-weight: 700;
         backdrop-filter: blur(4px);
     }
 
-    /* CARD CONTENT */
+    /* ── CONTENT ── */
     .bn-banner-content {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
+
     .bn-banner-title-row {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 16px;
     }
+
     .bn-banner-title-row h3 {
         margin: 0 0 6px;
-        color: var(--text-main);
+        color: #111827;
         font-size: 15px;
-        font-weight: 800;
+        font-weight: 700;
     }
+
     .bn-banner-title-row p {
         margin: 0;
-        color: var(--text-muted);
+        color: #6b7280;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 500;
         line-height: 1.5;
     }
 
-    /* STATUS BADGE */
+    /* ── STATUS ── */
     .bn-status {
         display: inline-flex;
         align-items: center;
         gap: 5px;
         font-size: 10px;
-        font-weight: 800;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 6px;
     }
-    .bn-dot-wrapper {
-        position: relative;
-        width: 5px; height: 5px;
-        display: inline-block;
-    }
-    .bn-dot {
-        width: 5px; height: 5px;
-        border-radius: 99px;
-        background: currentColor;
-        display: block;
-        position: absolute;
-        left: 0; top: 0;
-    }
-    .bn-dot-pulse {
-        width: 5px; height: 5px;
-        border-radius: 99px;
-        background: currentColor;
-        display: block;
-        position: absolute;
-        left: 0; top: 0;
-        opacity: 0.4;
-        transform: scale(1);
-        animation: dotGlow 1.8s infinite ease-in-out;
-    }
-    @keyframes dotGlow {
-        0% { transform: scale(1); opacity: 0.8; }
-        100% { transform: scale(3.2); opacity: 0; }
-    }
-    .bn-status.active { color: #15803d; }
-    .bn-status.inactive { color: var(--spekta-gray); }
 
-    /* META INFO GRID */
+    .bn-status.active {
+        background: #e6f7ed;
+        color: #15803d;
+    }
+
+    .bn-status.inactive {
+        background: #f3f4f6;
+        color: #9e9e9e;
+    }
+
+    /* ── META GRID ── */
     .bn-meta-grid {
         display: grid;
         grid-template-columns: 1.5fr 1fr 1fr;
         gap: 12px;
         padding: 12px;
         border-radius: 10px;
-        background: var(--spekta-gray-light);
+        background: #f9fafb;
         margin: 12px 0;
     }
+
     .bn-meta-grid span {
         display: block;
-        color: var(--text-muted);
+        color: #6b7280;
         font-size: 9px;
-        font-weight: 800;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 2px;
     }
+
     .bn-meta-grid strong {
         display: block;
-        color: var(--text-main);
+        color: #111827;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    /* CARD ACTIONS */
+    /* ── ACTIONS ── */
     .bn-actions {
         display: flex;
         align-items: center;
         justify-content: flex-end;
         gap: 8px;
     }
-    .bn-actions form { margin: 0; }
-    .bn-actions a, .bn-actions button {
+
+    .bn-actions form {
+        margin: 0;
+    }
+
+    .bn-actions a,
+    .bn-actions button {
         height: 32px;
         border: none;
         border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 0 12px;
+        padding: 0 14px;
         font-size: 11px;
-        font-weight: 800;
+        font-weight: 700;
         cursor: pointer;
         font-family: inherit;
         text-decoration: none;
         transition: all 0.2s ease;
     }
-    .bn-actions .edit { background: var(--spekta-gray-light); color: var(--text-main); }
-    .bn-actions .edit:hover { background: var(--border-soft); }
-    .bn-actions .delete { background: var(--spekta-red-light); color: var(--spekta-red); }
-    .bn-actions .delete:hover { background: #fecaca; }
 
-    /* EMPTY STATE */
+    .bn-actions .edit {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .bn-actions .edit:hover {
+        background: #3b82f6;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .bn-actions .delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .bn-actions .delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    /* ── EMPTY STATE ── */
     .bn-empty {
         text-align: center;
         padding: 48px;
-        background: var(--spekta-gray-light);
+        background: #f9fafb;
         border-radius: 16px;
-        border: 1px dashed var(--border-soft);
+        border: 1px dashed #e5e7eb;
     }
-    .bn-empty-icon {
-        width: 48px;
-        height: 48px;
-        background: var(--spekta-white);
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font-size: 18px;
-        color: var(--spekta-gray);
-        margin: 0 auto 12px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+
+    .bn-empty strong {
+        display: block;
+        font-size: 14px;
+        color: #111827;
+        margin-bottom: 4px;
+        font-weight: 700;
     }
-    .bn-empty strong { display: block; font-size: 14px; color: var(--text-main); margin-bottom: 4px; font-weight: 800;}
-    .bn-empty p { margin: 0; font-size: 12px; color: var(--text-muted); font-weight: 600; }
 
-    .bn-pagination { margin-top: 20px; }
+    .bn-empty p {
+        margin: 0;
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+    }
 
-    /* RESPONSIVE */
+    .bn-pagination {
+        margin-top: 20px;
+    }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-        .bn-header { flex-direction: column; align-items: flex-start; gap: 14px; }
-        .bn-stats { grid-template-columns: 1fr; }
-        .bn-banner-card { grid-template-columns: 1fr; }
-        .bn-banner-image { height: 160px; }
-        .bn-meta-grid { grid-template-columns: 1fr; gap: 12px; }
-        .bn-panel-heading { flex-direction: column; align-items: stretch;}
-        .bn-primary-btn { justify-content: center; }
+        .welcome-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .welcome-action {
+            border-left: none;
+            padding-left: 0;
+            min-width: unset;
+            width: 100%;
+        }
+
+        .bn-primary-btn-teal {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .bn-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .bn-banner-card {
+            grid-template-columns: 1fr;
+        }
+
+        .bn-banner-image {
+            height: 160px;
+        }
+
+        .bn-meta-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .bn-panel-heading {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
     }
 </style>
 @endsection

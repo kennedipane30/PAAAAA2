@@ -1,5 +1,5 @@
-<?php $__env->startSection('title', 'Tambah Pengajar'); ?>
-<?php $__env->startSection('subtitle', 'Tambah akun pengajar baru Spekta Academy'); ?>
+<?php $__env->startSection('title', 'Edit Pengajar'); ?>
+<?php $__env->startSection('subtitle', 'Perbarui data akun pengajar Spekta Academy'); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="teacher-form-page">
@@ -7,8 +7,8 @@
     
     <section class="welcome-card">
         <div class="welcome-text">
-            <h1>Tambah Pengajar</h1>
-            <p>Daftarkan akun pengajar baru agar dapat mengakses portal Spekta Academy.</p>
+            <h1>Edit Pengajar</h1>
+            <p>Perbarui data akun pengajar. Password boleh dikosongkan jika tidak ingin diubah.</p>
         </div>
         <div class="welcome-action">
             <a href="<?php echo e(route('admin.manajemen-pengajar.index')); ?>" class="back-btn">
@@ -34,18 +34,19 @@
     <section class="form-card">
         <div class="card-heading">
             <div>
-                <h2>Form Tambah Pengajar</h2>
-                <p>Isi data pengajar dengan benar. Akun akan langsung bisa digunakan sesuai status yang dipilih.</p>
+                <h2>Form Edit Pengajar</h2>
+                <p>Data yang diubah akan langsung tersimpan ke akun pengajar.</p>
             </div>
         </div>
 
-        <form action="<?php echo e(route('admin.manajemen-pengajar.store')); ?>" method="POST" class="teacher-form" id="teacherForm">
+        <form action="<?php echo e(route('admin.manajemen-pengajar.update', $teacher->usersID)); ?>" method="POST" class="teacher-form" id="editForm">
             <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
 
             <div class="input-group">
                 <label>Nama Lengkap</label>
                 <div class="input-wrap">
-                    <input type="text" name="name" id="name" value="<?php echo e(old('name')); ?>" placeholder="Contoh: Kennedi Pane" required>
+                    <input type="text" name="name" id="name" value="<?php echo e(old('name', $teacher->name)); ?>" placeholder="Contoh: Kennedi Pane" required>
                 </div>
                 <small class="error-message" id="nameError">Nama hanya boleh berisi huruf dan spasi</small>
             </div>
@@ -53,22 +54,25 @@
             <div class="input-group">
                 <label>Email Address</label>
                 <div class="input-wrap">
-                    <input type="email" name="email" value="<?php echo e(old('email')); ?>" placeholder="teacher@gmail.com" required>
+                    <input type="email" name="email" id="email" value="<?php echo e(old('email', $teacher->email)); ?>" placeholder="admin@gmail.com" required>
                 </div>
             </div>
 
             <div class="input-group">
                 <label>Nomor Telepon</label>
                 <div class="input-wrap">
-                    <input type="text" name="phone" id="phone" value="<?php echo e(old('phone')); ?>" placeholder="081234567890" required>
+                    <input type="text" name="phone" id="phone" value="<?php echo e(old('phone', $teacher->phone)); ?>" placeholder="081234567890" required>
                 </div>
                 <small class="error-message" id="phoneError">Nomor telepon hanya boleh berisi angka</small>
             </div>
 
             <div class="input-group">
-                <label>Password</label>
-                <div class="input-wrap">
-                    <input type="password" name="password" id="password" placeholder="Minimal 6 karakter" required>
+                <label>Password Baru</label>
+                <div class="input-wrap password-wrap">
+                    <input type="password" name="password" id="password" placeholder="Kosongkan jika tidak diubah">
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        <span id="passwordIcon">👁️</span>
+                    </button>
                 </div>
                 <small class="error-message" id="passwordError">Password harus mengandung minimal 1 huruf kapital dan 1 huruf kecil</small>
             </div>
@@ -77,9 +81,22 @@
                 <label>Status Akun</label>
                 <div class="input-wrap">
                     <select name="is_verified" required>
-                        <option value="1" <?php echo e(old('is_verified', '1') == '1' ? 'selected' : ''); ?>>Aktif</option>
-                        <option value="0" <?php echo e(old('is_verified') == '0' ? 'selected' : ''); ?>>Nonaktif</option>
+                        <option value="1" <?php echo e(old('is_verified', $teacher->is_verified ? '1' : '0') == '1' ? 'selected' : ''); ?>>Aktif</option>
+                        <option value="0" <?php echo e(old('is_verified', $teacher->is_verified ? '1' : '0') == '0' ? 'selected' : ''); ?>>Nonaktif</option>
                     </select>
+                </div>
+            </div>
+
+            
+            <div class="profile-summary">
+                <div class="summary-avatar">
+                    <?php echo e(strtoupper(substr($teacher->name, 0, 1))); ?>
+
+                </div>
+                <div>
+                    <strong><?php echo e($teacher->name); ?></strong>
+                    <span><?php echo e($teacher->email); ?></span>
+                    <small>Bergabung <?php echo e($teacher->created_at?->translatedFormat('d M Y')); ?></small>
                 </div>
             </div>
 
@@ -88,8 +105,8 @@
                     Batal
                 </a>
 
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    Simpan Pengajar
+                <button type="submit" class="submit-btn">
+                    Simpan Perubahan
                 </button>
             </div>
         </form>
@@ -102,7 +119,7 @@
         font-family: 'Montserrat', system-ui, sans-serif;
     }
 
-    /* ── WELCOME CARD (Container Personal seperti gambar kedua) ── */
+    /* ── WELCOME CARD ── */
     .welcome-card {
         background: #ffffff;
         border: 1px solid #e5e7eb;
@@ -208,7 +225,7 @@
         font-weight: 600;
     }
 
-    /* ── FORM CARD ── */
+    /* ── FORM CARD (FULL WIDTH) ── */
     .form-card {
         background: #ffffff;
         border: 1px solid #edf0f4;
@@ -239,11 +256,11 @@
         line-height: 1.5;
     }
 
-    /* ── FORM ── */
+    /* ── FORM (FULL WIDTH - 1 KOLOM) ── */
     .teacher-form {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+        grid-template-columns: 1fr;
+        gap: 18px;
     }
 
     .input-group {
@@ -302,6 +319,42 @@
         padding-right: 40px;
     }
 
+    /* ── PASSWORD WRAPPER WITH TOGGLE ── */
+    .password-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrap input {
+        padding-right: 50px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 4px;
+        color: #9ca3af;
+        transition: color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .toggle-password:hover {
+        color: #14b8a6;
+    }
+
+    .toggle-password:focus {
+        outline: none;
+    }
+
     /* Error Message */
     .error-message {
         color: #dc2626;
@@ -315,9 +368,56 @@
         display: block;
     }
 
+    /* ── PROFILE SUMMARY ── */
+    .profile-summary {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #f9fafb;
+        border: 1px solid #edf0f4;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-top: 4px;
+    }
+
+    .summary-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 99px;
+        background: rgba(20, 184, 166, 0.12);
+        color: #0d9488;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .profile-summary strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .profile-summary span {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .profile-summary small {
+        display: block;
+        color: #9ca3af;
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
     /* ── FORM ACTIONS ── */
     .form-actions {
-        grid-column: 1 / -1;
         display: flex;
         justify-content: flex-end;
         gap: 12px;
@@ -401,11 +501,6 @@
             padding: 20px 16px;
         }
 
-        .teacher-form {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
         .form-actions {
             flex-direction: column-reverse;
         }
@@ -419,15 +514,34 @@
         .welcome-text h1 {
             font-size: 18px;
         }
+
+        .profile-summary {
+            flex-direction: column;
+            text-align: center;
+        }
     }
 </style>
 
 <script>
+    // ── TOGGLE PASSWORD ──
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const icon = document.getElementById('passwordIcon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
     // Ambil elemen
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
     const passwordInput = document.getElementById('password');
-    const form = document.getElementById('teacherForm');
+    const form = document.getElementById('editForm');
 
     const nameError = document.getElementById('nameError');
     const phoneError = document.getElementById('phoneError');
@@ -459,12 +573,16 @@
         }
     }
 
-    // Validasi password: minimal 1 huruf kapital dan 1 huruf kecil
+    // Validasi password (jika diisi): minimal 1 huruf kapital dan 1 huruf kecil
     function validatePassword() {
         const password = passwordInput.value;
+        if (password === '') {
+            passwordError.classList.remove('show');
+            return true;
+        }
         const hasUpper = /[A-Z]/.test(password);
         const hasLower = /[a-z]/.test(password);
-        if (password !== '' && (!hasUpper || !hasLower)) {
+        if (!hasUpper || !hasLower) {
             passwordError.classList.add('show');
             return false;
         } else {
@@ -486,10 +604,10 @@
 
         if (!isNameValid || !isPhoneValid || !isPasswordValid) {
             e.preventDefault();
-            alert('Harap periksa kembali data yang Anda masukkan:\n- Nama hanya boleh huruf dan spasi\n- Nomor telepon hanya angka\n- Password harus mengandung huruf kapital dan huruf kecil');
+            alert('Harap periksa kembali data yang Anda masukkan:\n- Nama hanya boleh huruf dan spasi\n- Nomor telepon hanya angka\n- Password (jika diisi) harus mengandung huruf kapital dan huruf kecil');
         }
     });
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/pengajar/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/pengajar/edit.blade.php ENDPATH**/ ?>

@@ -69,7 +69,7 @@
     <!-- 1. BANNER SELAMAT DATANG -->
     <section class="welcome-card">
         <div class="welcome-text">
-            <h1>Selamat datang kembali, <span><?php echo e(Auth::user()->name); ?>!</span> 👋</h1>
+            <h1>Selamat datang kembali, <span><?php echo e(Auth::user()->name); ?>!</span></h1>
             <p>Kelola akademi dengan mudah dan pantau aktivitas secara real-time.</p>
         </div>
 
@@ -84,11 +84,13 @@
         </div>
     </section>
 
-    <!-- 2. KARTU STATISTIK UTAMA (5 KOLOM) -->
+    <!-- 2. KARTU STATISTIK UTAMA DENGAN WARNA FULL (TANPA SIMBOL & TULISAN BAWAH) -->
     <section class="stats-grid">
         <?php $__currentLoopData = $filteredStats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <?php
-                $colorClass = $index % 2 === 0 ? 'color-teal' : 'color-red';
+                // Warna berbeda untuk setiap kartu
+                $colorClasses = ['card-blue', 'card-teal', 'card-orange', 'card-purple', 'card-red'];
+                $colorClass = $colorClasses[$index % count($colorClasses)];
             ?>
             <a href="<?php echo e($card['route']); ?>" class="stat-card <?php echo e($colorClass); ?>">
                 <div class="stat-icon-wrap">
@@ -100,17 +102,6 @@
                 <div class="stat-info">
                     <p><?php echo e($card['title']); ?></p>
                     <h2><?php echo e(number_format($card['value'])); ?></h2>
-                </div>
-
-                <div class="stat-meta">
-                    <span class="badge badge-<?php echo e($card['badge_type']); ?>">
-                        <?php echo e($card['badge']); ?>
-
-                    </span>
-
-                    <?php if(!empty($card['badge_text'])): ?>
-                        <small><?php echo e($card['badge_text']); ?></small>
-                    <?php endif; ?>
                 </div>
             </a>
         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -160,7 +151,7 @@
                     <div class="indicator-value">
                         <?php echo e(number_format(count($chart_aktivitas_harian) > 0 ? round(array_sum($chart_aktivitas_harian) / count($chart_aktivitas_harian)) : 0)); ?>
 
-                        <span class="indicator-trend neutral"><i class="fa-solid fa-minus"></i> Bulan Ini</span>
+                        <span class="indicator-trend neutral">Bulan Ini</span>
                     </div>
                 </div>
 
@@ -173,7 +164,7 @@
                     <div class="indicator-value">
                         +<?php echo e(number_format(array_sum($chart_siswa_baru))); ?>
 
-                        <span class="indicator-trend up"><i class="fa-solid fa-arrow-up"></i>
+                        <span class="indicator-trend up">
                             <?php echo $monthNames[$monthParam - 1]; ?>
                         </span>
                     </div>
@@ -695,6 +686,14 @@
         --text-main: #1f2937;
         --text-muted: #6b7280;
         --border-soft: #e5e7eb;
+
+        /* Warna Tambahan */
+        --spekta-blue: #2563eb;
+        --spekta-blue-light: rgba(37, 99, 235, 0.08);
+        --spekta-orange: #f59e0b;
+        --spekta-orange-light: rgba(245, 158, 11, 0.08);
+        --spekta-purple: #8b5cf6;
+        --spekta-purple-light: rgba(139, 92, 246, 0.08);
     }
 
     .spekta-dashboard {
@@ -814,7 +813,7 @@
         text-align: center;
     }
 
-    /* 2. STATS GRID */
+    /* ── 2. STATS GRID DENGAN WARNA FULL (TANPA BADGE & META) ── */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -823,67 +822,132 @@
     }
 
     .stat-card {
-        background: var(--spekta-white);
-        border: 1px solid var(--border-soft);
         border-radius: 14px;
-        padding: 18px;
-        min-height: 148px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+        padding: 22px 24px;
+        min-height: 130px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        color: inherit;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        justify-content: center;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         text-decoration: none;
+        border: none;
+        position: relative;
+        overflow: hidden;
     }
 
     .stat-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--spekta-gray);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.04);
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.15);
     }
 
-    .stat-card.color-teal:hover { border-color: var(--spekta-teal); }
-    .stat-card.color-red:hover { border-color: var(--spekta-red); }
+    /* Warna Full untuk Kartu */
+    .stat-card.card-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .stat-card.card-blue:hover {
+        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    }
 
-    .stat-icon-wrap { display: flex; justify-content: flex-start; margin-bottom: 12px; }
+    .stat-card.card-teal {
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    }
+    .stat-card.card-teal:hover {
+        box-shadow: 0 8px 30px rgba(20, 184, 166, 0.4);
+    }
+
+    .stat-card.card-orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+    .stat-card.card-orange:hover {
+        box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+    }
+
+    .stat-card.card-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    .stat-card.card-purple:hover {
+        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .stat-card.card-red {
+        background: linear-gradient(135deg, #e53935 0%, #c5352c 100%);
+        box-shadow: 0 4px 15px rgba(229, 57, 53, 0.3);
+    }
+    .stat-card.card-red:hover {
+        box-shadow: 0 8px 30px rgba(229, 57, 53, 0.4);
+    }
+
+    /* Efek dekoratif pada card */
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -20%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+    }
+
+    .stat-icon-wrap {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 10px;
+    }
+
     .stat-icon {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border-radius: 10px;
         display: grid;
         place-items: center;
-        font-size: 14px;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        backdrop-filter: blur(4px);
     }
 
-    .color-teal .stat-icon { background: var(--spekta-teal-light); color: var(--spekta-teal); }
-    .color-red .stat-icon { background: var(--spekta-red-light); color: var(--spekta-red); }
+    .stat-info {
+        position: relative;
+        z-index: 1;
+    }
 
     .stat-card p {
-        font-size: 10px;
-        font-weight: 800;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--text-muted);
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.9);
         margin: 0 0 4px;
     }
 
     .stat-card h2 {
-        font-size: 24px;
+        font-size: 32px;
         line-height: 1;
         font-weight: 800;
-        color: var(--text-main);
-        margin: 0 0 8px;
+        color: #ffffff;
+        margin: 0;
     }
-
-    .stat-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .badge { font-size: 9px; font-weight: 800; border-radius: 6px; padding: 3px 6px; }
-    .badge-success { background: #e6f7ed; color: #15803d; }
-    .badge-danger { background: #fee2e2; color: #b91c1c; }
-    .badge-info { background: #e0f2fe; color: #0369a1; }
-    .badge-warning { background: #fef3c7; color: #b45309; }
-    .stat-meta small { color: var(--text-muted); font-size: 10px; font-weight: 600; }
 
     /* 3. ANALYTICS */
     .analytics-row { margin-bottom: 24px; }

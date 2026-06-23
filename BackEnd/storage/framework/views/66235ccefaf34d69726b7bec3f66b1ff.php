@@ -1,24 +1,24 @@
-<?php $__env->startSection('title', 'Tambah Banner'); ?>
-<?php $__env->startSection('subtitle', 'Upload banner carousel homepage mobile'); ?>
+<?php $__env->startSection('title', 'Edit Announcement'); ?>
+<?php $__env->startSection('subtitle', 'Perbarui data pengumuman Spekta Academy'); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="bn-form-page">
+<div class="ae-page">
 
     
     <section class="welcome-card">
         <div class="welcome-text">
-            <h1>Tambah Banner</h1>
-            <p>Upload banner baru untuk carousel homepage mobile Spekta Academy.</p>
+            <h1>Edit Announcement</h1>
+            <p>Perbarui judul, deskripsi, atau gambar pengumuman yang sudah dipublikasikan.</p>
         </div>
         <div class="welcome-action">
-            <a href="<?php echo e(route('admin.banners.index')); ?>" class="back-btn">
+            <a href="<?php echo e(route('admin.announcement.index')); ?>" class="back-btn">
                 Kembali
             </a>
         </div>
     </section>
 
     <?php if($errors->any()): ?>
-        <div class="bn-form-alert error">
+        <div class="ae-alert error">
             <div>
                 <strong>Data belum valid.</strong>
                 <ul>
@@ -31,94 +31,90 @@
     <?php endif; ?>
 
     
-    <section class="bn-form-grid">
-        <form action="<?php echo e(route('admin.banners.store')); ?>" method="POST" enctype="multipart/form-data" class="bn-form-card">
+    <section class="ae-grid">
+        <form action="<?php echo e(route('admin.announcement.update', $announcement->announcement_id)); ?>" method="POST" enctype="multipart/form-data" class="ae-form-card">
             <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
 
-            <div class="bn-card-heading">
+            <div class="ae-card-heading">
                 <div>
-                    <h2>Informasi Banner</h2>
-                    <p>Lengkapi informasi banner agar tampil rapi di aplikasi mobile.</p>
+                    <h2>Form Edit Pengumuman</h2>
+                    <p>Cukup ubah data pengumuman yang ingin diperbarui.</p>
                 </div>
             </div>
 
-            <div class="bn-input-group">
-                <label>Title</label>
-                <div class="bn-input-wrap">
-                    <input type="text" name="title" value="<?php echo e(old('title')); ?>" placeholder="Contoh: Promo Mei 2026">
+            <div class="ae-input-group">
+                <label>Headline Title</label>
+                <div class="ae-input-wrap">
+                    <input type="text" name="title" value="<?php echo e(old('title', $announcement->title)); ?>" required>
                 </div>
             </div>
 
-            <div class="bn-input-group full">
-                <label>Description</label>
-                <div class="bn-input-wrap">
-                    <textarea name="description" rows="4" placeholder="Tulis deskripsi singkat banner..."><?php echo e(old('description')); ?></textarea>
+            <div class="ae-input-group full">
+                <label>Content Details</label>
+                <div class="ae-input-wrap">
+                    <textarea name="description" rows="7" required><?php echo e(old('description', $announcement->description)); ?></textarea>
                 </div>
             </div>
 
-            <div class="bn-input-group">
-                <label>Image</label>
-                <div class="bn-input-wrap">
-                    <input type="file" name="image" id="bannerImageInput" accept="image/*" required>
+            <div class="ae-input-group">
+                <label>Replace Visual Media</label>
+                <div class="ae-input-wrap">
+                    <input type="file" name="image" id="announcementImageInput" accept="image/*">
                 </div>
             </div>
 
-            <div class="bn-input-group">
-                <label>Link</label>
-                <div class="bn-input-wrap">
-                    <input type="text" name="link" value="<?php echo e(old('link')); ?>" placeholder="/promo atau https://...">
-                </div>
-            </div>
+            <div class="ae-current-info">
+                <div class="ae-mini-avatar">
+                    <?php echo e(strtoupper(substr($announcement->title, 0, 1))); ?>
 
-            <div class="bn-input-group">
-                <label>Order</label>
-                <div class="bn-input-wrap">
-                    <input type="number" name="order_position" value="<?php echo e(old('order_position', 0)); ?>" min="0">
                 </div>
-            </div>
-
-            <div class="bn-switch-box">
-                <label class="bn-switch">
-                    <input type="checkbox" name="is_active" value="1" <?php echo e(old('is_active', '1') == '1' ? 'checked' : ''); ?>>
-                    <span></span>
-                </label>
                 <div>
-                    <strong>Aktifkan Banner</strong>
-                    <small>Banner aktif akan muncul pada carousel mobile.</small>
+                    <strong><?php echo e($announcement->title); ?></strong>
+                    <span>Dibuat <?php echo e($announcement->created_at?->translatedFormat('d M Y, H:i')); ?></span>
+                    <small>Kosongkan file jika tidak ingin mengganti gambar lama.</small>
                 </div>
             </div>
 
-            <div class="bn-form-actions">
-                <a href="<?php echo e(route('admin.banners.index')); ?>" class="bn-cancel-btn">Batal</a>
-                <button type="submit" class="bn-submit-teal">Simpan Banner</button>
+            <div class="ae-actions">
+                <a href="<?php echo e(route('admin.announcement.index')); ?>" class="ae-cancel-btn">Batal</a>
+
+                <button type="submit" class="ae-submit-teal">
+                    Update Announcement Data
+                </button>
             </div>
         </form>
 
-        <aside class="bn-preview-card">
-            <div class="bn-preview-heading">
-                <h3>Preview Banner</h3>
-                <p>Pratinjau gambar yang akan diunggah.</p>
+        <aside class="ae-preview-card">
+            <div class="ae-preview-heading">
+                <h3>Visual Preview</h3>
+                <p>Gambar saat ini atau gambar baru yang dipilih.</p>
             </div>
 
-            <div class="bn-preview-image" id="bannerPreviewBox">
-                <div>
-                    <span>Preview gambar akan tampil di sini</span>
-                </div>
+            <div class="ae-preview-image" id="announcementPreviewBox">
+                <?php if($announcement->image): ?>
+                    <img src="<?php echo e(asset('storage/' . $announcement->image)); ?>" alt="<?php echo e($announcement->title); ?>">
+                <?php else: ?>
+                    <div>
+                        <span>Tidak ada gambar</span>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <div class="bn-preview-note">
-                <span>Gunakan rasio gambar lebar seperti 16:9 agar banner terlihat maksimal di carousel.</span>
+            <div class="ae-preview-note">
+                <span>Gambar yang rapi akan membuat pengumuman terlihat lebih profesional pada aplikasi.</span>
             </div>
         </aside>
     </section>
+
 </div>
 
 <script>
-    const bannerImageInput = document.getElementById('bannerImageInput');
-    const bannerPreviewBox = document.getElementById('bannerPreviewBox');
+    const announcementImageInput = document.getElementById('announcementImageInput');
+    const announcementPreviewBox = document.getElementById('announcementPreviewBox');
 
-    if (bannerImageInput && bannerPreviewBox) {
-        bannerImageInput.addEventListener('change', function () {
+    if (announcementImageInput && announcementPreviewBox) {
+        announcementImageInput.addEventListener('change', function () {
             const file = this.files[0];
 
             if (!file) return;
@@ -126,7 +122,7 @@
             const reader = new FileReader();
 
             reader.onload = function (event) {
-                bannerPreviewBox.innerHTML = `<img src="${event.target.result}" alt="Preview Banner">`;
+                announcementPreviewBox.innerHTML = `<img src="${event.target.result}" alt="Preview Announcement">`;
             };
 
             reader.readAsDataURL(file);
@@ -148,7 +144,7 @@
         --border-soft: #e5e7eb;
     }
 
-    .bn-form-page {
+    .ae-page {
         width: 100%;
         font-family: 'Montserrat', sans-serif;
         color: var(--text-main);
@@ -238,7 +234,7 @@
     }
 
     /* ── ALERT ── */
-    .bn-form-alert {
+    .ae-alert {
         border-radius: 12px;
         padding: 14px 18px;
         margin-bottom: 20px;
@@ -249,28 +245,28 @@
         font-weight: 700;
     }
 
-    .bn-form-alert.error {
+    .ae-alert.error {
         background: #fef2f2;
         color: #b91c1c;
         border: 1px solid #fecaca;
     }
 
-    .bn-form-alert ul {
+    .ae-alert ul {
         margin: 6px 0 0;
         padding-left: 18px;
         font-weight: 600;
     }
 
     /* ── FORM GRID ── */
-    .bn-form-grid {
+    .ae-grid {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 350px;
         gap: 24px;
         align-items: start;
     }
 
-    .bn-form-card,
-    .bn-preview-card {
+    .ae-form-card,
+    .ae-preview-card {
         background: #ffffff;
         border: 1px solid #edf0f4;
         border-radius: 16px;
@@ -278,22 +274,22 @@
         padding: 24px;
     }
 
-    .bn-card-heading {
+    .ae-card-heading {
         margin-bottom: 20px;
         padding-bottom: 16px;
         border-bottom: 1px solid #f3f4f6;
     }
 
-    .bn-card-heading h2,
-    .bn-preview-heading h3 {
+    .ae-card-heading h2,
+    .ae-preview-heading h3 {
         margin: 0 0 6px;
         font-size: 16px;
         font-weight: 800;
         color: #111827;
     }
 
-    .bn-card-heading p,
-    .bn-preview-heading p {
+    .ae-card-heading p,
+    .ae-preview-heading p {
         margin: 0;
         font-size: 12px;
         color: #6b7280;
@@ -301,25 +297,25 @@
     }
 
     /* ── FORM ── */
-    .bn-form-card {
+    .ae-form-card {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
     }
 
-    .bn-card-heading,
-    .bn-input-group.full,
-    .bn-switch-box,
-    .bn-form-actions {
+    .ae-card-heading,
+    .ae-input-group.full,
+    .ae-current-info,
+    .ae-actions {
         grid-column: 1 / -1;
     }
 
-    .bn-input-group {
+    .ae-input-group {
         display: flex;
         flex-direction: column;
     }
 
-    .bn-input-group label {
+    .ae-input-group label {
         margin-bottom: 6px;
         color: #6b7280;
         font-size: 10px;
@@ -328,13 +324,13 @@
         letter-spacing: 0.05em;
     }
 
-    .bn-input-wrap {
+    .ae-input-wrap {
         position: relative;
         flex: 1;
     }
 
-    .bn-input-wrap input,
-    .bn-input-wrap textarea {
+    .ae-input-wrap input,
+    .ae-input-wrap textarea {
         width: 100%;
         padding: 0 14px;
         border: 1px solid #e5e7eb;
@@ -348,36 +344,36 @@
         transition: all 0.25s ease;
     }
 
-    .bn-input-wrap input {
+    .ae-input-wrap input {
         height: 44px;
     }
 
-    .bn-input-wrap textarea {
+    .ae-input-wrap textarea {
         resize: vertical;
         padding: 12px 14px;
-        min-height: 80px;
+        min-height: 120px;
         line-height: 1.5;
     }
 
-    .bn-input-wrap input:focus,
-    .bn-input-wrap textarea:focus {
+    .ae-input-wrap input:focus,
+    .ae-input-wrap textarea:focus {
         background: #ffffff;
         border-color: #14b8a6;
         box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
     }
 
-    .bn-input-wrap input::placeholder,
-    .bn-input-wrap textarea::placeholder {
+    .ae-input-wrap input::placeholder,
+    .ae-input-wrap textarea::placeholder {
         color: #9ca3af;
         font-weight: 400;
     }
 
-    .bn-input-wrap input[type="file"] {
+    .ae-input-wrap input[type="file"] {
         padding-top: 10px;
     }
 
-    /* ── SWITCH ── */
-    .bn-switch-box {
+    /* ── CURRENT INFO ── */
+    .ae-current-info {
         display: flex;
         align-items: center;
         gap: 14px;
@@ -387,64 +383,44 @@
         border: 1px solid #e5e7eb;
     }
 
-    .bn-switch {
-        position: relative;
+    .ae-mini-avatar {
         width: 44px;
-        height: 24px;
+        height: 44px;
+        border-radius: 99px;
+        background: rgba(20, 184, 166, 0.12);
+        color: #0d9488;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        font-weight: 800;
         flex-shrink: 0;
     }
 
-    .bn-switch input {
-        display: none;
-    }
-
-    .bn-switch span {
-        position: absolute;
-        inset: 0;
-        border-radius: 999px;
-        background: #9e9e9e;
-        cursor: pointer;
-        transition: 0.25s ease;
-    }
-
-    .bn-switch span::after {
-        content: "";
-        position: absolute;
-        width: 18px;
-        height: 18px;
-        top: 3px;
-        left: 3px;
-        border-radius: 999px;
-        background: #ffffff;
-        transition: 0.25s ease;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
-    }
-
-    .bn-switch input:checked + span {
-        background: #14b8a6;
-    }
-
-    .bn-switch input:checked + span::after {
-        transform: translateX(20px);
-    }
-
-    .bn-switch-box strong {
+    .ae-current-info strong {
         display: block;
         color: #111827;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
     }
 
-    .bn-switch-box small {
+    .ae-current-info span {
         display: block;
         color: #6b7280;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 500;
         margin-top: 2px;
     }
 
+    .ae-current-info small {
+        display: block;
+        color: #dc2626;
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
     /* ── FORM ACTIONS ── */
-    .bn-form-actions {
+    .ae-actions {
         display: flex;
         justify-content: flex-end;
         gap: 12px;
@@ -453,7 +429,7 @@
         border-top: 1px solid #f3f4f6;
     }
 
-    .bn-cancel-btn {
+    .ae-cancel-btn {
         height: 44px;
         padding: 0 22px;
         border-radius: 10px;
@@ -471,12 +447,12 @@
         cursor: pointer;
     }
 
-    .bn-cancel-btn:hover {
+    .ae-cancel-btn:hover {
         background: #e5e7eb;
     }
 
-    /* ── TOMBOL SIMPAN TEAL ── */
-    .bn-submit-teal {
+    /* ── TOMBOL UPDATE TEAL ── */
+    .ae-submit-teal {
         height: 44px;
         padding: 0 28px;
         border-radius: 10px;
@@ -495,28 +471,28 @@
         letter-spacing: 0.02em;
     }
 
-    .bn-submit-teal:hover {
+    .ae-submit-teal:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
     }
 
-    .bn-submit-teal:active {
+    .ae-submit-teal:active {
         transform: scale(0.97);
     }
 
     /* ── PREVIEW ── */
-    .bn-preview-card {
+    .ae-preview-card {
         position: sticky;
         top: 20px;
     }
 
-    .bn-preview-heading {
+    .ae-preview-heading {
         margin-bottom: 14px;
     }
 
-    .bn-preview-image {
+    .ae-preview-image {
         width: 100%;
-        height: 180px;
+        height: 200px;
         border-radius: 12px;
         border: 1px dashed #9e9e9e;
         background: #f9fafb;
@@ -529,13 +505,13 @@
         font-weight: 600;
     }
 
-    .bn-preview-image img {
+    .ae-preview-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    .bn-preview-note {
+    .ae-preview-note {
         margin-top: 14px;
         padding: 12px 16px;
         border-radius: 10px;
@@ -548,11 +524,11 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 1100px) {
-        .bn-form-grid {
+        .ae-grid {
             grid-template-columns: 1fr;
         }
 
-        .bn-preview-card {
+        .ae-preview-card {
             position: static;
         }
     }
@@ -576,17 +552,17 @@
             justify-content: center;
         }
 
-        .bn-form-card {
+        .ae-form-card {
             grid-template-columns: 1fr;
             padding: 16px;
         }
 
-        .bn-form-actions {
+        .ae-actions {
             flex-direction: column-reverse;
         }
 
-        .bn-cancel-btn,
-        .bn-submit-teal {
+        .ae-cancel-btn,
+        .ae-submit-teal {
             width: 100%;
             justify-content: center;
         }
@@ -595,11 +571,11 @@
             font-size: 18px;
         }
 
-        .bn-preview-image {
-            height: 140px;
+        .ae-preview-image {
+            height: 150px;
         }
     }
 </style>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/banners/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.spekta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Windows\Documents\GitHub\PAAAAA2\BackEnd\resources\views/admin/announcement/edit.blade.php ENDPATH**/ ?>

@@ -5,24 +5,18 @@
 @section('content')
 <div class="cp-page">
 
-    {{-- ── 1. HEADER MINIMALIS MODERN ── --}}
-    <section class="cp-header">
-        <div class="cp-header-left">
-            <span class="cp-breadcrumb-capsule">Student Score Center</span>
-            <!-- Menampilkan judul dinamis dari variabel $tryoutTitle di controller Anda -->
-            <h1>Hasil: <span style="color: var(--spekta-teal);">{{ $tryoutTitle ?? 'Paket Tryout' }}</span></h1>
-            <!-- FIX: Menggunakan count($results) untuk menghitung array biasa -->
+    {{-- ── WELCOME CARD ── --}}
+    <section class="welcome-card">
+        <div class="welcome-text">
+            <h1>Hasil: <span style="color: #0d9488;">{{ $tryoutTitle ?? 'Paket Tryout' }}</span></h1>
             <p>Total {{ count($results) }} siswa telah menyelesaikan ujian ini secara nasional.</p>
         </div>
-
-        <div class="cp-header-actions">
-            <a href="{{ route('admin.scores.index') }}" class="cp-secondary-btn">
-                <i class="fa-solid fa-arrow-left"></i> Kembali
-            </a>
+        <div class="welcome-action">
+            <a href="{{ route('admin.scores.index') }}" class="back-btn">Kembali</a>
         </div>
     </section>
 
-    {{-- ── 2. TABLE CARD (DENGAN PENANGANAN OBJEK REKURSIF) ── --}}
+    {{-- ── TABLE ── --}}
     <div class="cp-main-card">
         <div class="cp-table-wrap">
             <table class="cp-table">
@@ -38,14 +32,12 @@
                     @forelse($results as $res)
                         @if($res)
                             @php
-                                // Konversi paksa array bersarang (nested array) dari Go ke Object secara rekursif
                                 $resObj = (object) json_decode(json_encode($res));
                                 $studentName = $resObj->user_data->name ?? 'Siswa tidak ditemukan';
                                 $studentEmail = $resObj->user_data->email ?? '-';
                                 $createdAt = isset($resObj->created_at) ? \Carbon\Carbon::parse($resObj->created_at) : null;
                             @endphp
                             <tr>
-                                {{-- Profil Siswa --}}
                                 <td>
                                     <div class="cp-student-cell">
                                         <div class="cp-student-avatar">
@@ -58,34 +50,29 @@
                                     </div>
                                 </td>
 
-                                {{-- Benar --}}
                                 <td class="text-correct">
-                                    <i class="fa-solid fa-circle-check"></i> {{ $resObj->total_correct ?? 0 }} Soal
+                                    {{ $resObj->total_correct ?? 0 }} Soal
                                 </td>
 
-                                {{-- Skor Akhir --}}
                                 <td>
                                     <span class="cp-score-badge">
                                         {{ $resObj->score ?? 0 }}
                                     </span>
                                 </td>
 
-                                {{-- Tanggal --}}
                                 <td class="cp-date-cell">
-                                    <i class="fa-regular fa-clock"></i>
                                     {{ $createdAt ? $createdAt->format('d M Y, H:i') : '-' }} WIB
                                 </td>
                             </tr>
                         @endif
                     @empty
-                    <tr>
-                        <td colspan="4">
-                            <div class="cp-empty-state">
-                                <i class="fa-solid fa-user-slash"></i>
-                                <span>Belum ada siswa yang mengerjakan tryout ini.</span>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="4">
+                                <div class="cp-empty-state">
+                                    <strong>Belum ada siswa yang mengerjakan tryout ini.</strong>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -95,10 +82,9 @@
 
 <style>
     :root {
-        --spekta-red-dark: #c5352c;
-        --spekta-red: #e53935;
-        --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
@@ -115,131 +101,267 @@
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ── Header ── */
-    .cp-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
         margin-bottom: 24px;
-        gap: 20px;
-        border-bottom: 1px solid var(--border-soft);
-        padding-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
     }
-    .cp-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
+
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
     }
-    .cp-header h1 {
+
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-text h1 {
         margin: 0 0 6px;
-        color: var(--text-main);
-        font-size: 24px;
-        font-weight: 900;
+        font-size: 20px;
+        font-weight: 800;
         letter-spacing: -0.02em;
+        color: #111827;
     }
-    .cp-header p {
+
+    .welcome-text h1 span {
+        color: #0d9488;
+    }
+
+    .welcome-text p {
         margin: 0;
-        color: var(--text-muted);
         font-size: 13px;
-        font-weight: 600;
+        color: #6b7280;
+        font-weight: 500;
     }
-    .cp-secondary-btn {
+
+    .welcome-action {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-left: 1px solid #e5e7eb;
+        padding-left: 24px;
+        min-width: 140px;
+    }
+
+    .back-btn {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        border: 1px solid var(--border-soft);
-        background: var(--spekta-white);
-        color: var(--text-muted);
-        border-radius: 12px;
-        padding: 10px 16px;
+        height: 40px;
+        padding: 0 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #6b7280;
         font-size: 12px;
-        font-weight: 800;
+        font-weight: 700;
         text-decoration: none;
-        transition: all 0.2s;
-    }
-    .cp-secondary-btn:hover {
-        background: var(--spekta-gray-light);
-        color: var(--text-main);
-        border-color: var(--spekta-gray);
+        transition: all 0.2s ease;
     }
 
-    /* Table Container Card */
+    .back-btn:hover {
+        background: #f9fafb;
+        border-color: #14b8a6;
+        color: #14b8a6;
+    }
+
+    /* ── TABLE ── */
     .cp-main-card {
-        background: var(--spekta-white);
+        background: #ffffff;
         border-radius: 16px;
         padding: 20px;
-        border: 1px solid var(--border-soft);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
     }
 
-    .cp-table-wrap { overflow-x: auto; border-radius: 12px; }
-    .cp-table { width: 100%; border-collapse: collapse; min-width: 700px; }
-    .cp-table th { text-align: left; padding: 12px 14px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--spekta-gray-light); font-weight: 800; letter-spacing: 0.05em; }
-    .cp-table td { padding: 14px; border-bottom: 1px solid var(--spekta-gray-light); vertical-align: middle; }
-    .cp-table tbody tr:last-child td { border-bottom: none; }
-    .cp-table tbody tr:hover { background: #fafbfc; }
+    .cp-table-wrap {
+        overflow-x: auto;
+        border-radius: 12px;
+    }
 
-    /* Student Cell Profile */
-    .cp-student-cell { display: flex; align-items: center; gap: 10px; }
+    .cp-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .cp-table th {
+        text-align: left;
+        padding: 10px 14px;
+        font-size: 9px;
+        color: #6b7280;
+        text-transform: uppercase;
+        border-bottom: 2px solid #f3f4f6;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .cp-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .cp-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cp-table tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    /* ── STUDENT CELL ── */
+    .cp-student-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
     .cp-student-avatar {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: grid;
         place-items: center;
-        background: var(--spekta-teal-light);
-        color: var(--spekta-teal);
-        font-weight: 900;
-        font-size: 13px;
+        background: rgba(20, 184, 166, 0.1);
+        color: #0d9488;
+        font-weight: 700;
+        font-size: 12px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.03);
     }
-    .cp-student-info strong { display: block; font-size: 13px; font-weight: 800; color: var(--text-main); }
-    .cp-student-info span { display: block; font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 1px; }
 
-    .text-correct { color: #16a34a; font-weight: 700; font-size: 13px; }
-    .text-correct i { font-size: 12px; margin-right: 3px; }
+    .cp-student-info strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+    }
 
-    /* Score Badge */
+    .cp-student-info span {
+        display: block;
+        font-size: 10px;
+        color: #6b7280;
+        font-weight: 500;
+        margin-top: 1px;
+    }
+
+    /* ── CORRECT TEXT ── */
+    .text-correct {
+        color: #16a34a;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    /* ── SCORE BADGE ── */
     .cp-score-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 50px;
-        height: 28px;
+        min-width: 44px;
+        height: 26px;
         padding: 0 12px;
         border-radius: 8px;
         background: #1f2937;
-        color: var(--spekta-white);
-        font-size: 14px;
-        font-weight: 900;
-        box-shadow: 0 3px 8px rgba(31, 41, 55, 0.15);
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(31, 41, 55, 0.12);
     }
 
-    .cp-date-cell { color: var(--text-muted); font-size: 11px; font-weight: 700; }
-    .cp-date-cell i { color: var(--spekta-gray); margin-right: 3px; }
+    /* ── DATE ── */
+    .cp-date-cell {
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 500;
+    }
 
+    /* ── EMPTY STATE ── */
     .cp-empty-state {
         padding: 40px;
         text-align: center;
-        color: var(--text-muted);
-        font-size: 11px;
-        font-weight: 700;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 500;
     }
-    .cp-empty-state i { font-size: 20px; color: var(--spekta-gray); }
 
+    .cp-empty-state strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-        .cp-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+        .welcome-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .welcome-action {
+            border-left: none;
+            padding-left: 0;
+            min-width: unset;
+            width: 100%;
+        }
+
+        .back-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
+        .cp-table {
+            min-width: 500px;
+        }
+
+        .cp-table th,
+        .cp-table td {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .cp-student-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 10px;
+        }
+
+        .cp-score-badge {
+            font-size: 11px;
+            min-width: 36px;
+            height: 22px;
+            padding: 0 8px;
+        }
     }
 </style>
 @endsection

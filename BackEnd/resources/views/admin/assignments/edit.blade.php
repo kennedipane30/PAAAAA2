@@ -5,28 +5,25 @@
 
 @section('content')
 <div class="am-page">
-    {{-- HEADER --}}
-    <section class="am-header">
-        <div class="am-header-left">
-            <span class="am-breadcrumb-capsule">Manajemen Kurikulum</span>
+
+    {{-- ── WELCOME CARD ── --}}
+    <section class="welcome-card">
+        <div class="welcome-text">
             <h1>Edit Penugasan Pengajar</h1>
             <p>Perbarui relasi pengajar untuk mata pelajaran yang ditugaskan.</p>
         </div>
     </section>
 
-    {{-- FORM EDIT --}}
+    {{-- ── FORM EDIT ── --}}
     <section class="am-grid-top">
         <div class="am-card am-form-card">
             <div class="am-card-header">
                 <h2>Form Edit Penugasan</h2>
-                <a href="{{ route('admin.assignments.index') }}" class="am-btn-back">
-                    <i class="fa-solid fa-arrow-left"></i> Kembali
-                </a>
+                <a href="{{ route('admin.assignments.index') }}" class="am-btn-back">Kembali</a>
             </div>
 
             @if(session('error'))
                 <div class="am-alert error">
-                    <i class="fa-solid fa-circle-exclamation"></i>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
@@ -77,17 +74,12 @@
                 </div>
 
                 <div class="am-form-actions">
-                    <a href="{{ route('admin.assignments.index') }}" class="am-btn-secondary">
-                        <i class="fa-solid fa-times"></i> Batal
-                    </a>
-                    <button type="submit" class="am-btn-submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
-                    </button>
+                    <a href="{{ route('admin.assignments.index') }}" class="am-btn-secondary">Batal</a>
+                    <button type="submit" class="am-btn-submit-teal">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
 
-        {{-- INFO CARD --}}
         <div class="am-card">
             <div class="am-card-header">
                 <h2>Informasi Penugasan</h2>
@@ -111,7 +103,6 @@
                 </div>
             </div>
             <div class="am-info-note">
-                <i class="fa-solid fa-info-circle"></i>
                 <span>Perubahan akan langsung diterapkan setelah disimpan.</span>
             </div>
         </div>
@@ -121,7 +112,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Simpan nilai awal subject untuk fallback
     var initialSubjectId = $('#subject-select').val();
     var initialSubjectName = $('#subject-select option:selected').data('name') || '';
     var initialClassId = $('#class-select').val();
@@ -145,7 +135,6 @@ $(document).ready(function() {
                     if(data.length > 0) {
                         $.each(data, function(key, value) {
                             var selected = '';
-                            // Jika class_id masih sama dengan awal dan subject_id cocok
                             if (classId == initialClassId && value.material_id == initialSubjectId) {
                                 selected = 'selected';
                                 hasMatch = true;
@@ -153,7 +142,6 @@ $(document).ready(function() {
                             subjectSelect.append('<option value="' + value.material_id + '" data-name="' + value.material_name + '" ' + selected + '>' + value.material_name + '</option>');
                         });
 
-                        // Jika tidak ada yang match, gunakan yang pertama
                         if (!hasMatch && data.length > 0) {
                             var firstOption = subjectSelect.find('option:eq(1)');
                             firstOption.prop('selected', true);
@@ -171,14 +159,12 @@ $(document).ready(function() {
         }
     });
 
-    // Ketika user memilih mata pelajaran, simpan nama mapel ke hidden input
     $(document).on('change', '#subject-select', function() {
         var selectedOption = $(this).find('option:selected');
         var subjectName = selectedOption.data('name');
         $('#subject-name-hidden').val(subjectName);
     });
 
-    // Trigger change untuk load data awal jika class sudah terpilih
     if ($('#class-select').val()) {
         $('#class-select').trigger('change');
     }
@@ -187,10 +173,9 @@ $(document).ready(function() {
 
 <style>
     :root {
-        --spekta-red-dark: #c5352c;
-        --spekta-red: #e53935;
-        --spekta-teal: #2ea8ab;
-        --spekta-teal-light: rgba(46, 168, 171, 0.08);
+        --spekta-teal: #14b8a6;
+        --spekta-teal-dark: #0d9488;
+        --spekta-teal-light: rgba(20, 184, 166, 0.08);
         --spekta-red-light: rgba(229, 57, 53, 0.06);
         --spekta-gray: #9e9e9e;
         --spekta-gray-light: #f3f4f6;
@@ -212,42 +197,49 @@ $(document).ready(function() {
         to { opacity: 1; transform: translateY(0); }
     }
 
-    .am-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 20px;
+    /* ── WELCOME CARD ── */
+    .welcome-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #14b8a6;
+        border-radius: 16px;
+        padding: 24px 30px;
         margin-bottom: 24px;
-        border-bottom: 1px solid var(--border-soft);
-        padding-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        position: relative;
+        overflow: hidden;
     }
 
-    .am-breadcrumb-capsule {
-        display: inline-block;
-        background: var(--spekta-red-light);
-        color: var(--spekta-red-dark);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
+    .welcome-card::after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        top: -60px;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0.02) 100%);
+        border-radius: 999px;
+        pointer-events: none;
     }
 
-    .am-header h1 {
+    .welcome-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-text h1 {
         margin: 0 0 6px;
-        font-size: 24px;
-        font-weight: 900;
+        font-size: 20px;
+        font-weight: 800;
         letter-spacing: -0.02em;
-        color: var(--text-main);
+        color: #111827;
     }
 
-    .am-header p {
+    .welcome-text p {
         margin: 0;
-        color: var(--text-muted);
         font-size: 13px;
-        font-weight: 600;
+        color: #6b7280;
+        font-weight: 500;
     }
 
     .am-grid-top {
@@ -258,11 +250,11 @@ $(document).ready(function() {
     }
 
     .am-card {
-        background: var(--spekta-white);
+        background: #ffffff;
         border-radius: 16px;
         padding: 20px;
-        border: 1px solid var(--border-soft);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+        border: 1px solid #edf0f4;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
     }
 
     .am-card-header {
@@ -270,42 +262,42 @@ $(document).ready(function() {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f3f4f6;
     }
 
     .am-card-header h2 {
         font-size: 15px;
-        font-weight: 800;
-        color: var(--text-main);
+        font-weight: 700;
+        color: #111827;
         margin: 0;
     }
 
     .am-btn-back {
-        color: var(--text-muted);
+        color: #6b7280;
         text-decoration: none;
         font-size: 12px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
+        font-weight: 600;
+        padding: 6px 14px;
         border-radius: 8px;
-        background: var(--spekta-gray-light);
-        transition: 0.2s;
+        background: #f3f4f6;
+        transition: all 0.2s ease;
+        border: 1px solid #e5e7eb;
     }
 
     .am-btn-back:hover {
         background: #e5e7eb;
-        color: var(--text-main);
+        color: #111827;
     }
 
     .am-alert {
         display: flex;
         gap: 10px;
         align-items: center;
-        padding: 12px 18px;
+        padding: 12px 16px;
         border-radius: 12px;
         margin-bottom: 18px;
-        font-weight: 800;
+        font-weight: 700;
         font-size: 13px;
     }
 
@@ -322,37 +314,38 @@ $(document).ready(function() {
 
     .am-field label {
         font-size: 10px;
-        font-weight: 800;
-        color: var(--text-muted);
+        font-weight: 700;
+        color: #6b7280;
         text-transform: uppercase;
         margin-bottom: 6px;
         display: block;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.05em;
     }
 
     .am-field select {
         width: 100%;
-        padding: 11px;
+        padding: 10px 12px;
         border-radius: 10px;
-        border: 1px solid var(--border-soft);
-        background: var(--spekta-gray-light);
-        font-weight: 600;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        font-weight: 500;
         font-family: inherit;
         font-size: 12px;
         outline: none;
-        transition: all 0.25s;
+        transition: all 0.25s ease;
+        color: #111827;
     }
 
     .am-field select:focus {
-        border-color: var(--spekta-teal);
-        background: var(--spekta-white);
-        box-shadow: 0 0 0 3px rgba(46, 168, 171, 0.12);
+        border-color: #14b8a6;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
     }
 
     .am-field select:disabled {
         background: #f9fafb !important;
-        border-color: var(--border-soft) !important;
-        color: var(--text-muted) !important;
+        border-color: #e5e7eb !important;
+        color: #6b7280 !important;
         cursor: not-allowed;
     }
 
@@ -364,51 +357,59 @@ $(document).ready(function() {
     }
 
     .am-btn-secondary {
-        padding: 12px 20px;
-        border-radius: 12px;
-        font-weight: 800;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 700;
         cursor: pointer;
         font-family: inherit;
-        font-size: 13px;
+        font-size: 12px;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
-        border: 1px solid var(--border-soft);
-        background: var(--spekta-gray-light);
-        color: var(--text-main);
-        transition: 0.2s;
+        border: 1px solid #e5e7eb;
+        background: #f3f4f6;
+        color: #374151;
+        transition: all 0.2s ease;
     }
 
     .am-btn-secondary:hover {
         background: #e5e7eb;
     }
 
-    .am-btn-submit {
-        background: linear-gradient(135deg, var(--spekta-red) 0%, var(--spekta-red-dark) 100%);
-        color: var(--spekta-white);
+    /* ── TOMBOL SIMPAN TEAL ── */
+    .am-btn-submit-teal {
+        padding: 10px 24px;
+        border-radius: 10px;
         border: none;
-        padding: 12px 20px;
-        border-radius: 12px;
-        font-weight: 800;
+        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: inherit;
         cursor: pointer;
-        transition: 0.2s;
-        font-size: 13px;
+        box-shadow: 0 4px 15px rgba(20, 184, 166, 0.25);
+        transition: all 0.25s ease;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
         justify-content: center;
+        letter-spacing: 0.02em;
     }
 
-    .am-btn-submit:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 15px rgba(229, 57, 53, 0.2);
+    .am-btn-submit-teal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(20, 184, 166, 0.35);
     }
 
-    /* Info List */
+    .am-btn-submit-teal:active {
+        transform: scale(0.97);
+    }
+
+    /* ── INFO LIST ── */
     .am-info-list {
         display: grid;
-        gap: 14px;
+        gap: 12px;
     }
 
     .am-info-item {
@@ -416,7 +417,7 @@ $(document).ready(function() {
         justify-content: space-between;
         align-items: center;
         padding: 8px 0;
-        border-bottom: 1px solid var(--spekta-gray-light);
+        border-bottom: 1px solid #f3f4f6;
     }
 
     .am-info-item:last-child {
@@ -424,50 +425,54 @@ $(document).ready(function() {
     }
 
     .am-info-label {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        color: var(--text-muted);
+        color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.05em;
     }
 
     .am-info-value {
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--text-main);
+        font-size: 13px;
+        font-weight: 700;
+        color: #111827;
     }
 
     .am-info-note {
         margin-top: 16px;
         padding: 12px 16px;
-        background: var(--spekta-teal-light);
+        background: rgba(20, 184, 166, 0.06);
         border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
         font-size: 12px;
-        font-weight: 600;
-        color: var(--spekta-teal);
-    }
-
-    .am-info-note i {
-        font-size: 16px;
+        font-weight: 500;
+        color: #0d9488;
     }
 
     @media (max-width: 768px) {
+        .welcome-card {
+            padding: 20px;
+        }
+
+        .welcome-text h1 {
+            font-size: 18px;
+        }
+
         .am-grid-top {
             grid-template-columns: 1fr;
         }
+
         .am-form-actions {
             flex-direction: column;
         }
-        .am-form-actions .am-btn-secondary,
-        .am-form-actions .am-btn-submit {
+
+        .am-btn-secondary,
+        .am-btn-submit-teal {
+            width: 100%;
             justify-content: center;
         }
-        .am-header {
-            flex-direction: column;
-            align-items: flex-start;
+
+        .am-card {
+            padding: 16px;
         }
     }
 </style>
